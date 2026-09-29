@@ -91,8 +91,10 @@ left open is rolled back.
 (`ApiContext::errorsFromCms()` builds it from `Cms::$errors`; keys `field.{language_id}`
 become field and language code).
 
-`system.describe` returns a **JSON schema** of the parameters for each method, with the
-descriptions from the `@param` lines – usable as a tool definition for an LLM.
+`system.describe` returns a **JSON schema** of the parameters for each method, with
+descriptions – usable as a tool definition for an LLM. The texts appear in the admin's
+language; `Api::describe($method, $lang)` returns them in another backend language (the
+assistant uses `en_US`).
 
 ## Methods
 
@@ -103,6 +105,7 @@ the overview.
 |---|---|---|
 | `system.whoami` | – | admin, group, interface, channel, module rights, instances with languages |
 | `system.methods`, `system.describe` | `method` | directory, JSON schema |
+| `docs.search`, `docs.read` | `query`, `book`, `language`, `limit` or `page`, `anchor` | handbook sections by relevance (page, anchor, excerpt); a page or section as Markdown |
 | `area.list` | `instance_id`, `types` | readable content areas with number of records and the group's rights |
 | `area.info` | `area_id` | instance, languages, default and sort field, tree, slug prefix, rights |
 | `area.fields` | `area_id`, `with_meta` | input fields: type, multilingual, required, limits, options, target areas |
@@ -235,7 +238,7 @@ class BlogApi
     /**
      * @param int $postId  id of the post
      */
-    #[ApiMethod('blog.post', 'Read a post.')]
+    #[ApiMethod('blog.post', '#blog.api_post')]
     public function post(int $postId): array
     {
         $data = $this->blog->load($postId);
@@ -244,6 +247,13 @@ class BlogApi
                 'changed_at' => $this->context->isoTime($data['changed_at'])];
     }
 }
+```
+
+The texts live in `Modules/Blog/backend/lang/{language}.php`:
+
+```php
+'api_post' => 'Read a post.',
+'api__post_id' => 'Post (post_id)',
 ```
 
 After changing `settings.php`: `camindo.php refresh`.
@@ -262,9 +272,18 @@ Rules:
   text as text. Points in time stored in UTC as ISO 8601 with offset in the admin's time
   zone (`ApiContext::isoTime()`), wall time (`datetime`) without offset. Languages as
   codes (`de_DE`, `ApiContext::languageId()` / `languageCode()`).
+* **Translatable descriptions:** the description in the attribute is a snippet
+  (`'#blog.api_publish'`); the parameters are described by the snippets
+  `blog.api_publish__{parameter}` or – shared by all methods of the component –
+  `blog.api__{parameter}` (e.g. `api__record_id`), preferably in `backend/lang/`. If a
+  snippet is missing, the `@param` line of the docblock applies; a plain text instead of
+  a snippet in the attribute stays untranslated.
 * **Declare the severity:** `#[ApiMethod('blog.publish', '…', write: true, level:
   ApiMethod::LEVEL_CHANGE)]`. Without it, `LEVEL_READ` applies – the assistant then runs
   the method without asking.
+* **Offer a trial run:** a parameter `bool $simulate = false` (only check, change
+  nothing) makes the assistant's confirmation more meaningful – it calls the method with
+  `simulate` first and shows the result.
 * **Respect open forms:** code that changes a record without a form checks with
   `RecordService::loadForChange()` – if the same admin still has a form open (for
   example while chatting with an LLM), the API answers `open_in_backend` instead of
@@ -273,15 +292,24 @@ Rules:
 ## Assistant (add-on module `camindo/module-ai`)
 
 The add-on module Ai is an LLM chat in the backend's side panel. The model works
-exclusively through the API: every method is a ***tool*** – name with `__` instead of
-the dot (`record__search`), schema from `system.describe` – called after
+through the API: every method is a ***tool*** – name with `__` instead of the dot
+(`record__search`), schema and English descriptions from `Api::describe()` – called
+after
 `ApiSession::attach('llm')` in the admin's backend session. So it sees only what the
 admin sees, and every change appears in the audit log under the admin's name with the
 origin `llm`. From level 1 on ([severity](#severity)), the assistant runs a method only
-after the admin has confirmed it.
+after the admin has confirmed it; the confirmation shows the record (`record_id`),
+before/after of the fields in `data` and – if the method has `simulate` – the result of
+a trial run. Outside the API there are two UI tools: `ui__views` lists the
+backend views the admin may open (catalogs `install/views.php`,
+[05](05-backend-development.md#view-catalog-installviewsphp)), `ui__open` opens one of
+them – or directly a record's detail view, a filtered list or an edit form – as a layer;
+the server builds the address from checked values. What cannot be done through the API
+the assistant opens this way and guides the admin; questions about using the system it
+answers via `docs.search`/`docs.read`.
 
 For custom API methods this means: they are available to the assistant automatically –
-with the description from `#[ApiMethod]` and the `@param` lines as instructions. A
+with their (English) description as instructions. A
 missing or too low severity lets it act without asking. Providers, settings and
 structure are described in the module's documentation.
 

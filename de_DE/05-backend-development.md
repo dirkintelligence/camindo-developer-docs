@@ -10,6 +10,7 @@ Modules/Blog/                    (Core-Module: Core/Modules/{Name}/)
 ├── BlogBackend.php              Backend-Logik: list(), info(), edit(), search()
 ├── install/
 │   ├── settings.php             Steckbrief des Moduls (Kapitel 08)
+│   ├── views.php                Ansichten für Werkzeuge wie den KI-Assistenten (unten)
 │   ├── schema.sql               Tabellen (CREATE TABLE IF NOT EXISTS)
 │   └── migrations/              Versionsschritte
 ├── lang/{locale}.php            Snippets für Backend UND Frontend  (Präfix 'blog')
@@ -482,9 +483,41 @@ Modulzugriff auf `Area` (`RecordBatch::fulltextAllowed()`).
 6. Snippets `lang/en_US.php` (Pflicht) und weitere Sprachen; `module_label`,
    `module_description`.
 7. HTML-Vorlagen in `backend/html/` – Handler nur dort oder per `$backend->on()`.
+   Dazu `install/views.php`: die Ansichten, die ein Werkzeug öffnen darf (unten).
 8. `php Core/cron/camindo.php component install {Name} --activate` – legt die Tabellen
    an, baut die Caches der Komponente und schreibt die Laufzeitlisten.
 9. Den Benutzergruppen das Modul (und ggf. Zusatzrechte) zuweisen.
+
+## Ansichten-Katalog (`install/views.php`)
+
+Welche View-Scripte ein Werkzeug dem Admin als Layer öffnen darf – etwa der Assistent
+des Zusatzmoduls Ai ([16](16-api.md#assistent-zusatzmodul-camindomodule-ai)) –,
+beschreibt jede Komponente in `install/views.php`. `Camindo\Core\BackendViews` liest
+die Kataloge der aktiven Module, zeigt nur, was der Admin öffnen darf
+(`Access::script()`: Modulzugriff, `script_access`, persönliche Scripte), und baut die
+Adresse nur aus den erlaubten Parametern.
+
+```php
+<?php
+return [
+    'blog_list.php' => [
+        'description' => 'List of all blog posts with status; starting point to create a post.',
+    ],
+    'blog_edit.php' => [
+        'description' => 'Edit form of a post. function=create: new post; copy / delete with id.',
+        'params'      => ['id' => 'int', 'function' => ['create', 'copy', 'delete']],
+    ],
+];
+```
+
+* Nur Scripte, die beim Öffnen nichts ändern: Listen, Detailansichten, Formulare, die
+  erst beim Absenden wirken. Keine Aktionen (`*_run.php`, Cache-Neubau …), keine
+  ajax-Scripte.
+* Die Beschreibung ist englisch und für ein Sprachmodell geschrieben: was die Ansicht
+  zeigt, wofür man sie braucht, was die Parameter bewirken.
+* Parametertypen: `'int'` (positive Ganzzahl), `'string'` (bis 200 Zeichen) oder eine
+  Liste erlaubter Werte; andere Parameter verwirft `BackendViews::url()`.
+* Kein `refresh` nötig – die Datei wird bei Bedarf gelesen.
 
 ## Ohne Browser testen
 

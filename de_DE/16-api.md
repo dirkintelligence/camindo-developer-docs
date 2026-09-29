@@ -170,6 +170,20 @@ Transaktion. Mit `simulate` wird nur geprüft.
   (Recht „Owner anpassen"). Eingebettete Inhalte (`link`) ändert man über ihre eigene
   `record_id`.
 
+## Aus Templates und Custom Tools
+
+```php
+$result = $cms->api('record.search', ['area_id' => 8, 'filter' => ['status_id' => 1]]);
+if ($result['ok']) foreach ($result['data']['rows'] as $row) { … }
+```
+
+`Cms::api()` nimmt die laufende API-Session, wenn es eine gibt (Zeitplaner, CLI,
+PHP-API). Sonst arbeitet der Aufruf in der geladenen Backend-Session mit – Kanal
+`tool`, danach wieder abgemeldet: ein Trigger-Template, das beim Speichern im Backend
+läuft, handelt so als der Admin, der speichert. Ohne Admin-Session (Frontend) antwortet
+die API mit `not_logged_in`. Ein Script des Zeitplaners (Typ `php`) nimmt die Session
+aus `CAMINDO_API_SESSION` ([07](07-media-processing.md#zeitplaner-modul-scheduler)).
+
 ## Kommandozeile
 
 ```bash

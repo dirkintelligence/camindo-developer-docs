@@ -402,6 +402,9 @@ function onSave(array &$affectedFields, array &$data, array &$previousData): voi
 * When moving, the trigger template of the **target area** applies.
 * An event does not run nested for the same record (protection against endless loops).
   A template that cannot be loaded throws an exception.
+* The API is available via `$this->cms->api('record.search', [...])`
+  ([16](16-api.md#from-templates-and-custom-tools)) – in the backend as the admin who
+  saves; for a frontend user (`CMS:USER_INPUT`) there is none.
 
 ## Editor support and messages
 

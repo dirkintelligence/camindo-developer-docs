@@ -410,6 +410,9 @@ function onSave(array &$affectedFields, array &$data, array &$previousData): voi
 * Beim Verschieben gilt das Trigger-Template des **Zielbereichs**.
 * Ein Ereignis läuft für denselben Datensatz nicht verschachtelt (Schutz gegen
   Endlosschleifen). Ein Template, das sich nicht laden lässt, löst eine Exception aus.
+* Die API steht über `$this->cms->api('record.search', [...])` bereit
+  ([16](16-api.md#aus-templates-und-custom-tools)) – im Backend als der Admin, der
+  speichert; bei einem Frontend-Benutzer (`CMS:USER_INPUT`) gibt es keine.
 
 ## Editor-Unterstützung und Meldungen
 

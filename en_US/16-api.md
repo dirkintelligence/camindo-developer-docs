@@ -168,6 +168,20 @@ copy), validation against the field definitions, check-in in one transaction. Wi
 * Tree and order via `parent_id` and `previous_id`, the owner via `owner_id` (right
   "change owner"). Embedded content (`link`) is changed via its own `record_id`.
 
+## From templates and custom tools
+
+```php
+$result = $cms->api('record.search', ['area_id' => 8, 'filter' => ['status_id' => 1]]);
+if ($result['ok']) foreach ($result['data']['rows'] as $row) { … }
+```
+
+`Cms::api()` uses the running API session if there is one (scheduler, CLI, PHP API).
+Otherwise the call works along in the loaded backend session – channel `tool`, detached
+again afterwards: a trigger template running on save in the backend thus acts as the
+admin who saves. Without an admin session (frontend), the API answers `not_logged_in`. A
+scheduler script (type `php`) takes the session from `CAMINDO_API_SESSION`
+([07](07-media-processing.md#scheduler-module-scheduler)).
+
 ## Command line
 
 ```bash

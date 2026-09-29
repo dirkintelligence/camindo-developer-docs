@@ -141,7 +141,7 @@ Audit-Log trägt ein Stapellauf den Kanal mit (`llm-batch`, `scheduler-batch` �
 
 Jede Methode trägt einen ***Schweregrad*** (`ApiMethod::LEVEL_*`, in `system.methods` und
 `system.describe` als `level`): wie leicht sich ihre Wirkung rückgängig machen lässt.
-Danach entscheidet der [Assistent](#assistent-modul-ai), ob er vor dem Ausführen nachfragt.
+Danach entscheidet der [Assistent](#assistent-zusatzmodul-camindomodule-ai), ob er vor dem Ausführen nachfragt.
 
 | Stufe | Konstante | Methoden |
 |---|---|---|
@@ -274,57 +274,20 @@ Regeln:
   (etwa im Chat mit einem LLM) antwortet die API mit `open_in_backend`, statt dessen
   Arbeitskopie zu verwerfen.
 
-## Assistent (Modul Ai)
+## Assistent (Zusatzmodul `camindo/module-ai`)
 
-Das Modul Ai (`Core/Modules/Ai/`) ist ein LLM-Chat im Seitenpanel des Backends
-(Strg+H). Das Modell arbeitet ausschließlich über die API: Jede Methode ist ein
-***Werkzeug*** – Name mit `__` statt Punkt (`record__search`), Schema aus
-`system.describe` –, aufgerufen nach `ApiSession::attach('llm')` in der Backend-Session
-des Admins. Das Modell sieht also nur, was der Admin sieht, und jede Änderung steht im
-Audit-Log unter seinem Namen mit der Herkunft `llm`. Wer das Modul nutzen darf, regelt
-das Modulrecht der Gruppe.
+Das Zusatzmodul Ai ist ein LLM-Chat im Seitenpanel des Backends. Das Modell arbeitet
+ausschließlich über die API: Jede Methode ist ein ***Werkzeug*** – Name mit `__` statt
+Punkt (`record__search`), Schema aus `system.describe` –, aufgerufen nach
+`ApiSession::attach('llm')` in der Backend-Session des Admins. Es sieht also nur, was
+der Admin sieht, und jede Änderung steht im Audit-Log unter dessen Namen mit der
+Herkunft `llm`. Ab Stufe 1 ([Schweregrad](#schweregrad)) führt der Assistent eine
+Methode erst nach Bestätigung durch den Admin aus.
 
-| Klasse | Aufgabe |
-|---|---|
-| `AiAssistant` | Werkzeug-Schleife: Anfrage an den Anbieter, Werkzeug-Aufrufe ausführen, Ergebnisse gesammelt zurückgeben – bis zur Antwort ohne Werkzeug, zur nächsten Bestätigung oder `ai.max_rounds` |
-| `AiChat` | laufender Chat je Admin in `ai_chat`, verschlüsselt (`Crypt`); nach `ai.chat_days` ohne Änderung gelöscht |
-| `AiSettings` | Konfiguration `ai.*`, darüber die Einstellungen des Superusers (Tabelle `system`, Schlüssel `ai_settings`); Anbieter, Schlüssel und Adresse nur aus der Konfiguration |
-| `AiProviders` | wählt den Anbieter nach `ai.provider` |
-| `Provider\ProviderInterface` | austauschbarer Anbieter: `send($system, $messages, $tools)` → `ProviderResponse` |
-| `AiBackend` | Startseite, Chat, Bestätigung (`backend-ai.js`: `cApp.ai`) |
-
-**Bestätigung.** Werkzeuge ab Stufe 1 führt die Schleife nicht von sich aus aus: Sie
-hält an (`pending`), und der Admin erlaubt die Aktion einmal, erlaubt – bis zum Ende des
-Chats – alle Aktionen derselben Stufe (`approved_levels`) oder lehnt ab; dann bekommt
-das Modell ein Fehlerergebnis. Stufen über `ai.max_level` (bzw. der Einstellung des
-Superusers) erscheinen gar nicht erst als Werkzeug. Die Bestätigung ist eine Bremse
-gegen Fehlgriffe und gegen Anweisungen, die in Inhalten stecken (Prompt-Injection) –
-die Rechtegrenze zieht weiterhin die Gruppe des Admins.
-
-**Anbieter.** Mitgeliefert sind `anthropic` (offizielles PHP-SDK `anthropic-ai/sdk`) und
-`mock` für Tests (vorbereitete Antworten aus `ai.mock_file`). Ein eigener Anbieter setzt
-`ProviderInterface` um und steht als Klassenname in `ai.provider`; sein Konstruktor
-bekommt `AiSettings::all()`. Der Verlauf ist neutral (Blöcke `text`, `tool_use`,
-`tool_result`); jede Antwort trägt zusätzlich `raw` in der Form des Anbieters, die
-derselbe Anbieter im nächsten Aufruf unverändert wiedergibt – etwa Denkblöcke mit
-Signatur.
-
-| Schlüssel | Vorgabe | Bedeutung |
-|---|---|---|
-| `ai.provider` | `'anthropic'` | Name aus `AiProviders::PROVIDERS` oder Klassenname |
-| `ai.api_key` | `''` | Schlüssel des Anbieters – nur in der Konfiguration; leer: Assistent nicht verfügbar |
-| `ai.model`, `ai.effort`, `ai.max_tokens` | `'claude-opus-5-5'`, `'medium'`, `16000` | Modell, Denkaufwand, Höchstlänge einer Antwort |
-| `ai.fallbacks` | `'default'` | Anthropic: bei einer Ablehnung auf ein anderes Modell ausweichen (`''` = aus) |
-| `ai.base_url`, `ai.timeout` | `''`, `300` | andere Adresse (Proxy), Zeitlimit je Anfrage |
-| `ai.max_rounds` | `12` | Anfragen an den Anbieter je Nachricht des Admins |
-| `ai.max_level` | `5` | höchste Stufe, die der Assistent überhaupt ausführen darf |
-| `ai.chat_days` | `30` | Aufbewahrung der Chats |
-
-**Fremder Text.** Was das Modell schreibt, stammt zum Teil aus Inhalten Dritter.
-Antworten laufen durch `Markdown` (Safe Mode) und `HtmlSanitizer`, alles andere durch
-`htmlspecialchars()`; `{` wird maskiert, damit `Backend::template()` darin keine
-Snippet-Platzhalter auflöst. Werkzeug-Ergebnisse gehen gekürzt (60 000 Zeichen) an das
-Modell.
+Für eigene API-Methoden heißt das: Sie stehen dem Assistenten automatisch zur
+Verfügung – mit der Beschreibung aus `#[ApiMethod]` und den `@param`-Zeilen als
+Anleitung. Ein fehlender oder zu niedriger Schweregrad lässt ihn ohne Rückfrage
+handeln. Anbieter, Einstellungen und Aufbau beschreibt die Dokumentation des Moduls.
 
 ## Grenzen
 

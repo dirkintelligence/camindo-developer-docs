@@ -56,7 +56,7 @@ Eigenentwicklungen. Externe Abhängigkeiten beschränken sich auf wenige Bibliot
 | [13 – Sicherheit I: Anmeldung, Schlüssel, Protokoll](13-security-authentication.md) | Passwörter, Signaturen, Sessions, zweiter Faktor, Schlüsselrotation, Audit-Log |
 | [14 – Sicherheit II: Web](14-security-web.md) | CSRF, HTML-Filter, Sicherheits-Header, Script-Policy, Uploads, ImageMagick, Backend-Domain |
 | [15 – Konventionen](15-conventions.md) | Namen, Code-Stil, SQL, Sprachen, Schreibrichtung, Dateirechte |
-| [16 – API](16-api.md) | Die API als Oberfläche: Sessions, Kanäle, Aufrufe, Schweregrade, eigene API-Methoden, Kommandozeile, Assistent (Modul Ai) |
+| [16 – API](16-api.md) | Die API als Oberfläche: Sessions, Kanäle, Aufrufe, Schweregrade, eigene API-Methoden, Kommandozeile, Assistent (Zusatzmodul) |
 
 Einsteigern empfiehlt sich die Reihenfolge 01 → 02 → 03 → 05; wer nur einen
 Medienprozessor oder eine Extension schreiben will, liest 01, 07 bzw. 08.

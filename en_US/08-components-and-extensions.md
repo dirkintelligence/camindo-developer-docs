@@ -73,7 +73,8 @@ Only keys from a fixed list are taken over (`ComponentManager::SETTINGS_KEYS`):
 | `widget` | module | start page widget ([05](05-backend-development.md#start-page-widgets)) |
 | `api` | module | API classes relative to the module namespace, e.g. `['BlogApi']` ([16](16-api.md#custom-api-methods)) |
 | `commands`, `services` | module | own `(CMS:…)` commands ([06](06-template-compiler.md#custom-commands-from-add-on-modules)) |
-| `display_types`, `field_types`, `assets`, `options_provider` | extension | see below |
+| `assets` | module, extension | JS and CSS files ([assets](#assets-and-endpoints)); for modules on every backend page |
+| `display_types`, `field_types`, `options_provider` | extension | see below |
 
 `settings.php` is evaluated via `include` – a component is code the operator installs.
 
@@ -246,6 +247,15 @@ text field.
 `public/backend/ext/{name}/` (copy rather than symlink, so that `vendor/` does not
 become reachable from the document root) and lists them in the manifest with
 `?v={version}`.
+
+A **module** may list `assets` as well (`['js' => […], 'css' => […]]`, relative to the
+module's `public/`). They go to `public/backend/mod/{name}/`, and the backend includes
+them on **every** page – stylesheets in the head, scripts before `backend-init.js`,
+regardless of the admin's module right (the server checks the rights). Such a script
+initializes itself (`$(document).ready(…)`) and must not break anything without the
+module right. This is meant for things that reach beyond the module, such as a keyboard
+shortcut. `camindo.php refresh` republishes the assets of all running extensions and
+modules – after changing the files, that is all it takes.
 
 An extension's endpoints live in `backend/` and are reachable via
 `/backendExtensions/{Name}/{script}`. They only require a session – extensions have no

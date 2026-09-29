@@ -74,7 +74,8 @@ Nur Schlüssel aus einer festen Liste werden übernommen
 | `widget` | Modul | Startseiten-Widget ([05](05-backend-development.md#startseiten-widgets)) |
 | `api` | Modul | API-Klassen relativ zum Modul-Namespace, z. B. `['BlogApi']` ([16](16-api.md#eigene-api-methoden)) |
 | `commands`, `services` | Modul | eigene `(CMS:…)`-Befehle ([06](06-template-compiler.md#eigene-befehle-aus-zusatzmodulen)) |
-| `display_types`, `field_types`, `assets`, `options_provider` | Extension | siehe unten |
+| `assets` | Modul, Extension | JS- und CSS-Dateien ([Assets](#assets-und-endpunkte)); bei Modulen auf jeder Backend-Seite |
+| `display_types`, `field_types`, `options_provider` | Extension | siehe unten |
 
 `settings.php` wird per `include` ausgewertet – eine Komponente ist Code, den der
 Betreiber installiert.
@@ -248,6 +249,15 @@ Wert ein normales Text-Feld.
 `ComponentManager` **kopiert** die in `assets` genannten Dateien nach
 `public/backend/ext/{name}/` (Kopie statt Symlink, damit `vendor/` nicht vom Docroot
 aus erreichbar wird) und trägt sie mit `?v={version}` ins Manifest ein.
+
+Auch ein **Modul** darf `assets` nennen (`['js' => […], 'css' => […]]`, relativ zu
+`public/` des Moduls). Sie landen in `public/backend/mod/{name}/`, und das Backend
+bindet sie auf **jeder** Seite ein – Stylesheets im Kopf, Scripte vor
+`backend-init.js`, unabhängig vom Modulrecht des Admins (die Rechte prüft der Server).
+Ein solches Script initialisiert sich selbst (`$(document).ready(…)`) und darf ohne
+Modulrecht nichts kaputt machen. Gedacht ist das für Dinge, die über das Modul hinaus
+wirken, etwa ein Tastaturkürzel. `camindo.php refresh` publiziert die Assets aller
+laufenden Extensions und Module neu – nach einer Änderung an den Dateien genügt das.
 
 Endpunkte einer Extension liegen in `backend/` und sind über
 `/backendExtensions/{Name}/{script}` erreichbar. Sie verlangen nur eine Session –

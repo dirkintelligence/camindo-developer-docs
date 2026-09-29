@@ -92,8 +92,10 @@ nur `internal`. Eine offen gebliebene Transaktion wird zurückgerollt.
 (`ApiContext::errorsFromCms()` macht sie aus `Cms::$errors`; Schlüssel `feld.{language_id}`
 werden zu Feld und Sprachcode).
 
-`system.describe` liefert je Methode ein **JSON-Schema** der Parameter mit den
-Beschreibungen aus den `@param`-Zeilen – brauchbar als Werkzeug-Definition für ein LLM.
+`system.describe` liefert je Methode ein **JSON-Schema** der Parameter samt
+Beschreibungen – brauchbar als Werkzeug-Definition für ein LLM. Die Texte erscheinen in
+der Sprache des Admins; `Api::describe($method, $lang)` liefert sie in einer anderen
+Backend-Sprache (der Assistent nimmt `en_US`).
 
 ## Methoden
 
@@ -104,6 +106,7 @@ Beschreibungen aus den `@param`-Zeilen – brauchbar als Werkzeug-Definition fü
 |---|---|---|
 | `system.whoami` | – | Admin, Gruppe, Oberfläche, Kanal, Modulrechte, Instanzen mit Sprachen |
 | `system.methods`, `system.describe` | `method` | Verzeichnis, JSON-Schema |
+| `docs.search`, `docs.read` | `query`, `book`, `language`, `limit` bzw. `page`, `anchor` | Handbuch-Abschnitte nach Relevanz (Seite, Anker, Ausschnitt); Seite oder Abschnitt als Markdown |
 | `area.list` | `instance_id`, `types` | lesbare Inhaltsbereiche mit Anzahl Datensätze und Rechten der Gruppe |
 | `area.info` | `area_id` | Instanz, Sprachen, Default- und Sortierfeld, Baum, Slug-Präfix, Rechte |
 | `area.fields` | `area_id`, `with_meta` | Eingabefelder: Typ, Mehrsprachigkeit, Pflicht, Grenzen, Auswahlwerte, Zielbereiche |
@@ -237,7 +240,7 @@ class BlogApi
     /**
      * @param int $postId  Id des Beitrags
      */
-    #[ApiMethod('blog.post', 'Einen Beitrag lesen.')]
+    #[ApiMethod('blog.post', '#blog.api_post')]
     public function post(int $postId): array
     {
         $data = $this->blog->load($postId);
@@ -246,6 +249,13 @@ class BlogApi
                 'changed_at' => $this->context->isoTime($data['changed_at'])];
     }
 }
+```
+
+Die Texte stehen in `Modules/Blog/backend/lang/{sprache}.php`:
+
+```php
+'api_post' => 'Einen Beitrag lesen.',
+'api__post_id' => 'Beitrag (post_id)',
 ```
 
 Nach einer Änderung an `settings.php`: `camindo.php refresh`.
@@ -266,9 +276,18 @@ Regeln:
   JSON, Text als Text. In UTC gespeicherte Zeitpunkte als ISO 8601 mit Offset in der
   Zeitzone des Admins (`ApiContext::isoTime()`), Wandzeit (`datetime`) ohne Offset.
   Sprachen als Codes (`de_DE`, `ApiContext::languageId()` / `languageCode()`).
+* **Beschreibungen übersetzbar:** Die Beschreibung im Attribut ist ein Snippet
+  (`'#blog.api_publish'`), die Parameter stehen in den Snippets
+  `blog.api_publish__{parameter}` bzw. – für alle Methoden der Komponente gemeinsam –
+  `blog.api__{parameter}` (etwa `api__record_id`), am besten in `backend/lang/`. Fehlt
+  ein Snippet, gilt die `@param`-Zeile des Docblocks; ein Text statt eines Snippets im
+  Attribut bleibt unübersetzt.
 * **Schweregrad angeben:** `#[ApiMethod('blog.publish', '…', write: true, level:
   ApiMethod::LEVEL_CHANGE)]`. Ohne Angabe gilt `LEVEL_READ` – der Assistent führt die
   Methode dann ohne Rückfrage aus.
+* **Probelauf anbieten:** Ein Parameter `bool $simulate = false` (nur prüfen, nichts
+  ändern) macht die Bestätigung des Assistenten aussagekräftiger – er ruft die Methode
+  vorher mit `simulate` auf und zeigt das Ergebnis.
 * **Offene Masken beachten:** Wer einen Datensatz ohne Maske ändert, prüft mit
   `RecordService::loadForChange()` – bei einer noch offenen Maske desselben Admins
   (etwa im Chat mit einem LLM) antwortet die API mit `open_in_backend`, statt dessen
@@ -277,16 +296,24 @@ Regeln:
 ## Assistent (Zusatzmodul `camindo/module-ai`)
 
 Das Zusatzmodul Ai ist ein LLM-Chat im Seitenpanel des Backends. Das Modell arbeitet
-ausschließlich über die API: Jede Methode ist ein ***Werkzeug*** – Name mit `__` statt
-Punkt (`record__search`), Schema aus `system.describe` –, aufgerufen nach
+über die API: Jede Methode ist ein ***Werkzeug*** – Name mit `__` statt Punkt
+(`record__search`), Schema und englische Beschreibungen aus `Api::describe()` –,
+aufgerufen nach
 `ApiSession::attach('llm')` in der Backend-Session des Admins. Es sieht also nur, was
 der Admin sieht, und jede Änderung steht im Audit-Log unter dessen Namen mit der
 Herkunft `llm`. Ab Stufe 1 ([Schweregrad](#schweregrad)) führt der Assistent eine
-Methode erst nach Bestätigung durch den Admin aus.
+Methode erst nach Bestätigung durch den Admin aus; die Bestätigung zeigt den Datensatz
+(`record_id`), Vorher/Nachher der Felder aus `data` und – hat die Methode `simulate` –
+das Ergebnis eines Probelaufs. Außerhalb der API stehen zwei Werkzeuge der Oberfläche:
+`ui__views` listet die Backend-Ansichten, die der Admin öffnen darf (Kataloge
+`install/views.php`, [05](05-backend-development.md#ansichten-katalog-installviewsphp)),
+`ui__open` öffnet ihm eine davon oder direkt Detailansicht, gefilterte Liste und
+Eingabemaske eines Datensatzes als Layer; die Adresse baut der Server aus geprüften
+Angaben. Was sich über die API nicht erledigen lässt, öffnet der Assistent so und leitet
+den Admin an; Fragen zur Bedienung beantwortet er über `docs.search`/`docs.read`.
 
 Für eigene API-Methoden heißt das: Sie stehen dem Assistenten automatisch zur
-Verfügung – mit der Beschreibung aus `#[ApiMethod]` und den `@param`-Zeilen als
-Anleitung. Ein fehlender oder zu niedriger Schweregrad lässt ihn ohne Rückfrage
+Verfügung – mit ihrer (englischen) Beschreibung als Anleitung. Ein fehlender oder zu niedriger Schweregrad lässt ihn ohne Rückfrage
 handeln. Anbieter, Einstellungen und Aufbau beschreibt die Dokumentation des Moduls.
 
 ## Grenzen

@@ -10,6 +10,7 @@ Modules/Blog/                    (core modules: Core/Modules/{Name}/)
 ├── BlogBackend.php              backend logic: list(), info(), edit(), search()
 ├── install/
 │   ├── settings.php             module profile (chapter 08)
+│   ├── views.php                views for tools such as the AI assistant (below)
 │   ├── schema.sql               tables (CREATE TABLE IF NOT EXISTS)
 │   └── migrations/              version steps
 ├── lang/{locale}.php            snippets for backend AND frontend   (prefix 'blog')
@@ -478,9 +479,40 @@ access to `Area` (`RecordBatch::fulltextAllowed()`).
 6. Snippets `lang/en_US.php` (mandatory) and further languages; `module_label`,
    `module_description`.
 7. HTML templates in `backend/html/` – handlers only there or via `$backend->on()`.
+   Plus `install/views.php`: the views a tool may open (below).
 8. `php Core/cron/camindo.php component install {Name} --activate` – creates the
    tables, builds the component's caches and writes the runtime lists.
 9. Assign the module (and any extra rights) to the user groups.
+
+## View catalog (`install/views.php`)
+
+Which view scripts a tool may open for the admin as a layer – for example the assistant
+of the add-on module Ai ([16](16-api.md#assistant-add-on-module-camindomodule-ai)) –
+each component describes in `install/views.php`. `Camindo\Core\BackendViews` reads the
+catalogs of the active modules, shows only what the admin may open (`Access::script()`:
+module access, `script_access`, personal scripts) and builds the address only from the
+allowed parameters.
+
+```php
+<?php
+return [
+    'blog_list.php' => [
+        'description' => 'List of all blog posts with status; starting point to create a post.',
+    ],
+    'blog_edit.php' => [
+        'description' => 'Edit form of a post. function=create: new post; copy / delete with id.',
+        'params'      => ['id' => 'int', 'function' => ['create', 'copy', 'delete']],
+    ],
+];
+```
+
+* Only scripts that change nothing when opened: lists, detail views, forms that act only
+  when submitted. No actions (`*_run.php`, cache rebuilds …), no ajax scripts.
+* The description is English and written for a language model: what the view shows,
+  what it is for, what the parameters do.
+* Parameter types: `'int'` (positive integer), `'string'` (up to 200 characters) or a
+  list of allowed values; `BackendViews::url()` drops any other parameter.
+* No `refresh` needed – the file is read when required.
 
 ## Testing without a browser
 

@@ -118,12 +118,23 @@ the overview.
 | `record.restore` | `record_id` | back from the recycle bin, as in the recycle bin module |
 | `record.message` | `record_id`, `to` (id or name), `subject`, `body` | internal message, the record is linked |
 | `record.preview_url` | `record_id`, `language` | preview address – only after `attach()` |
+| `record.batch` | `area_id`, `mode` (`edit`, `move`, `delete`, `fulltext`), scope: `ids` \| `filter`/`filterop`/`filtermode` \| `all`; `data`, `relations`, `files` (edit), `target_area_id`, `mapping`, `auto_map` (move), `simulate`, `background` (`auto`, `yes`, `no`) | `total`, `done`, `failed`, `errors` per record – or `background.token`; extra right "batch processing" |
+| `record.export_fields` | `area_id`, `type` (`csv`, `docx`) | selectable field keys with preselection and subfields |
+| `record.export` | `area_id`, `type` (`csv`, `docx`, `xml`), scope `ids` or `filter` (otherwise all), `fields`, `languages` (CSV: codes; DOCX: [from, to]), `options` (`header`, `bom`, `separator`, `enclosure`, `eol`; XML: `files`), `background` | `zip`, `path`, `size`, `records`, `valid_until` – or `background.token`; rights as in the form |
+| `record.exports` | – | existing export files |
+| `system.processes`, `system.process`, `system.process_abort` | `token` | own background processes: `status` (`running`, `finished`, `timeout`, `failed`), `progress`, `message` |
 
 The parameters of `record.search` are those of `Cms::select()` ([04](04-select-and-filter.md));
 there is no `sql`, `request` or `debug`. The list returns the values in the short form of
 the backend list (text in the admin's locale, shortened) – `record.info` provides the
 complete values in neutral format. Without `language`, the backend's language applies
 (the admin's preferred language version, otherwise the primary language).
+
+Large amounts run as a ***background process*** as in the backend – from
+`admin.mass_delete_threshold` (batch) or `admin.export_background_threshold` (export),
+or with `background: yes`. The response then contains `background.token`;
+`system.process` returns the state, and the result also arrives as an internal message.
+In the audit log, a batch run carries the channel along (`llm-batch`, `scheduler-batch` …).
 
 ### Writing
 

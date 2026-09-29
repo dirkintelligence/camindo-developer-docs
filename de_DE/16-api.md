@@ -110,12 +110,54 @@ Beschreibungen aus den `@param`-Zeilen – brauchbar als Werkzeug-Definition fü
 | `record.search` | `area_id` (eine Id oder Liste, 0 = global), `filter`, `filterop`, `filtermode`, `sort`, `order`, `skip`, `limit`, `url`, `language`, `relation` + `src_id`/`dest_id` | Trefferliste wie die Backend-Liste: `columns`, `rows` (Werte als Text), `filter_text`, `paging` (`total`, `next_skip`) |
 | `record.info` | `record_id`, `tab` (`content`, `meta`, `history`, `fulltext`), `language` (Code, `all`), `fields`, `truncate` | Kopf (Bereich, Status, Zeiten, Sperre, `open_in_backend`, Rechte, Sprachen) und die Felder im neutralen Format; gekürzte Texte mit `truncated`, Verknüpfungen mit `total`/`more` |
 | `record.field_value` | `record_id`, `field`, `language`, `skip`, `limit` | voller Inhalt eines Feldes, Verknüpfungen seitenweise, eingebettete Inhalte (`link`) mit ihren Feldern |
+| `record.update` | `record_id`, `data`, `fields`, `relations`, `files`, `parent_id`, `previous_id`, `owner_id`, `unlock`, `simulate` | Auschecken, Ändern, Einchecken in einem Schritt; `record_id`, `simulated`, `record` (Kopfdaten) |
+| `record.create` | `area_id`, `data`, `relations`, `files`, `parent_id`, `previous_id`, `owner_id`, `simulate` | neuer Datensatz (nicht in abhängigen Bereichen) |
+| `record.copy` | `record_id`, `data`, `relations`, `files`, `simulate` | Kopie wie in der Maske (Dateien, eingebettete Inhalte, hinter dem Vorbild), mit Änderungen |
+| `record.move_options` | `record_id`, `target_area_id` | je Quellfeld: Inhalt vorhanden, passende Zielfelder, Vorauswahl |
+| `record.move` | `record_id`, `target_area_id`, `mapping`, `auto_map`, `unlock`, `simulate` | verwendete Zuordnung, `dropped` (Felder, deren Inhalt verworfen wird) |
+| `record.delete` | `record_id`, `with_childs`, `unlock` | Papierkorb (`deleted`) bzw. Hintergrundprozess (`background`) |
+| `record.restore` | `record_id` | aus dem Papierkorb zurück, wie im Modul Papierkorb |
+| `record.message` | `record_id`, `to` (Id oder Name), `subject`, `body` | interne Nachricht, der Datensatz ist verlinkt |
+| `record.preview_url` | `record_id`, `language` | Vorschau-Adresse – nur nach `attach()` |
 
 Die Parameter von `record.search` sind die von `Cms::select()` ([04](04-select-and-filter.md));
 `sql`, `request` und `debug` gibt es nicht. Die Liste liefert die Werte in der
 Kurzform der Backend-Liste (Text in Locale des Admins, gekürzt) – für die vollständigen
 Werte im neutralen Format ist `record.info` da. Ohne `language` gilt die Sprache des
 Backends (bevorzugte Sprachversion des Admins, sonst die Hauptsprache).
+
+### Schreiben
+
+Schreibende Methoden gehen denselben Weg wie die Eingabemaske (`RecordService`): Rechte
+der Gruppe, Bearbeitungssperre eines anderen Admins (`locked`, mit `unlock` übergehbar
+wie in der Maske), die eigene noch offene Maske (`open_in_backend` – die API verwirft
+deren Arbeitskopie nicht), Validierung nach den Felddefinitionen, Check-in in einer
+Transaktion. Mit `simulate` wird nur geprüft.
+
+```json
+{
+  "record_id": 5508,
+  "data":      {"title": {"en_EN": "Summer sale", "de_DE": "Sommerschlussverkauf"},
+                "online_at": "2026-10-01T10:00:00+02:00", "price": "19.90"},
+  "relations": {"tags": {"add": [3014], "remove": [3056]}, "categories": [2681]},
+  "files":     {"image": {"serverfile": "fotos/sale.jpg"},
+                "pdf":   {"content": "<Base64>", "filename": "flyer.pdf"},
+                "old":   null}
+}
+```
+
+* `data`: Werte im neutralen Format (`ApiValues::input()`), mehrsprachig als
+  `{Code: Wert}` – nur Sprachen mit Schreibrecht; ein einzelner Wert gilt der
+  Hauptsprache. Zeitpunkte mit oder ohne Offset (ohne: Zeitzone des Admins), Wandzeit
+  ohne Offset, Dezimalpunkt, Beträge als `"19.90"`.
+* `relations`: eine Liste ersetzt alle Verknüpfungen; `set`, `add`, `remove`, `order`
+  (nur Felder mit manueller Sortierung) lassen sich kombinieren.
+* `files`: `serverfile` (unter `var/upload`), `content` (Base64, höchstens
+  `api.base64_max_bytes`), `tmpfile` (unter `var/tmp`), `null` entfernt; mehrsprachig
+  `{Code: …}`. Eine Datei per URL holt die API bewusst nicht.
+* Baum und Reihenfolge über `parent_id` und `previous_id`, der Owner über `owner_id`
+  (Recht „Owner anpassen"). Eingebettete Inhalte (`link`) ändert man über ihre eigene
+  `record_id`.
 
 ## Kommandozeile
 

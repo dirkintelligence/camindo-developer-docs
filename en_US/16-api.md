@@ -109,12 +109,53 @@ the overview.
 | `record.search` | `area_id` (one id or a list, 0 = global), `filter`, `filterop`, `filtermode`, `sort`, `order`, `skip`, `limit`, `url`, `language`, `relation` + `src_id`/`dest_id` | result list like the backend list: `columns`, `rows` (values as text), `filter_text`, `paging` (`total`, `next_skip`) |
 | `record.info` | `record_id`, `tab` (`content`, `meta`, `history`, `fulltext`), `language` (code, `all`), `fields`, `truncate` | header (area, status, times, lock, `open_in_backend`, rights, languages) and the fields in neutral format; shortened texts with `truncated`, relations with `total`/`more` |
 | `record.field_value` | `record_id`, `field`, `language`, `skip`, `limit` | full content of a field, relations page by page, embedded content (`link`) with its fields |
+| `record.update` | `record_id`, `data`, `fields`, `relations`, `files`, `parent_id`, `previous_id`, `owner_id`, `unlock`, `simulate` | check out, change, check in in one step; `record_id`, `simulated`, `record` (header) |
+| `record.create` | `area_id`, `data`, `relations`, `files`, `parent_id`, `previous_id`, `owner_id`, `simulate` | new record (not in dependent areas) |
+| `record.copy` | `record_id`, `data`, `relations`, `files`, `simulate` | copy as in the form (files, embedded content, after the original), with changes |
+| `record.move_options` | `record_id`, `target_area_id` | per source field: has content, matching target fields, preselection |
+| `record.move` | `record_id`, `target_area_id`, `mapping`, `auto_map`, `unlock`, `simulate` | mapping used, `dropped` (fields whose content is discarded) |
+| `record.delete` | `record_id`, `with_childs`, `unlock` | recycle bin (`deleted`) or background process (`background`) |
+| `record.restore` | `record_id` | back from the recycle bin, as in the recycle bin module |
+| `record.message` | `record_id`, `to` (id or name), `subject`, `body` | internal message, the record is linked |
+| `record.preview_url` | `record_id`, `language` | preview address – only after `attach()` |
 
 The parameters of `record.search` are those of `Cms::select()` ([04](04-select-and-filter.md));
 there is no `sql`, `request` or `debug`. The list returns the values in the short form of
 the backend list (text in the admin's locale, shortened) – `record.info` provides the
 complete values in neutral format. Without `language`, the backend's language applies
 (the admin's preferred language version, otherwise the primary language).
+
+### Writing
+
+Writing methods take the same path as the edit form (`RecordService`): group rights,
+another admin's edit lock (`locked`, can be overridden with `unlock` as in the form), the
+admin's own still open form (`open_in_backend` – the API does not discard that working
+copy), validation against the field definitions, check-in in one transaction. With
+`simulate`, only the checks run.
+
+```json
+{
+  "record_id": 5508,
+  "data":      {"title": {"en_EN": "Summer sale", "de_DE": "Sommerschlussverkauf"},
+                "online_at": "2026-10-01T10:00:00+02:00", "price": "19.90"},
+  "relations": {"tags": {"add": [3014], "remove": [3056]}, "categories": [2681]},
+  "files":     {"image": {"serverfile": "fotos/sale.jpg"},
+                "pdf":   {"content": "<base64>", "filename": "flyer.pdf"},
+                "old":   null}
+}
+```
+
+* `data`: values in neutral format (`ApiValues::input()`), multilingual as
+  `{code: value}` – only languages with write permission; a single value applies to the
+  primary language. Points in time with or without offset (without: the admin's time
+  zone), wall time without offset, decimal point, amounts as `"19.90"`.
+* `relations`: a list replaces all relations; `set`, `add`, `remove`, `order` (only
+  fields with manual sorting) can be combined.
+* `files`: `serverfile` (below `var/upload`), `content` (base64, at most
+  `api.base64_max_bytes`), `tmpfile` (below `var/tmp`), `null` removes; multilingual
+  `{code: …}`. The API deliberately does not fetch files from a URL.
+* Tree and order via `parent_id` and `previous_id`, the owner via `owner_id` (right
+  "change owner"). Embedded content (`link`) is changed via its own `record_id`.
 
 ## Command line
 

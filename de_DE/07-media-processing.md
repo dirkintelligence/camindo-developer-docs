@@ -273,6 +273,23 @@ Die Zeitsteuerung steht in Cron-Syntax (Minute, Stunde, Tag, Monat, Jahr, Wochen
 startet jede fällige Aufgabe als eigenen Prozess und hält Ergebnis und Meldung in
 `last_*` fest.
 
+**Unter welchem Admin.** Jede Aufgabe hat einen Admin (`scheduler.admin_id`, Vorgabe der
+vom Installer angelegte Admin `scheduler`, `Installer::createSchedulerAdmin()`).
+`SchedulerRunner::run()` öffnet für ihn eine eigene Session – `ApiSession::runAs()`,
+Oberfläche `cli`, Kanal `scheduler` ([16](16-api.md)) – und schließt sie danach. Es
+gelten seine Gruppenrechte, das Audit-Log zeigt ihn mit der Herkunft `scheduler`. Ein
+`php`-Script bekommt die Session als Umgebungsvariable `CAMINDO_API_SESSION`:
+
+```php
+require '/pfad/zum/projekt/load_camindo.php';
+$app->get(\Camindo\Core\Api\ApiSession::class)->resume(getenv('CAMINDO_API_SESSION'), 'scheduler');
+$result = $app->get(\Camindo\Core\Api\Api::class)->call('record.search', ['area_id' => 8]);
+```
+
+Ein Template läuft im selben Prozess in dieser Session. Einem `url`-Aufruf wird die
+Session nie mitgegeben. Ohne gültigen Admin (gelöscht, gesperrt, Gruppe ohne `cli`,
+`Scheduler::adminError()`) scheitert der Lauf.
+
 **Typ `template`.** `Page::renderScheduled()` stellt die Umgebung eines Seitenaufrufs
 ohne Datensatz her: Instanz des Templates samt lesbaren Instanzen
 (`Cms::setInstanceAccess()`), Inhaltssprache aus `details.language_id` (0 =

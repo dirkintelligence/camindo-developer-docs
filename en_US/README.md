@@ -57,7 +57,7 @@ Parsedown, and jQuery and Bootstrap in the backend).
 | [13 – Security I: authentication, keys, audit](13-security-authentication.md) | Passwords, signatures, sessions, second factor, key rotation, audit log |
 | [14 – Security II: web](14-security-web.md) | CSRF, HTML filter, security headers, script policy, uploads, ImageMagick, backend domain |
 | [15 – Conventions](15-conventions.md) | Names, code style, SQL, languages, text direction, file permissions |
-| [16 – API](16-api.md) | The API as an interface: sessions, channels, calls, custom API methods, command line |
+| [16 – API](16-api.md) | The API as an interface: sessions, channels, calls, severity levels, custom API methods, command line, assistant (module Ai) |
 
 Newcomers are best served by reading 01 → 02 → 03 → 05; if you only want to write a
 media processor or an extension, read 01 and then 07 or 08.

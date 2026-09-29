@@ -137,6 +137,21 @@ Große Mengen laufen wie im Backend als ***Hintergrundprozess*** – ab
 liefert `system.process`, das Ergebnis kommt zusätzlich als interne Nachricht. Im
 Audit-Log trägt ein Stapellauf den Kanal mit (`llm-batch`, `scheduler-batch` …).
 
+### Schweregrad
+
+Jede Methode trägt einen ***Schweregrad*** (`ApiMethod::LEVEL_*`, in `system.methods` und
+`system.describe` als `level`): wie leicht sich ihre Wirkung rückgängig machen lässt.
+Danach entscheidet der [Assistent](#assistent-modul-ai), ob er vor dem Ausführen nachfragt.
+
+| Stufe | Konstante | Methoden |
+|---|---|---|
+| 0 | `LEVEL_READ` | Lesen, Anlegen, Kopieren, Exportieren – alle nicht genannten |
+| 1 | `LEVEL_CHANGE` | `record.update`, `record.restore`, `record.message`, `system.process_abort` |
+| 2 | `LEVEL_DELETE` | `record.delete` (Papierkorb) |
+| 3 | `LEVEL_MOVE` | `record.move` – nur über einen Umweg rückgängig zu machen |
+| 4 | `LEVEL_MASS` | `record.batch` |
+| 5 | `LEVEL_ADMIN` | administrative Änderungen (Bereiche, Felder, Status, Rechte) – noch keine Methode |
+
 ### Schreiben
 
 Schreibende Methoden gehen denselben Weg wie die Eingabemaske (`RecordService`): Rechte
@@ -251,10 +266,65 @@ Regeln:
   JSON, Text als Text. In UTC gespeicherte Zeitpunkte als ISO 8601 mit Offset in der
   Zeitzone des Admins (`ApiContext::isoTime()`), Wandzeit (`datetime`) ohne Offset.
   Sprachen als Codes (`de_DE`, `ApiContext::languageId()` / `languageCode()`).
+* **Schweregrad angeben:** `#[ApiMethod('blog.publish', '…', write: true, level:
+  ApiMethod::LEVEL_CHANGE)]`. Ohne Angabe gilt `LEVEL_READ` – der Assistent führt die
+  Methode dann ohne Rückfrage aus.
 * **Offene Masken beachten:** Wer einen Datensatz ohne Maske ändert, prüft mit
   `RecordService::loadForChange()` – bei einer noch offenen Maske desselben Admins
   (etwa im Chat mit einem LLM) antwortet die API mit `open_in_backend`, statt dessen
   Arbeitskopie zu verwerfen.
+
+## Assistent (Modul Ai)
+
+Das Modul Ai (`Core/Modules/Ai/`) ist ein LLM-Chat im Seitenpanel des Backends
+(Strg+H). Das Modell arbeitet ausschließlich über die API: Jede Methode ist ein
+***Werkzeug*** – Name mit `__` statt Punkt (`record__search`), Schema aus
+`system.describe` –, aufgerufen nach `ApiSession::attach('llm')` in der Backend-Session
+des Admins. Das Modell sieht also nur, was der Admin sieht, und jede Änderung steht im
+Audit-Log unter seinem Namen mit der Herkunft `llm`. Wer das Modul nutzen darf, regelt
+das Modulrecht der Gruppe.
+
+| Klasse | Aufgabe |
+|---|---|
+| `AiAssistant` | Werkzeug-Schleife: Anfrage an den Anbieter, Werkzeug-Aufrufe ausführen, Ergebnisse gesammelt zurückgeben – bis zur Antwort ohne Werkzeug, zur nächsten Bestätigung oder `ai.max_rounds` |
+| `AiChat` | laufender Chat je Admin in `ai_chat`, verschlüsselt (`Crypt`); nach `ai.chat_days` ohne Änderung gelöscht |
+| `AiSettings` | Konfiguration `ai.*`, darüber die Einstellungen des Superusers (Tabelle `system`, Schlüssel `ai_settings`); Anbieter, Schlüssel und Adresse nur aus der Konfiguration |
+| `AiProviders` | wählt den Anbieter nach `ai.provider` |
+| `Provider\ProviderInterface` | austauschbarer Anbieter: `send($system, $messages, $tools)` → `ProviderResponse` |
+| `AiBackend` | Startseite, Chat, Bestätigung (`backend-ai.js`: `cApp.ai`) |
+
+**Bestätigung.** Werkzeuge ab Stufe 1 führt die Schleife nicht von sich aus aus: Sie
+hält an (`pending`), und der Admin erlaubt die Aktion einmal, erlaubt – bis zum Ende des
+Chats – alle Aktionen derselben Stufe (`approved_levels`) oder lehnt ab; dann bekommt
+das Modell ein Fehlerergebnis. Stufen über `ai.max_level` (bzw. der Einstellung des
+Superusers) erscheinen gar nicht erst als Werkzeug. Die Bestätigung ist eine Bremse
+gegen Fehlgriffe und gegen Anweisungen, die in Inhalten stecken (Prompt-Injection) –
+die Rechtegrenze zieht weiterhin die Gruppe des Admins.
+
+**Anbieter.** Mitgeliefert sind `anthropic` (offizielles PHP-SDK `anthropic-ai/sdk`) und
+`mock` für Tests (vorbereitete Antworten aus `ai.mock_file`). Ein eigener Anbieter setzt
+`ProviderInterface` um und steht als Klassenname in `ai.provider`; sein Konstruktor
+bekommt `AiSettings::all()`. Der Verlauf ist neutral (Blöcke `text`, `tool_use`,
+`tool_result`); jede Antwort trägt zusätzlich `raw` in der Form des Anbieters, die
+derselbe Anbieter im nächsten Aufruf unverändert wiedergibt – etwa Denkblöcke mit
+Signatur.
+
+| Schlüssel | Vorgabe | Bedeutung |
+|---|---|---|
+| `ai.provider` | `'anthropic'` | Name aus `AiProviders::PROVIDERS` oder Klassenname |
+| `ai.api_key` | `''` | Schlüssel des Anbieters – nur in der Konfiguration; leer: Assistent nicht verfügbar |
+| `ai.model`, `ai.effort`, `ai.max_tokens` | `'claude-opus-5-5'`, `'medium'`, `16000` | Modell, Denkaufwand, Höchstlänge einer Antwort |
+| `ai.fallbacks` | `'default'` | Anthropic: bei einer Ablehnung auf ein anderes Modell ausweichen (`''` = aus) |
+| `ai.base_url`, `ai.timeout` | `''`, `300` | andere Adresse (Proxy), Zeitlimit je Anfrage |
+| `ai.max_rounds` | `12` | Anfragen an den Anbieter je Nachricht des Admins |
+| `ai.max_level` | `5` | höchste Stufe, die der Assistent überhaupt ausführen darf |
+| `ai.chat_days` | `30` | Aufbewahrung der Chats |
+
+**Fremder Text.** Was das Modell schreibt, stammt zum Teil aus Inhalten Dritter.
+Antworten laufen durch `Markdown` (Safe Mode) und `HtmlSanitizer`, alles andere durch
+`htmlspecialchars()`; `{` wird maskiert, damit `Backend::template()` darin keine
+Snippet-Platzhalter auflöst. Werkzeug-Ergebnisse gehen gekürzt (60 000 Zeichen) an das
+Modell.
 
 ## Grenzen
 

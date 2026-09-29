@@ -136,6 +136,21 @@ or with `background: yes`. The response then contains `background.token`;
 `system.process` returns the state, and the result also arrives as an internal message.
 In the audit log, a batch run carries the channel along (`llm-batch`, `scheduler-batch` …).
 
+### Severity
+
+Every method carries a ***severity*** (`ApiMethod::LEVEL_*`, returned as `level` by
+`system.methods` and `system.describe`): how easily its effect can be undone. The
+[assistant](#assistant-module-ai) uses it to decide whether to ask before acting.
+
+| Level | Constant | Methods |
+|---|---|---|
+| 0 | `LEVEL_READ` | read, create, copy, export – all not listed |
+| 1 | `LEVEL_CHANGE` | `record.update`, `record.restore`, `record.message`, `system.process_abort` |
+| 2 | `LEVEL_DELETE` | `record.delete` (trash) |
+| 3 | `LEVEL_MOVE` | `record.move` – can only be undone via a detour |
+| 4 | `LEVEL_MASS` | `record.batch` |
+| 5 | `LEVEL_ADMIN` | administrative changes (areas, fields, status, rights) – no method yet |
+
 ### Writing
 
 Writing methods take the same path as the edit form (`RecordService`): group rights,
@@ -247,10 +262,64 @@ Rules:
   text as text. Points in time stored in UTC as ISO 8601 with offset in the admin's time
   zone (`ApiContext::isoTime()`), wall time (`datetime`) without offset. Languages as
   codes (`de_DE`, `ApiContext::languageId()` / `languageCode()`).
+* **Declare the severity:** `#[ApiMethod('blog.publish', '…', write: true, level:
+  ApiMethod::LEVEL_CHANGE)]`. Without it, `LEVEL_READ` applies – the assistant then runs
+  the method without asking.
 * **Respect open forms:** code that changes a record without a form checks with
   `RecordService::loadForChange()` – if the same admin still has a form open (for
   example while chatting with an LLM), the API answers `open_in_backend` instead of
   discarding that working copy.
+
+## Assistant (module Ai)
+
+The module Ai (`Core/Modules/Ai/`) is an LLM chat in the backend's side panel (Ctrl+H).
+The model works exclusively through the API: every method is a ***tool*** – name with
+`__` instead of the dot (`record__search`), schema from `system.describe` – called after
+`ApiSession::attach('llm')` in the admin's backend session. So the model sees only what
+the admin sees, and every change appears in the audit log under the admin's name with
+the origin `llm`. Who may use the module is governed by the group's module right.
+
+| Class | Purpose |
+|---|---|
+| `AiAssistant` | tool loop: request to the provider, run the tool calls, return the results together – until an answer without tools, the next confirmation or `ai.max_rounds` |
+| `AiChat` | current chat per admin in `ai_chat`, encrypted (`Crypt`); deleted after `ai.chat_days` without changes |
+| `AiSettings` | configuration `ai.*`, overlaid by the superuser's settings (table `system`, key `ai_settings`); provider, key and address only from the configuration |
+| `AiProviders` | picks the provider by `ai.provider` |
+| `Provider\ProviderInterface` | exchangeable provider: `send($system, $messages, $tools)` → `ProviderResponse` |
+| `AiBackend` | start page, chat, confirmation (`backend-ai.js`: `cApp.ai`) |
+
+**Confirmation.** The loop does not run tools from level 1 on by itself: it pauses
+(`pending`), and the admin allows the action once, allows all actions of the same level
+until the end of the chat (`approved_levels`), or declines – the model then receives an
+error result. Levels above `ai.max_level` (or the superuser's setting) are not even
+offered as tools. The confirmation is a brake against mistakes and against instructions
+hidden in content (prompt injection) – the permission boundary is still drawn by the
+admin's group.
+
+**Providers.** Included are `anthropic` (official PHP SDK `anthropic-ai/sdk`) and `mock`
+for tests (prepared answers from `ai.mock_file`). A custom provider implements
+`ProviderInterface` and is set as a class name in `ai.provider`; its constructor receives
+`AiSettings::all()`. The history is neutral (blocks `text`, `tool_use`, `tool_result`);
+every answer also carries `raw` in the provider's own format, which the same provider
+passes back unchanged in the next call – thinking blocks with their signature, for
+example.
+
+| Key | Default | Meaning |
+|---|---|---|
+| `ai.provider` | `'anthropic'` | name from `AiProviders::PROVIDERS` or a class name |
+| `ai.api_key` | `''` | the provider's key – only in the configuration; empty: assistant not available |
+| `ai.model`, `ai.effort`, `ai.max_tokens` | `'claude-opus-5-5'`, `'medium'`, `16000` | model, effort, maximum length of an answer |
+| `ai.fallbacks` | `'default'` | Anthropic: fall back to another model on a refusal (`''` = off) |
+| `ai.base_url`, `ai.timeout` | `''`, `300` | other address (proxy), time limit per request |
+| `ai.max_rounds` | `12` | requests to the provider per message of the admin |
+| `ai.max_level` | `5` | highest level the assistant may run at all |
+| `ai.chat_days` | `30` | retention of chats |
+
+**Foreign text.** What the model writes partly comes from third-party content. Answers
+go through `Markdown` (safe mode) and `HtmlSanitizer`, everything else through
+`htmlspecialchars()`; `{` is masked so that `Backend::template()` does not resolve
+snippet placeholders in it. Tool results are passed to the model shortened (60,000
+characters).
 
 ## Limits
 

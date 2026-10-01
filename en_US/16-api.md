@@ -2,9 +2,9 @@
 
 The API is **another interface** to the backend – for programs, the command line, the
 scheduler, custom tools and an LLM chat. It has no users and no permission model of its
-own: the one logged in is always an administrator, and the rights of their user group
+own: the one logged in is always a user, and the rights of their user group
 apply ([11](11-permissions.md)). What the API does shows up in the audit log as an
-action of this administrator.
+action of this user.
 
 Classes: `Camindo\Core\Api\` (directory `Core/src/Api/`).
 
@@ -20,17 +20,17 @@ Classes: `Camindo\Core\Api\` (directory `Core/src/Api/`).
 
 ## Interfaces and channels
 
-An ***interface*** is the way an admin logs in: `backend`, `cli` (command line), `php`
-(PHP API). Which of them a group may use is set by the superuser in the group
+An ***interface*** is the way a user logs in: `backend`, `cli` (command line), `php`
+(PHP API). Which of them a user group may use is set by the superuser in the user group
 (`group.details.interfaces`, without it only `backend`). Every session belongs to exactly
 one interface ([13](13-security-authentication.md#sessions-and-cookies)).
 
 The ***channel*** says who is working through the session. It appears in the audit log
-as the origin (`AuditLog::setContext()`); the admin remains the actor.
+as the origin (`AuditLog::setContext()`); the user remains the actor.
 
 | Channel | Who |
 |---|---|
-| `llm` | an LLM in the backend chat, in the admin's session |
+| `llm` | an LLM in the backend chat, in the user's session |
 | `tool` | a custom tool running from a backend request |
 | `scheduler` | a scheduler task |
 | `cli`, `php` | the interface itself |
@@ -44,14 +44,14 @@ as the origin (`AuditLog::setContext()`); the admin remains the actor.
 | `attach($channel)` | `backend` | no new one: works along in the loaded backend session (LLM chat, custom tool) |
 | `resume($sessionId, $channel)` | `cli`, `php` | resumes an existing session in another process or request |
 | `logout()` | – | own session: discard working copies, delete the row; after `attach()` only end working along |
-| `whoami()` | – | admin, group, interface, channel, module rights, instances with languages (codes) and read/write permission |
+| `whoami()` | – | user, user group, interface, channel, module rights, instances with languages (codes) and read/write permission |
 
 Own sessions (`cli`, `php`) expire after `api.max_inactive_sec` of inactivity and at the
 latest at the maximum lifetime (`$maxLifetime`, capped by `api.max_lifetime`). They have
 no cookie and no login device. Renewing the password and setting up TOTP only work in the
 backend – until then `login()` refuses. Passkeys cannot be confirmed via the API.
 
-With `attach()` the API sees exactly what the admin sees and leaves the admin's traces.
+With `attach()` the API sees exactly what the user sees and leaves the user's traces.
 Only then are there preview links – they depend on a backend session
 ([14](14-security-web.md#fixed-backend-domain)).
 
@@ -77,12 +77,12 @@ left open is rolled back.
 
 | Error code | Meaning |
 |---|---|
-| `not_logged_in` | no valid session, or the group may not (or no longer) use the interface |
+| `not_logged_in` | no valid session, or the user group may not (or no longer) use the interface |
 | `second_factor` | login still needs the code |
-| `access_denied` | the group's rights are not sufficient |
+| `access_denied` | the user group's rights are not sufficient |
 | `not_found` | object not found |
-| `locked` | another admin is editing the record |
-| `open_in_backend` | the admin still has the record open in an edit form |
+| `locked` | another user is editing the record |
+| `open_in_backend` | the user still has the record open in an edit form |
 | `validation` | validation failed – details in `errors` |
 | `invalid_param` | unknown method or parameter |
 | `internal` | unexpected error |
@@ -92,7 +92,7 @@ left open is rolled back.
 become field and language code).
 
 `system.describe` returns a **JSON schema** of the parameters for each method, with
-descriptions – usable as a tool definition for an LLM. The texts appear in the admin's
+descriptions – usable as a tool definition for an LLM. The texts appear in the user's
 language; `Api::describe($method, $lang)` returns them in another backend language (the
 assistant uses `en_US`).
 
@@ -103,14 +103,14 @@ the overview.
 
 | Method | Parameters (selection) | Result |
 |---|---|---|
-| `system.whoami` | – | admin, group, interface, channel, module rights, instances with languages |
+| `system.whoami` | – | user, user group, interface, channel, module rights, instances with languages |
 | `system.methods`, `system.describe` | `method` | directory, JSON schema |
 | `docs.search`, `docs.read` | `query`, `book`, `language`, `limit` or `page`, `anchor` | handbook sections by relevance (page, anchor, excerpt); a page or section as Markdown |
-| `area.list` | `instance_id`, `types` | readable content areas with number of records and the group's rights |
+| `area.list` | `instance_id`, `types` | readable content areas with number of records and the user group's rights |
 | `area.info` | `area_id` | instance, languages, default and sort field, tree, slug prefix, rights |
 | `area.fields` | `area_id`, `with_meta` | input fields: type, multilingual, required, limits, options, target areas |
 | `record.search` | `area_id` (one id or a list, 0 = global), `filter`, `filterop`, `filtermode`, `sort`, `order`, `skip`, `limit`, `url`, `language`, `relation` + `src_id`/`dest_id` | result list like the backend list: `columns`, `rows` (values as text), `filter_text`, `paging` (`total`, `next_skip`) |
-| `record.info` | `record_id`, `tab` (`content`, `meta`, `history`, `fulltext`), `language` (code, `all`), `fields`, `truncate` | header (area, status, times, lock, `open_in_backend`, rights, languages) and the fields in neutral format; shortened texts with `truncated`, relations with `total`/`more` |
+| `record.info` | `record_id`, `tab` (`content`, `meta`, `history`, `fulltext`), `language` (code, `all`), `fields`, `truncate` | header (area, status, times, lock, `open_in_backend`, rights, languages) and the fields in neutral format; shortened texts with `truncated`, relations with `total`/`more`; `history` = the last 20 entries (more: `audit.history`) |
 | `record.field_value` | `record_id`, `field`, `language`, `skip`, `limit` | full content of a field, relations page by page, embedded content (`link`) with its fields |
 | `record.update` | `record_id`, `data`, `fields`, `relations`, `files`, `parent_id`, `previous_id`, `owner_id`, `unlock`, `simulate` | check out, change, check in in one step; `record_id`, `simulated`, `record` (header) |
 | `record.create` | `area_id`, `data`, `relations`, `files`, `parent_id`, `previous_id`, `owner_id`, `simulate` | new record (not in dependent areas) |
@@ -126,12 +126,33 @@ the overview.
 | `record.export` | `area_id`, `type` (`csv`, `docx`, `xml`), scope `ids` or `filter` (otherwise all), `fields`, `languages` (CSV: codes; DOCX: [from, to]), `options` (`header`, `bom`, `separator`, `enclosure`, `eol`; XML: `files`), `background` | `zip`, `path`, `size`, `records`, `valid_until` – or `background.token`; rights as in the form |
 | `record.exports` | – | existing export files |
 | `system.processes`, `system.process`, `system.process_abort` | `token` | own background processes: `status` (`running`, `finished`, `timeout`, `failed`), `progress`, `message` |
+| `area.settings`, `area.update` | `area_id`, `with_schema` or `data`, `previous_id`, `simulate` | read and change all settings of an area or folder (`values`, `schema`) – module Structure |
+| `area.create`, `area.copy`, `area.blueprints` | `data`, `blueprint`, `previous_id`, `simulate` or `area_id`, `data` or `type` | create (also from a blueprint, with its fields), copy (settings, rights, fields), blueprints of a type |
+| `area.access`, `area.access_update` | `area_id`, `access` (group_id => rights), `simulate` | read and set area rights per user group |
+| `field.types`, `field.info`, `field.create`, `field.update`, `field.convert` | `area_id`, `type`, `data`, `source_fields`, `remove_links`, `to_type`, `to_multilingual`, `simulate` | field types with display types and flags; read, create, change a field (like the form), convert type or multilingualism (`lossy`) |
+| `language.*`, `status.*`, `instance.*` | `id`, `data`, `with_schema`, `simulate` | languages (list, info, create, update), status (list, create, update), instances (list, info, update) |
+| `converter.*` | `processor`, `id`, `data`, `simulate` | processors (compact list, settings per processor via `processor_info`); list converters (compact: label, processor, target size), read, create, change |
+| `scheduler.*` | `type`, `id`, `data`, `simulate` | read, create, change tasks (without password); `scheduler.run` starts a run (`token`) |
+| `template.*` | `area_id`, `id`, `data`, `simulate` | template areas; read templates (with code), create, change – trial run with `compile_errors` |
+| `audit.search` | `action`, `object_type`, `object_id`, `area_id`, `admin_id`, `origin`, `from`, `to` (Y-m-d or Y-m-d H:i, time zone of the user; `to` inclusive), `search`, `field`, `oldest_first`, `skip`, `limit` | entries without values (`fields` = changed fields), `total`, `next_skip`; for records and areas the current `state` (`active`, `trash`, `purged`) |
+| `audit.history` | `object_id`, `object_type` (default `record`), `oldest_first` (default true), `skip`, `limit`, `truncate`, `verify` | complete history with before/after (`AuditDiff::plainChanges()`), also of deleted and purged records; `object.state` with `deleted_at`, `expires_at`, `restorable`, `area_in_trash`; `verify` checks the hash chain (superusers) |
+| `trash.list` | `all` (superusers), `search`, `area_id`, `limit` | recycle bin like the module (roots of each delete operation): label, area, `deleted_at`, `deleted_by`, `children`, `expires_at`; superusers also get deleted areas – restore with `record.restore` |
+
+**Audit log and recycle bin:** for superusers `audit.*` (module Audit, `AuditApi`)
+checks the same script as the interface (`Access::script('Audit', 'index.php')`) and shows
+everything including IP addresses. Everyone else sees – as in the "Changes" tab – only
+entries about records in readable areas; what counts is the `area_id` of the audit row
+(`AuditLog::search()` with the restrictions `object_types`/`area_ids`), so the check still
+applies after deletion. `audit.history` does not load the record but reads the log
+(`AuditLog::historyPage()`, only the pages of the file it needs). `trash.list`
+(`TrashApi`) lists like `Trash::records()`: without superuser rights only one's own
+deletions from readable areas.
 
 The parameters of `record.search` are those of `Cms::select()` ([04](04-select-and-filter.md));
 there is no `sql`, `request` or `debug`. The list returns the values in the short form of
-the backend list (text in the admin's locale, shortened) – `record.info` provides the
+the backend list (text in the user's locale, shortened) – `record.info` provides the
 complete values in neutral format. Without `language`, the backend's language applies
-(the admin's preferred language version, otherwise the primary language).
+(the user's preferred language version, otherwise the primary language).
 
 Large amounts run as a ***background process*** as in the backend – from
 `admin.mass_delete_threshold` (batch) or `admin.export_background_threshold` (export),
@@ -148,17 +169,17 @@ Every method carries a ***severity*** (`ApiMethod::LEVEL_*`, returned as `level`
 | Level | Constant | Methods |
 |---|---|---|
 | 0 | `LEVEL_READ` | read, create, copy, export – all not listed |
-| 1 | `LEVEL_CHANGE` | `record.update`, `record.restore`, `record.message`, `system.process_abort` |
+| 1 | `LEVEL_CHANGE` | `record.update`, `record.restore`, `record.message`, `system.process_abort`, `scheduler.run` |
 | 2 | `LEVEL_DELETE` | `record.delete` (trash) |
 | 3 | `LEVEL_MOVE` | `record.move` – can only be undone via a detour |
 | 4 | `LEVEL_MASS` | `record.batch` |
-| 5 | `LEVEL_ADMIN` | administrative changes (areas, fields, status, rights) – no method yet |
+| 5 | `LEVEL_ADMIN` | creating and changing in administration: `area.create/update/copy/access_update`, `field.create/update/convert`, `language.create/update`, `status.create/update`, `instance.update`, `converter.create/update`, `scheduler.create/update`, `template.create/update` |
 
 ### Writing
 
-Writing methods take the same path as the edit form (`RecordService`): group rights,
-another admin's edit lock (`locked`, can be overridden with `unlock` as in the form), the
-admin's own still open form (`open_in_backend` – the API does not discard that working
+Writing methods take the same path as the edit form (`RecordService`): user group rights,
+another user's edit lock (`locked`, can be overridden with `unlock` as in the form), the
+user's own still open form (`open_in_backend` – the API does not discard that working
 copy), validation against the field definitions, check-in in one transaction. With
 `simulate`, only the checks run.
 
@@ -176,7 +197,7 @@ copy), validation against the field definitions, check-in in one transaction. Wi
 
 * `data`: values in neutral format (`ApiValues::input()`), multilingual as
   `{code: value}` – only languages with write permission; a single value applies to the
-  primary language. Points in time with or without offset (without: the admin's time
+  primary language. Points in time with or without offset (without: the user's time
   zone), wall time without offset, decimal point, amounts as `"19.90"`.
 * `relations`: a list replaces all relations; `set`, `add`, `remove`, `order` (only
   fields with manual sorting) can be combined.
@@ -196,7 +217,7 @@ if ($result['ok']) foreach ($result['data']['rows'] as $row) { … }
 `Cms::api()` uses the running API session if there is one (scheduler, CLI, PHP API).
 Otherwise the call works along in the loaded backend session – channel `tool`, detached
 again afterwards: a trigger template running on save in the backend thus acts as the
-admin who saves. Without an admin session (frontend), the API answers `not_logged_in`. A
+user who saves. Without a user session (frontend), the API answers `not_logged_in`. A
 scheduler script (type `php`) takes the session from `CAMINDO_API_SESSION`
 ([07](07-media-processing.md#scheduler-module-scheduler)).
 
@@ -213,7 +234,7 @@ php Core/cron/camindo.php api call METHOD --params-file=params.json
 php Core/cron/camindo.php api logout
 ```
 
-Output is JSON; the exit code is 1 if the API reports an error. The admin's group needs
+Output is JSON; the exit code is 1 if the API reports an error. The user group of the user needs
 the interface "command line".
 
 ## Custom API methods
@@ -265,11 +286,11 @@ Rules:
   ([05](05-backend-development.md#structure-of-a-module)). The API class checks
   parameters and translates results and errors.
 * **Rights as in the backend** – via `Access` and the dataset classes; `Cms::select()`
-  restricts queries to the group's instances and areas anyway. Pass parameters on to
+  restricts queries to the user group's instances and areas anyway. Pass parameters on to
   `select()` only via a whitelist: never `sql`, `request` or `debug`.
 * **Throw errors** (`ApiException`), don't return them; notes via `ApiContext::warn()`.
 * **Neutral values:** integers without separators, decimals with a point, JSON as JSON,
-  text as text. Points in time stored in UTC as ISO 8601 with offset in the admin's time
+  text as text. Points in time stored in UTC as ISO 8601 with offset in the user's time
   zone (`ApiContext::isoTime()`), wall time (`datetime`) without offset. Languages as
   codes (`de_DE`, `ApiContext::languageId()` / `languageCode()`).
 * **Translatable descriptions:** the description in the attribute is a snippet
@@ -285,9 +306,48 @@ Rules:
   nothing) makes the assistant's confirmation more meaningful – it calls the method with
   `simulate` first and shows the result.
 * **Respect open forms:** code that changes a record without a form checks with
-  `RecordService::loadForChange()` – if the same admin still has a form open (for
+  `RecordService::loadForChange()` – if the same user still has a form open (for
   example while chatting with an LLM), the API answers `open_in_backend` instead of
   discarding that working copy.
+
+### Configuration datasets: `DatasetApi`
+
+For tables such as language, status, instance, converter, scheduler or template there is
+a base class: `Camindo\Core\Api\DatasetApi` provides list, detail, create and change
+via `DatasetWriter`; the subclass defines dataset, scripts and fields and declares the
+methods (the attribute carries the name):
+
+```php
+class StatusApi extends DatasetApi
+{
+    protected const MODULE  = 'Status';
+    protected const SCRIPTS = ['list' => 'status_list.php', 'info' => 'status_info.php', 'edit' => 'status_edit.php'];
+    protected const FIELDS  = ['label', 'icon', 'color_class', 'position'];
+
+    public function __construct(Status $status, DatasetWriter $writer) { parent::__construct($status, $writer); }
+
+    #[ApiMethod('status.create', '#status.api_create', write: true, level: ApiMethod::LEVEL_ADMIN)]
+    public function create(array $data, bool $simulate = false): array { return $this->apiCreate($data, $simulate); }
+}
+```
+
+* **Rights like the interface:** `DatasetWriter::requireScript()` checks the script that
+  does the same task in the backend (`Access::script()`: module access, additional rights).
+* **Values** in the neutral format; JSON subfields as an object (`{"details": {"width": 800}}`)
+  or with a dot – they are merged with the stored JSON, an unknown subfield is rejected.
+  So are fields outside `WRITABLE` – unless they carry the value they already have: the
+  values from `x.info` may come back unchanged.
+* **Read-only fields:** what `FIELDS` shows but cannot be written carries `readonly: true`
+  in the `schema`; `CREATE_ONLY` (writable only when creating, e.g. the type of an area)
+  gives `create_only: true`. `HINTS` (field => hint) explains in the error message where
+  the value comes from (`field "type" is read-only here (derived from the processor) -
+  omit it`); an unknown field reports `unknown field`.
+* **Trial run:** `simulate` calls `Dataset::check()` ([03](03-dataset-api.md#checkarray-fields-array-data-bool)) –
+  the same checks as `save()`, without writing and without `hookOnSaved()`.
+* **More than `save()`:** whatever the interface does in addition belongs in a service
+  both use – e.g. `AreaService` (create from blueprint, copy) or
+  `SchedulerRunner::startNow()`. Answers: `items`/`values`, on request `schema` (label,
+  type, required, limits, options – the instructions for an LLM).
 
 ## Assistant (add-on module `camindo/module-ai`)
 
@@ -295,21 +355,34 @@ The add-on module Ai is an LLM chat in the backend's side panel. The model works
 through the API: every method is a ***tool*** – name with `__` instead of the dot
 (`record__search`), schema and English descriptions from `Api::describe()` – called
 after
-`ApiSession::attach('llm')` in the admin's backend session. So it sees only what the
-admin sees, and every change appears in the audit log under the admin's name with the
+`ApiSession::attach('llm')` in the user's backend session. So it sees only what the
+user sees, and every change appears in the audit log under the user's name with the
 origin `llm`. From level 1 on ([severity](#severity)), the assistant runs a method only
-after the admin has confirmed it; the confirmation shows the record (`record_id`),
+after the user has confirmed it; the confirmation shows the record (`record_id`),
 before/after of the fields in `data` and – if the method has `simulate` – the result of
-a trial run. Outside the API there are two UI tools: `ui__views` lists the
-backend views the admin may open (catalogs `install/views.php`,
+a trial run. If the trial run fails, the assistant does not ask: the model gets the
+error as the result right away. Results of create and update calls (`id`, `simulated`,
+`fields`, `values`) are passed on in short form – instead of `values` only
+`stored_differently` with the values that were stored otherwise than sent. Outside the
+API there are two UI tools: `ui__views` lists the
+backend views the user may open (catalogs `install/views.php`,
 [05](05-backend-development.md#view-catalog-installviewsphp)), `ui__open` opens one of
 them – or directly a record's detail view, a filtered list or an edit form – as a layer;
 the server builds the address from checked values. What cannot be done through the API
-the assistant opens this way and guides the admin; questions about using the system it
+the assistant opens this way and guides the user; questions about using the system it
 answers via `docs.search`/`docs.read`.
 
+Only a basic set is loaded at the start (search, read and change records; areas and
+fields; handbooks; user interface). All other methods appear with their name and the
+***first sentence of their description*** in the catalog of the tool `tools__load`; the
+model loads them when needed, the result refers to them (Anthropic: `defer_loading` and
+`tool_reference` – the start of the request stays the same, the prompt cache holds).
+
 For custom API methods this means: they are available to the assistant automatically –
-with their (English) description as instructions. A
+with their (English) description as instructions. The first sentence alone must say what
+the method is for; lists should be compact (like the list in the backend) and leave
+details to a method of their own – every answer is sent to the model again with each
+further request. A
 missing or too low severity lets it act without asking. Providers, settings and
 structure are described in the module's documentation.
 

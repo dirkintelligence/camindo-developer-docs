@@ -1,36 +1,36 @@
 # 11 – Rechte
 
-Rechte im Backend hängen an ***Benutzergruppen*** (`group`). Jeder Administrator gehört
-genau einer Gruppe. Die Frontend-Community hat ein eigenes Rechtemodell
+Rechte im Backend hängen an ***Benutzergruppen*** (`group`). Jeder Benutzer gehört
+genau einer Benutzergruppe. Die Frontend-Community hat ein eigenes Rechtemodell
 ([12](12-community.md)).
 
 ## Das System in Kürze
 
 | Ebene | Gepflegt in | Recht |
 |---|---|---|
-| Oberfläche | Gruppe → Formular | Backend, Kommandozeile (`cli`), PHP-API (`php`) – worüber sich Admins der Gruppe anmelden dürfen |
-| Modul | Gruppe → Formular | Zugriff ja/nein je gelistetem Modul, darunter die **Zusatzrechte** des Moduls |
+| Oberfläche | Benutzergruppe → Formular | Backend, Kommandozeile (`cli`), PHP-API (`php`) – worüber sich Benutzer der Benutzergruppe anmelden dürfen |
+| Modul | Benutzergruppe → Formular | Zugriff ja/nein je gelistetem Modul, darunter die **Zusatzrechte** des Moduls |
 | Instanz | dito | zugewiesene Instanzen; nur ihre Bereiche erscheinen |
 | Sprache | dito (instanzübergreifend) | kein Zugriff / lesen / lesen und schreiben – für Inhalte |
-| Bereich | Gruppe → Reiter „Bereichsrechte" und Bereich → Reiter „Zugriff" | Lesen · eigene Gruppe: Schreiben/Löschen · andere Gruppe: Schreiben/Löschen · „Erweitert" (Owner ändern); Template-Bereiche nur Lesen/Schreiben; Ordner haben keine Rechte |
+| Bereich | Benutzergruppe → Reiter „Bereichsrechte" und Bereich → Reiter „Zugriff" | Lesen · eigene Benutzergruppe: Schreiben/Löschen · andere Benutzergruppe: Schreiben/Löschen · „Erweitert" (Owner ändern); Template-Bereiche nur Lesen/Schreiben; Ordner haben keine Rechte |
 
-Gruppe **1 (Superuser)** darf alles, hat keine Rechte-Zeilen und ist nicht bearbeitbar.
-Gruppenverwaltung, Bereichsrechte, XML-Import/-Export und einige Werkzeuge sind
+Benutzergruppe **1 (Superuser)** darf alles, hat keine Rechte-Zeilen und ist nicht bearbeitbar.
+Verwaltung der Benutzergruppen, Bereichsrechte, XML-Import/-Export und einige Werkzeuge sind
 Superusern vorbehalten.
 
 Ableitungen, die überall gelten:
 
 * Leserecht auf einen Bereich = Leserecht auf alle seine Datensätze; Schreiben setzt
   Lesen voraus.
-* Die **Gruppe eines Datensatzes** ist die Gruppe seines Owners (`record.owner_id` →
-  `admin.group_id`); danach gelten die Rechte „eigene Gruppe" oder „andere Gruppe".
+* Die **Benutzergruppe eines Datensatzes** ist die Benutzergruppe seines Owners (`record.owner_id` →
+  `admin.group_id`); danach gelten die Rechte „eigene Benutzergruppe" oder „andere Benutzergruppe".
 * **Verschieben** braucht im Quellbereich Schreiben und Löschen, im Zielbereich Schreiben.
 * **Verknüpfen** braucht nur Leserecht auf den Zielbereich. Ohne Leserecht auf
   mindestens einen Zielbereich wird ein Verknüpfungsfeld nicht gezeigt, beim Speichern
   nicht angefasst, und der Datensatz lässt sich weder verschieben noch kopieren.
-* Eine neu zugewiesene Instanz gibt der Gruppe alle ihre Bereiche (volle Rechte ohne
+* Eine neu zugewiesene Instanz gibt der Benutzergruppe alle ihre Bereiche (volle Rechte ohne
   „Erweitert") und Sprachen (lesen) frei; ein neu angelegter Bereich bekommt die Rechte
-  der beim Anlegen gewählten Gruppen, eine Bereichskopie die des Originals.
+  der beim Anlegen gewählten Benutzergruppen, eine Bereichskopie die des Originals.
 
 ## Datenmodell
 
@@ -51,13 +51,13 @@ geänderte Zeile gilt als nicht vorhanden ([13](13-security-authentication.md#si
 
 ## Laufzeit: Gruppendatei und `Access`
 
-`InstanceCache` schreibt je Gruppe eine Datei `var/cache/group-{id}.php` (sichtbare
+`InstanceCache` schreibt je Benutzergruppe eine Datei `var/cache/group-{id}.php` (sichtbare
 Instanzen, lesbare Bereiche, Modul-, Bereichs- und Sprachrechte). `Session::load()`
 lädt sie je Request in `Camindo\Core\Access` – danach sind alle Prüfungen
 Array-Zugriffe. Außerdem setzt die Session für Nicht-Superuser
 `Cms::setInstanceAccess()` und `Cms::setAreaAccess()`: **jede** Abfrage über
 `Cms::select()` auf `area`, `record`, `template` ist damit automatisch auf die Instanzen
-und lesbaren Bereiche der Gruppe beschränkt – Listen, Suche, Lookups, Exporte.
+und lesbaren Bereiche der Benutzergruppe beschränkt – Listen, Suche, Lookups, Exporte.
 
 ```php
 $access = $backend->access();            // bzw. $app->get(Access::class)
@@ -78,20 +78,20 @@ echo $access->deniedHtml();              // nur die Meldung
 
 ### Oberflächen
 
-Die API ist eine weitere Oberfläche zum Backend: dieselben Admins, dieselben Rechte ihrer
-Gruppe ([16](16-api.md)). Welche Oberfläche eine Gruppe benutzen darf, prüfen die
+Die API ist eine weitere Oberfläche zum Backend: dieselben Benutzer, dieselben Rechte ihrer
+Benutzergruppe ([16](16-api.md)). Welche Oberfläche eine Benutzergruppe benutzen darf, prüfen die
 Anmeldung (`Admin::loginByName()`, `ApiSession::runAs()`) und jedes Laden einer Session
-(`Session::load()`): Wird einer Gruppe eine Oberfläche entzogen, enden ihre laufenden
+(`Session::load()`): Wird einer Benutzergruppe eine Oberfläche entzogen, enden ihre laufenden
 Sessions dort beim nächsten Request. `Access::interface()` antwortet – anders als die
 übrigen Methoden – ungeladen mit Nein. Superuser dürfen alle Oberflächen.
 
-Ohne geladene Rechte (Frontend, Cron ohne Admin) ist `Access` **ungeladen und verweigert
+Ohne geladene Rechte (Frontend, Cron ohne Benutzer) ist `Access` **ungeladen und verweigert
 nichts** – das Frontend prüft über `RecordUser`, Cron läuft als System. Hintergrundjobs,
-die ein Admin im Backend auslöst (Import, Export, Stapelverarbeitung, Massenlöschung),
+die ein Benutzer im Backend auslöst (Import, Export, Stapelverarbeitung, Massenlöschung),
 laden seine Rechte (`Session::setCliAdmin($id, withAccess: true)`); sonst ließe sich
 jede Prüfung über „als Hintergrundprozess" umgehen.
 
-Rebuild der Gruppendateien: bei jeder Änderung an Gruppen, Instanzen, Sprachen,
+Rebuild der Gruppendateien: bei jeder Änderung an Benutzergruppen, Instanzen, Sprachen,
 Bereichen und Rechten automatisch; von Hand `InstanceCache::rebuild()` bzw. Werkzeuge →
 Entwickler.
 
@@ -113,7 +113,7 @@ Modulzugriff, Zusatzrecht des Scripts (`script_access`), Ausnahmen (`shared`,
 
 ## Zusatzrechte
 
-Ein gelistetes Modul definiert Rechte, die eine Gruppe neben dem Modulzugriff einzeln
+Ein gelistetes Modul definiert Rechte, die eine Benutzergruppe neben dem Modulzugriff einzeln
 bekommt – in `install/settings.php`:
 
 ```php
@@ -124,7 +124,7 @@ bekommt – in `install/settings.php`:
     'blog_publish.php' => 'publish',
 ],
 'shared'   => ['blog_list.php'],       // darf von anderen Modulen als Lookup (src_field gesetzt) gerufen werden
-'personal' => ['blog_prefs.php'],      // darf jeder Admin rufen, auch ohne Modulzugriff
+'personal' => ['blog_prefs.php'],      // darf jeder Benutzer rufen, auch ohne Modulzugriff
 'entries'  => ['index.php', 'index_archive.php'],   // Einstiege der Kachel, der erste erlaubte gewinnt
 'superuser' => true,                   // Modul nur für Superuser
 ```
@@ -143,14 +143,14 @@ Zusatzrechte im Core (Auszug):
 
 ## Owner
 
-Jeder Datensatz gehört einem Administrator (`record.owner_id`): beim Anlegen im Backend
-dem Session-Admin, im Frontend dem Parameter `owner` von `CMS:USER_REGISTER` /
+Jeder Datensatz gehört einem Benutzer (`record.owner_id`): beim Anlegen im Backend
+dem Session-Benutzer, im Frontend dem Parameter `owner` von `CMS:USER_REGISTER` /
 `CMS:USER_INPUT` bzw. `user.default_owner_id`. Ändern darf ihn nur, wer im Bereich
-„Erweitert" hat (`areaSetOwner()`) – und nur auf Admins der eigenen Gruppe (Superuser:
+„Erweitert" hat (`areaSetOwner()`) – und nur auf Benutzer der eigenen Benutzergruppe (Superuser:
 alle); `Record::hookOnSave()` setzt sonst den bisherigen Wert zurück.
 
 ## Rechte testen
 
-Gruppe anlegen, einen Test-Admin in diese Gruppe setzen, `Session::create($adminId)` –
+Benutzergruppe anlegen, einen Test-Benutzer in diese Benutzergruppe setzen, `Session::create($adminId)` –
 danach lässt sich `Access` direkt abfragen oder per HTTP mit dem Cookie `sessid` gegen
-`/backendModules/…` prüfen. Test-Admin und Session hinterher entfernen.
+`/backendModules/…` prüfen. Test-Benutzer und Session hinterher entfernen.

@@ -27,7 +27,8 @@ Every component has the same skeleton:
 │   └── migrations/            {version}.sql and {version}.php
 ├── lang/  backend/lang/       snippets
 ├── backend/                   backend scripts, html/, lang/
-└── public/                    extensions only: js/, css/ (published)
+├── public/                    extensions only: js/, css/ (published)
+└── docs/{language}/           optional: the component's manual (Markdown)
 ```
 
 Namespaces: `Camindo\Modules\{Name}`, `Camindo\Processors\{Name}`,
@@ -66,10 +67,10 @@ Only keys from a fixed list are taken over (`ComponentManager::SETTINGS_KEYS`):
 | `access` | module | extra rights `name => label snippet` ([11](11-permissions.md#extra-rights)) |
 | `script_access` | module | `script.php => extra_right` |
 | `shared` | module | scripts other modules may call as a lookup without module access |
-| `personal` | module | scripts every admin may call without module access (own settings) |
+| `personal` | module | scripts every user may call without module access (own settings) |
 | `entries` | module | entry scripts of the tile; the first permitted one wins |
 | `button` | module | `false`: no tile (e.g. widget only) |
-| `superuser` | module | `true`: superusers only, regardless of group rights |
+| `superuser` | module | `true`: superusers only, regardless of user group rights |
 | `widget` | module | start page widget ([05](05-backend-development.md#start-page-widgets)) |
 | `api` | module | API classes relative to the module namespace, e.g. `['BlogApi']` ([16](16-api.md#custom-api-methods)) |
 | `commands`, `services` | module | own `(CMS:…)` commands ([06](06-template-compiler.md#custom-commands-from-add-on-modules)) |
@@ -138,7 +139,36 @@ components active at runtime** (core + active) with `path`, `namespace`, `versio
 the accepted `settings.php` keys. What is missing does not exist at runtime. The lists
 are read via `include` per request, never from the database.
 `Cms::componentPath($kind, $name)` resolves through them; `Backend::backendPath()`,
-`ProcessorFactory`, `Access` and the start page use them.
+`ProcessorFactory`, `Access` and the start page use them. Every time the lists are
+written, `ComponentManager` rebuilds the search index of the manuals – so the manuals of
+components come and go with them.
+
+### A component's manual
+
+Every component may bring its own manual. The module Docs adds it to the backend's
+manuals (selection, search, keyword index, print view, previous/next) as soon as the
+component is active:
+
+```
+{Name}/docs/{language}/01-{kind}-{name}.md     start page (mandatory), e.g. Modules/Blog/docs/en_US/01-module-blog.md
+{Name}/docs/{language}/*.md                    further chapters, also in subdirectories
+{Name}/docs/{language}/_/*.svg                 icons (Material Symbols), as in Core/docs
+```
+
+| Rule | |
+|---|---|
+| `{kind}` | `module`, `extension` or `processor` |
+| `{name}` | component name in lower case (`TinyMce` → `tinymce`) |
+| Languages | the same codes as `Core/docs/` (`de_DE`, `en_US` …); without a start page in a language, the manual does not exist there |
+| Title | the first heading of the start page – in the selection and the overview |
+| Order | start page, then its links in lists and tables, remaining pages by file name – number the chapters (`02-…`, `03-…`) |
+| Links | relative within the manual (`./02-commands.md#section`); links into the core manuals or those of other components stay plain text – name manual and chapter in the text |
+| Style | like the core manuals |
+
+Internally the manual is called `{kind}-{name}` (e.g. `module-blog`); its pages appear
+under this name in the API as well (`docs.search`, `docs.read`, parameter `book`). The
+component's README stays short: purpose, installation, license and, per language, a link
+to the start page in `docs/` (see [10](10-publishing-components.md#one-repository-per-component)).
 
 ## Extensions
 
@@ -150,8 +180,7 @@ field has at most one extension.
 | Core extension | Display / field type | Purpose |
 |---|---|---|
 | `Calendar` | `text` / `datetime`, `timestampl`, `time` | native date/time picker |
-| `Datepicker` | `text` / `datetime`, `timestampl` | calendar in the admin's locale |
-| `Markdown` | `textarea` / `text`, `chars` | Markdown editor with preview |
+| `Datepicker` | `text` / `datetime`, `timestampl` | calendar in the user's locale |
 | `MarkdownVisual` | `textarea` / `text`, `chars` | Markdown editor that edits the formatted view |
 | `IconPicker` | `text` | choose a Material symbol |
 | `Snippets` | `text` | snippet search for label fields |
@@ -251,7 +280,7 @@ become reachable from the document root) and lists them in the manifest with
 A **module** may list `assets` as well (`['js' => […], 'css' => […]]`, relative to the
 module's `public/`). They go to `public/backend/mod/{name}/`, and the backend includes
 them on **every** page – stylesheets in the head, scripts before `backend-init.js`,
-regardless of the admin's module right (the server checks the rights). Such a script
+regardless of the user's module right (the server checks the rights). Such a script
 initializes itself (`$(document).ready(…)`) and must not break anything without the
 module right. This is meant for things that reach beyond the module, such as a keyboard
 shortcut. `camindo.php refresh` republishes the assets of all running extensions and
@@ -284,7 +313,12 @@ Pasted Markdown and HTML go through the same block list; whatever it cannot repr
 targets are limited to `http(s)`, `mailto`, `tel`, `ftp` and relative addresses.
 
 On top of common Markdown there are `++underline++`, alignment containers
-`::: left|center|right … :::` and `<br>` in table cells. In the frontend,
+`::: left|center|right … :::`, `<br>` in table cells and the text direction as Unicode
+isolates: RLI `U+2067` (right to left) or LRI `U+2066` (left to right) up to PDI
+`U+2069`, in the editor `bdi[dir]` (button `dir`; `&#x2067;` … `&#x2069;` is recognised
+too; a character without its counterpart stays text). Emphasis does not cross the
+boundary of an isolate. The renderer passes the characters through unchanged – browsers
+apply them. In the frontend,
 `Camindo\Core\Markdown` renders it (Parsedown in safe mode, extended by exactly this
 syntax, plus entities and the escapes `\:`, `\&`, `\=`, `\<`) – as a template
 command `(CMS:TEXT field markdown=true)`. Script and class must know the same syntax;

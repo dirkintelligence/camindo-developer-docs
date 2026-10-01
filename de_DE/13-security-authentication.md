@@ -90,23 +90,23 @@ einem Schlüsselwechsel, für Entwicklungsdaten):
 ## Sessions und Cookies
 
 * `Session::create()` erzeugt **immer** eine neue Session-Id (gegen Session-Fixation);
-  aus einer Session desselben Admins im Cookie werden nur aufgeklappte Ordner und
+  aus einer Session desselben Benutzers im Cookie werden nur aufgeklappte Ordner und
   offene Arbeitskopien übernommen.
 * Cookie `sessid`: HttpOnly immer, `Secure` nach `admin.cookie_secure` (Vorgabe `true`),
   `SameSite` nach `admin.cookie_samesite` (Vorgabe `Lax`), kein Ablaufdatum;
   serverseitig verfällt die Session nach `admin.max_inactive_sec`.
 * HttpOnly verhindert das **Auslesen** der Session-Id per JavaScript, nicht Requests im
   Namen der Session – dagegen helfen HTML-Filter und Script-Policy ([14](14-security-web.md)).
-* Arbeitskopien hängen am Admin; `admin_session_record` hält fest, welche zu welcher
+* Arbeitskopien hängen am Benutzer; `admin_session_record` hält fest, welche zu welcher
   Session gehört. Abmelden verwirft nur die Arbeitskopien dieser Session; „auf allen
-  Geräten abmelden" alle Arbeitskopien und Sessions des Admins.
+  Geräten abmelden" alle Arbeitskopien und Sessions des Benutzers.
 * Jede Session gehört zu einer ***Oberfläche*** (`admin_session.interface`: `backend`,
   `cli`, `php`), die in ihrer Signatur steckt. Die Backend-Einstiege laden nur
   Backend-Sessions (`Session::load($id)`), die API nur ihre eigenen
   (`Session::load($id, ['cli', 'php'])`). Sessions der Kommandozeile und der PHP-API
   verfallen nach `api.max_inactive_sec` Untätigkeit und spätestens zu `expires_at`
   (Höchstlaufzeit, begrenzt durch `api.max_lifetime`). Sie haben kein Cookie und kein
-  Anmeldegerät. Die Gruppe muss die Oberfläche benutzen dürfen – geprüft bei der
+  Anmeldegerät. Die Benutzergruppe muss die Oberfläche benutzen dürfen – geprüft bei der
   Anmeldung und bei jedem Laden ([11](11-permissions.md#oberflächen)).
 * Passwort erneuern und TOTP einrichten gehen nur im Anmeldedialog des Backends; eine
   Anmeldung über die PHP-API wird bis dahin abgewiesen (`admin.error_login_backend_first`).
@@ -129,12 +129,12 @@ ist ein Wiedererkennungsmerkmal, kein Anmeldegeheimnis.
 
 Benachrichtigungen gehen an `LoginNotifierInterface::notify($event, $kind, $account,
 $context)`; die Klasse kommt aus `security.login_notifier` (Vorgabe `LoginNotifier`:
-E-Mail an Administratoren; für Frontend-Konten nichts – das Template sieht die
+E-Mail an Benutzer; für Frontend-Konten nichts – das Template sieht die
 Ereignisse in `$set`). Ereignisse: `new_device`, `password_changed`, `totp_enabled`,
 `totp_disabled`, `code_enabled`, `code_disabled`, `recovery_code_used`. Ein eigener
 Notifier (SMS, Push) kann den Standard im Konstruktor verlangen und als Rückfall rufen.
 
-Administratoren sehen ihre Geräte und Sessions unter `Admin/devices.php` und können sie
+Benutzer sehen ihre Geräte und Sessions unter `Admin/devices.php` und können sie
 einzeln entfernen; `admin_session.device_id` sorgt dafür, dass mit einem Gerät auch
 seine Sessions enden.
 
@@ -156,7 +156,7 @@ interface SecondFactorInterface {
 | `TotpFactor` | 6 Ziffern aus einer Authenticator-App (RFC 6238, ohne Bibliothek: `Totp`) oder ein Wiederherstellungscode |
 | `WebAuthnFactor` | Passkey bzw. Sicherheitsschlüssel (WebAuthn); daneben App-Code (wenn TOTP aktiv) oder Wiederherstellungscode |
 
-`Admin::secondFactor()` wählt je Admin; `security.admin_2fa` = `email` | `totp`
+`Admin::secondFactor()` wählt je Benutzer; `security.admin_2fa` = `email` | `totp`
 (Vorgabe, freiwillig) | `totp_required` (Superuser müssen). Die Anmeldung ist
 zweistufig: nach dem Passwort eine einmalige `uid` im Formular, die genau ein
 Prüfversuch einlösen darf.
@@ -185,7 +185,7 @@ und nicht ausgewertet – es zählt der Besitz des Schlüssels, nicht die Herkun
 * **Welcher Faktor:** `WebAuthnFactor::applies()` vor TOTP und E-Mail – bei
   `second_factor = 'webauthn'` (nur Passkeys) oder wenn Passkeys vorhanden sind (auch neben
   TOTP; das Formular nimmt dann beides). Die Kennung `webauthn` steht in der Signatur der
-  Admin-Zeile: gelöschte Passkey-Zeilen stufen nicht herunter, es bleiben die
+  Zeile in `admin`: gelöschte Passkey-Zeilen stufen nicht herunter, es bleiben die
   Wiederherstellungscodes.
 * **Anmeldung:** Die Challenge ist `Crypt::hash('webauthn-login|' . uid)` – die `uid` ist
   zufällig und genau einen Versuch wert, also auch die Challenge; eine Spalte braucht es
@@ -214,16 +214,16 @@ und nicht ausgewertet – es zählt der Besitz des Schlüssels, nicht die Herkun
 Offen: Anmeldung ohne Passwort (`residentKey: preferred` ist schon angefordert) und
 Passkeys für Frontend-Profile.
 
-## Passwort-Pflichten für Administratoren
+## Passwort-Pflichten für Benutzer
 
-* Ein Passwort, das ein **anderer** Admin gesetzt hat (Anlegen, Zurücksetzen), muss bei
+* Ein Passwort, das ein **anderer** Benutzer gesetzt hat (Anlegen, Zurücksetzen), muss bei
   der nächsten Anmeldung geändert werden (`admin.password_change`).
 * `admin.password_retention_days` > 0 verlangt eine Änderung nach Ablauf.
 * Das eigene Passwort ändert nur, wer das bisherige kennt; jede Änderung beendet die
   anderen Sessions des Kontos.
 * Zusatzrechte `admin_create` (anlegen mit Startpasswort) und `admin_change` (ändern,
-  sperren) gelten nur für die eigene Gruppe; das Passwort eines bestehenden anderen
-  Admins setzt nur ein Superuser.
+  sperren) gelten nur für die eigene Benutzergruppe; das Passwort eines bestehenden anderen
+  Benutzer setzt nur ein Superuser.
 
 ## Schlüsselrotation
 
@@ -240,9 +240,9 @@ abgelöste in `.camindo.key.retired`. `encrypt()`/`hash()` nutzen nur den aktuel
 
 `KeyRotation::rotate()` (höchstens einmal je 24 Stunden): Sicherung, Wartungsmodus,
 neuer Schlüssel, dann alles neu verschlüsseln (`data_enc` samt `hash`, `record_cache`,
-Admin-Kontaktdaten und TOTP-Secrets, Nachrichten, Zeitplaner-Passwörter,
+Kontaktdaten der Benutzer und TOTP-Secrets, Nachrichten, Zeitplaner-Passwörter,
 Frontend-TOTP, Audit-Dateien), alle Signaturen neu schreiben (löscht alle
-Admin-Sessions), Gruppen-Cache neu. Passwort-Hashes bleiben gültig und werden bei der
+Benutzer-Sessions), Gruppen-Cache neu. Passwort-Hashes bleiben gültig und werden bei der
 nächsten Anmeldung erneuert; `--invalidate-passwords` leert sie stattdessen. Ein
 Abbruch verliert nichts – `decrypt()` kennt beide Schlüssel, `rotate` lässt sich
 wiederholen. `retire` entfernt einen alten Schlüssel erst, wenn nichts mehr von ihm
@@ -287,12 +287,14 @@ nichts. Dazu Anmeldung, Fehlanmeldung, Abmeldung und Exporte personenbezogener D
 
 Anzeige: Reiter „Änderungen" der Detailansichten – Datensatz und jede andere
 Dataset-Info-Seite (Bereich, Feld, Template, Status, Instanz, Sprache, Konverter,
-Aufgabe, Komponente, Gruppe; Admin nur Superuser) über `Backend::auditTabAdd()`,
+Aufgabe, Komponente, Benutzergruppe; Benutzer nur Superuser) über `Backend::auditTabAdd()`,
 `auditTabActive()`, `auditHistory()` bzw. `infoAuditTabs()` für Seiten ohne eigene
 Reiter –, Modul Audit (Superuser),
-Reiter „Aktivitäten" der Admin-Detailansicht (Superuser, `AdminBackend::audit()` →
+Reiter „Aktivitäten" der Detailansicht eines Benutzers (Superuser, `AdminBackend::audit()` →
 `AuditBackend::adminActivity()`: zuletzt bearbeitete Datensätze über
-`AuditLog::recentObjects()`, darunter alle Einträge des Admins).
+`AuditLog::recentObjects()`, darunter alle Einträge des Benutzers). Über die API:
+`audit.search` und `audit.history` ([16](16-api.md)) – ohne Superuser nur Datensätze
+lesbarer Bereiche, IP-Adressen nur für Superuser.
 
 ## Betriebshinweise und Update-Prüfung
 

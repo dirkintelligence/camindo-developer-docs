@@ -57,7 +57,7 @@ nicht in `backend.css`, sondern in den Build der Bootstrap-Dateien.
 | `module_label`, `module_description` | – |
 
 Mit Präfix: `admin.field_admin_name`, `proc.imagegd.field_width`,
-`ext.markdown.label`. Schlüssel enthalten keine Punkte.
+`ext.markdownvisual.label`. Schlüssel enthalten keine Punkte.
 
 ## Code-Stil
 
@@ -112,7 +112,7 @@ Mit Präfix: `admin.field_admin_name`, `proc.imagegd.field_width`,
 | CLI, ohne Session | `system.timezone` | `en_US` |
 
 Gespeichert wird in UTC, angezeigt in `Cms::$userTZ`. Datums- und Zahlenformate folgen
-im Backend der Locale des Admins bzw. `system.locale`, im Frontend der Inhaltssprache
+im Backend der Locale des Benutzers bzw. `system.locale`, im Frontend der Inhaltssprache
 (`language.code`, sonst `language.backend_code`).
 
 **Schreibrichtung (RTL).** Ist eine Backend-Sprache aus `Cms::RTL_LANGUAGES` eingestellt
@@ -139,7 +139,7 @@ Rechten an.
 Schreibbar ist nur `var/` und `public/media/`:
 
 ```
-var/cache/       Snippets, HTML-Vorlagen, Instanzen, Gruppen, Trigger, Update-Prüfung
+var/cache/       Snippets, HTML-Vorlagen, Instanzen, Benutzergruppen, Trigger, Update-Prüfung
 var/config/      Laufzeitlisten, Versionsstempel, ImageMagick-Policy
 var/templates/   Quelltexte der Templates          var/php/      kompilierte Templates
 var/custom/      Snippets je Instanz, Scripts des Zeitplaners

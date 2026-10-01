@@ -1,7 +1,8 @@
 # 12 – Frontend-Community
 
-„User" ist in camindo der Website-Besucher mit Konto – nicht der Backend-Benutzer, der
-heißt Administrator. Ein User hat **keine eigene Tabelle**: sein Profil ist ein
+„Frontend-User" ist in camindo der registrierte Website-Besucher mit Konto – nicht der
+Backend-Benutzer, der heißt schlicht „Benutzer". Ein Frontend-User hat **keine eigene
+Tabelle**: sein Abbild im CMS, der Profil-Datensatz, ist ein
 Datensatz in einem Bereich vom Typ `profile`, seine Beiträge sind Datensätze in Bereichen
 vom Typ `ugc`. Gelesen wird über `Cms::select()`, geschrieben über `Record` –
 Arbeitskopie, Validierung, Uploads und Thumbnails inklusive.
@@ -25,14 +26,14 @@ Template-Programmierer; hier steht, was dahinter passiert.
 | Typ | Zusatzangaben |
 |---|---|
 | `profile` | `area.login_name_field_id` (Feld vom Typ `chars` oder `encrypted`), `area.login_password_field_id` (Feld vom Typ `password`), `details.second_factor` |
-| `ugc` | `details.profile_area_ids` – Profil-Bereiche, deren User hier schreiben dürfen |
+| `ugc` | `details.profile_area_ids` – Profil-Bereiche, deren Frontend-User hier schreiben dürfen |
 
 | Element | Zweck |
 |---|---|
 | `record.user_id` | Besitzer im Frontend = Profil-Datensatz; Grundlage der Besitzprüfung |
-| `record.owner_id` | Besitzer im Backend (Admin), siehe [11](11-permissions.md#owner) |
+| `record.owner_id` | Besitzer im Backend (Benutzer), siehe [11](11-permissions.md#owner) |
 | `record.status_id = 2` | „unbestätigt" – nach der Registrierung, bis zur Bestätigung |
-| `record.needs_review` | 1 bei allem, was ein User anlegt oder ändert |
+| `record.needs_review` | 1 bei allem, was ein Frontend-User anlegt oder ändert |
 | `user_session`, `user_basket`, `user_token`, `user_login_attempt` | Sessions, Warenkorb, Einmal-Tokens, Fehlversuche |
 | `user_second_factor`, `user_recovery_code` | zweiter Faktor |
 
@@ -156,7 +157,7 @@ JavaScript – an Endung **oder** erkanntem Mime-Typ, `MediaAccess::isActiveCont
 wird immer abgelehnt, auch wenn das Feld ihn erlaubt.
 
 **Owner:** `USER_REGISTER` und `USER_INPUT` (beim Anlegen) setzen `owner_id` und
-`created_by` aus dem Parameter `owner` bzw. `user.default_owner_id`; gibt es den Admin
+`created_by` aus dem Parameter `owner` bzw. `user.default_owner_id`; gibt es den Benutzer
 nicht, wird nichts gespeichert. `changed_by` bleibt NULL.
 
 ### `USER_BASKET`
@@ -197,7 +198,7 @@ Upload- und Thumbnail-Felder haben die Einstellung `details.user_auth`:
 | Wert | Wirkung |
 |---|---|
 | 0 | `CMS:MEDIA` verlinkt direkt ins Medienverzeichnis |
-| 1 | `MediaAccess::protectField()` sperrt `media/{instance_id}/{field_id}/` (`Require all denied`); `CMS:MEDIA` verlinkt auf `/file.php?file={field_id}/{record_id}[/{language_id}]`; `MediaDelivery` liefert nur an einen angemeldeten User aus einem der Profil-Bereiche in `details.profile_area_ids` |
+| 1 | `MediaAccess::protectField()` sperrt `media/{instance_id}/{field_id}/` (`Require all denied`); `CMS:MEDIA` verlinkt auf `/file.php?file={field_id}/{record_id}[/{language_id}]`; `MediaDelivery` liefert nur an einen angemeldeten Frontend-User aus einem der Profil-Bereiche in `details.profile_area_ids` |
 
 `file.php` bedient auch `CMS:MEDIA auth=true` und `download="name"`. Jeder Fehlschlag ist
 ein 404. Aktiver Inhalt geht immer als `attachment` mit

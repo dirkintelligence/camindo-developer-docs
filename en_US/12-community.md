@@ -1,7 +1,8 @@
 # 12 – Frontend community
 
-In camindo, a "user" is a website visitor with an account – not the backend user,
-who is called administrator. A user has **no table of their own**: the profile is a
+In camindo, a "frontend user" is a registered website visitor with an account – not the
+backend user, who is simply called "user". A frontend user has **no table of their own**:
+their representation in the CMS, the profile record, is a
 record in an area of type `profile`, contributions are records in areas of type `ugc`.
 Reading goes through `Cms::select()`, writing through `Record` – working copy,
 validation, uploads and thumbnails included.
@@ -25,14 +26,14 @@ for form, lists, search and `select()`.
 | Type | Additional settings |
 |---|---|
 | `profile` | `area.login_name_field_id` (field of type `chars` or `encrypted`), `area.login_password_field_id` (field of type `password`), `details.second_factor` |
-| `ugc` | `details.profile_area_ids` – profile areas whose users may write here |
+| `ugc` | `details.profile_area_ids` – profile areas whose frontend users may write here |
 
 | Element | Purpose |
 |---|---|
 | `record.user_id` | owner in the frontend = profile record; basis of the ownership check |
-| `record.owner_id` | owner in the backend (admin), see [11](11-permissions.md#owner) |
+| `record.owner_id` | owner in the backend (user), see [11](11-permissions.md#owner) |
 | `record.status_id = 2` | "unconfirmed" – after registration, until confirmation |
-| `record.needs_review` | 1 for everything a user creates or changes |
+| `record.needs_review` | 1 for everything a frontend user creates or changes |
 | `user_session`, `user_basket`, `user_token`, `user_login_attempt` | sessions, basket, one-time tokens, failed attempts |
 | `user_second_factor`, `user_recovery_code` | second factor |
 
@@ -133,7 +134,7 @@ code by SMS, call your SMS service in the template instead of `CMS:EMAIL`.
 
 | Area | without `ignoreuser` |
 |---|---|
-| `ugc` | logged in, the user's profile area in `details.profile_area_ids`; change only own records (`user_id`) |
+| `ugc` | logged in, the frontend user's profile area in `details.profile_area_ids`; change only own records (`user_id`) |
 | `profile` | only the own profile; no creation (use `USER_REGISTER`) |
 | `record` | never |
 
@@ -154,7 +155,7 @@ JavaScript – by extension **or** detected MIME type, `MediaAccess::isActiveCon
 is always rejected, even if the field allows it.
 
 **Owner:** `USER_REGISTER` and `USER_INPUT` (when creating) set `owner_id` and
-`created_by` from the `owner` parameter or `user.default_owner_id`; if that admin does
+`created_by` from the `owner` parameter or `user.default_owner_id`; if that user does
 not exist, nothing is saved. `changed_by` stays NULL.
 
 ### `USER_BASKET`
@@ -175,7 +176,7 @@ no longer counts.
 | Value | Effect |
 |---|---|
 | `none` (default) | never |
-| `optional` | only with a factor the user set up (`USER_2FA`) |
+| `optional` | only with a factor the frontend user set up (`USER_2FA`) |
 | `new_device` | own factor, otherwise a code by e-mail on an unknown device (`LoginDevices::isKnown()`) – the first device is unknown too |
 | `required` | app code if set up, otherwise a code by e-mail |
 

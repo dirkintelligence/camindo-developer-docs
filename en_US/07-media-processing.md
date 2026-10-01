@@ -213,7 +213,7 @@ shows a badge on the hourglass in the header.
 
 Background tasks started from the backend (mass deletion, batch processing, import,
 export, thumbnails) pass their job as a JSON file in `var/tmp/` and run with the rights
-of the admin who started them (`Session::setCliAdmin($id, withAccess: true)`); the
+of the user who started them (`Session::setCliAdmin($id, withAccess: true)`); the
 result arrives as an internal message.
 
 ## Cron
@@ -270,11 +270,11 @@ Timing uses cron syntax (minute, hour, day, month, year, weekday).
 starts every due task as a separate process and records result and message in
 `last_*`.
 
-**As which admin.** Every task has an admin (`scheduler.admin_id`, by default the admin
+**As which user.** Every task has a user (`scheduler.admin_id`, by default the user
 `scheduler` created by the installer, `Installer::createSchedulerAdmin()`).
 `SchedulerRunner::run()` opens a session of its own for them – `ApiSession::runAs()`,
 interface `cli`, channel `scheduler` ([16](16-api.md)) – and closes it afterwards. Their
-group rights apply, and the audit log shows them with the origin `scheduler`. A `php`
+user group rights apply, and the audit log shows them with the origin `scheduler`. A `php`
 script receives the session as environment variable `CAMINDO_API_SESSION`:
 
 ```php
@@ -284,7 +284,7 @@ $result = $app->get(\Camindo\Core\Api\Api::class)->call('record.search', ['area_
 ```
 
 A template runs in the same process within this session. A `url` call never gets the
-session. Without a valid admin (deleted, blocked, group without `cli`,
+session. Without a valid user (deleted, blocked, user group without `cli`,
 `Scheduler::adminError()`), the run fails.
 
 **Type `template`.** `Page::renderScheduled()` sets up the environment of a page request

@@ -192,7 +192,7 @@ record_id, area_id, instance_id, template_id,
 position, depth, parent_id, parent_ids JSON, lft, rgt,     ← Baum
 online_at, offline_at, status_id, needs_review,            ← Veröffentlichung
 created_by, changed_by, created_at, changed_at (datetime(3)),
-owner_id,                                                  ← Besitzer im Backend (Admin)
+owner_id,                                                  ← Besitzer im Backend (Benutzer)
 user_id,                                                   ← Besitzer im Frontend (Profil)
 tmp, origin_id, locked, deleted                            ← Arbeitskopien, Papierkorb
 ```
@@ -201,7 +201,7 @@ tmp, origin_id, locked, deleted                            ← Arbeitskopien, Pa
 
 | Tabelle | Zweck |
 |---|---|
-| `admin` | Administratoren; Passwort-Hash, Signatur `sig`, verschlüsselte Kontaktdaten, `settings` JSON (Sprache, Zeitzone, Widgets …), zweiter Faktor |
+| `admin` | Benutzer; Passwort-Hash, Signatur `sig`, verschlüsselte Kontaktdaten, `settings` JSON (Sprache, Zeitzone, Widgets …), zweiter Faktor |
 | `group`, `rel_group_instance`, `rel_group_area`, `rel_group_language` | Benutzergruppen und ihre Rechte ([11](11-permissions.md)) |
 | `admin_session`, `admin_session_record` | Backend-Sessions; welche Arbeitskopie zu welcher Session gehört |
 | `admin_login_attempt`, `admin_recovery_code`, `login_device`, `admin_passkey` | Anmeldeschutz, Wiederherstellungscodes, bekannte Geräte, Passkeys ([13](13-security-authentication.md)) |
@@ -216,7 +216,7 @@ tmp, origin_id, locked, deleted                            ← Arbeitskopien, Pa
 | `bgproc` | Hintergrundprozesse |
 | `scheduler` | zeitgesteuerte Aufgaben |
 | `message` | interne Nachrichten (verschlüsselt) |
-| `history` | zuletzt bearbeitete Datensätze und Templates je Admin |
+| `history` | zuletzt bearbeitete Datensätze und Templates je Benutzer |
 | `audit_log` | Metadaten des Audit-Logs; die Inhalte liegen in `var/audit/` |
 | `user_session`, `user_basket`, `user_token`, `user_login_attempt`, `user_second_factor`, `user_recovery_code` | Frontend-Community |
 | `rate_limit` | Drosselung von Anfragen |
@@ -365,12 +365,12 @@ unter der Id der Kopie; `VirtualFieldsTrait::_loadTmpData()`/`_saveTmpData()`
 übersetzen ihn in die Arbeitsform (`feld => [typ, wert]`, mehrsprachig
 `{language_id: eingabe}`).
 
-* **Bearbeitungssperre:** Eine Arbeitskopie sperrt das Original für andere Admins,
+* **Bearbeitungssperre:** Eine Arbeitskopie sperrt das Original für andere Benutzer,
   solange ihr `changed_at` jünger als `admin.max_inactive_sec` ist. Beim Abmelden
   werden die Arbeitskopien der Session verworfen.
 * **Uploads sofort, Thumbnails später:** Eine Datei übersteht so eine gescheiterte
   Prüfung, die teure Umwandlung läuft nur einmal.
-* Eine vorhandene Arbeitskopie desselben Admins wird wiederverwendet
+* Eine vorhandene Arbeitskopie desselben Benutzers wird wiederverwendet
   (`findTemporaryByOrigin()`).
 
 ## Datensätze verschieben
@@ -400,7 +400,7 @@ zusammenpassen. Zugriffsschutz und Auslieferung: [07](07-media-processing.md#abl
 
 ## Löschen
 
-**Administratoren löschen nur soft.** Endgültig löscht erst der Papierkorb:
+**Benutzer löschen nur soft.** Endgültig löscht erst der Papierkorb:
 
 ```
 delete()   → deleted = 1, Dateien nach var/deleted/     (restore() macht das rückgängig)
@@ -426,8 +426,8 @@ seinen Hooks vorbei. Einzelheiten: [03](03-dataset-api.md#löschen-und-wiederher
 
 ## Zeitzonen
 
-`Cms` stellt `system.timezone` ein, danach die Zeitzone des Admins
+`Cms` stellt `system.timezone` ein, danach die Zeitzone des Benutzers
 (`admin.settings.timezone`) bzw. der Inhaltssprache (`language.timezone`) – für PHP und
 für die Datenbankverbindung. Umrechnung: `Cms::utcToUserTZ()`, Formatierung
 `Cms::_formatDate()` / `_formatTime()` (ICU, proleptisch gregorianisch) in der Locale des
-Admins.
+Benutzer.

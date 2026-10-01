@@ -58,7 +58,7 @@ Meldungen in `Cms::$errors`). Beispiel `RecordService`:
 
 | Methode | Aufgabe |
 |---|---|
-| `loadForAction($id, $action)` | produktiven Datensatz laden, Rechte der Gruppe für `read`, `edit`, `delete`, `copy`, `move` |
+| `loadForAction($id, $action)` | produktiven Datensatz laden, Rechte der Benutzergruppe für `read`, `edit`, `delete`, `copy`, `move` |
 | `loadForChange($id, $action, $areaId, $unlock)` | dazu Bereich, fremde Sperre und die eigene noch offene Maske |
 | `lockInfo()`, `lockMessage()`, `ownOpenCopy()` | Bearbeitungssperren |
 | `checkOut($data, $copy, $dependents)` | Arbeitskopie samt eingebetteter Inhalte, der Session zugeordnet |
@@ -71,9 +71,9 @@ Die Eingabemaske, das Verschieben, die Stapelverarbeitung, der Import und die AP
 ([16](16-api.md)) nutzen ihn. Ebenso geteilt: `RecordPresenter` – Spalten und Werte der
 Datensatzliste (`listFields()`, `listValue()`), dieselben in der Backend-Liste, der
 Lookup-Vorschau und `record.search`.
-Eine Arbeitskopie des Session-Admins sperrt ihn selbst nicht – `checkOut()` verwirft
+Eine Arbeitskopie des Session-Benutzers sperrt ihn selbst nicht – `checkOut()` verwirft
 sie aber. Wer einen Datensatz ohne Maske ändert, prüft deshalb mit `loadForChange()`,
-ob derselbe Admin ihn noch in einer Maske offen hat.
+ob derselbe Benutzer ihn noch in einer Maske offen hat.
 
 ### Die vier Standardseiten
 
@@ -132,7 +132,7 @@ die Backend-Klasse `Backend::access()`:
 
 ```php
 $access = $this->backend->access();
-if (!$access->areaRead($areaId)) {                 // Leserecht der Gruppe auf den Bereich
+if (!$access->areaRead($areaId)) {                 // Leserecht der Benutzergruppe auf den Bereich
     echo $access->deniedHtml();
     echo $this->backend->template('container_footer');
     return;
@@ -289,7 +289,8 @@ $backend->formField($blog, [
     'value' => $data['title'],
     'id'    => $id,
     // optional: colDef, varName, display_type, options, template, placeholder,
-    //           append, selectPlease, lookupOptions, attr, fullWidth, langId, langSuffix
+    //           append, selectPlease, lookupOptions, attr, fullWidth, langId, langSuffix,
+    //           textLang, dir
 ]);
 $backend->formStatic($blog, 'created_at', $html);
 echo $backend->form('edit_form_buttons', [], removePlaceholders: true);
@@ -298,6 +299,16 @@ echo $backend->form('edit_form_buttons', [], removePlaceholders: true);
 `formField()` ersetzt den Platzhalter `{data_{name}}`; mit `'varName' => 'filter'`
 entsteht `{filter_{name}}` – so werden Suchmasken gebaut. Mehrsprachige Felder bekommen
 `'langId'` und `'langSuffix'`: der Feldname wird `data[name][{language_id}]`.
+
+***Schreibrichtung:*** `'textLang'` (Sprachcode bzw. Locale des Inhalts, Vorgabe bei
+`langId`: `langSuffix`) setzt `dir` nach `Cms::isRtl()` – ein `ar_SA`-Feld steht auch im
+deutschen Backend rechts nach links. Das gilt für Texte (`text`, `chars`, `encrypted` als
+`text`/`textarea`, auch mit Editor-Extension); E-Mail, Telefon, Passwort und Felder mit
+Flag `name` stehen immer `ltr`, alles andere erbt die Richtung des Backends (`<html dir>`).
+`'dir' => 'ltr'|'rtl'|'auto'` erzwingt eine Richtung. Dieselbe Regel liefert
+`Backend::fieldDirection($colDef, $lang)` für eigene Ausgaben (Info-Ansicht, nur lesbare
+Sprachen). Editor-Extensions übernehmen die Richtung des Feldes
+(`getComputedStyle(el).direction`).
 
 `formField()` prüft streng gegen zwei Listen in `Backend`: `$displayTypes[$typ]`
 (welcher `display_type` zu welchem Feldtyp passt) und `$validationFlags[$typ]`. Passt
@@ -396,7 +407,7 @@ Datei-Felder weg und prüft die Gesamtgröße gegen `cConfig.max_upload_bytes`.
 ## Startseiten-Widgets
 
 Die Startseite ist ein Raster aus vier Plätzen; Platz 1 hält die Modulkacheln, die
-Plätze 2–4 füllt jeder Admin in seinen Einstellungen (`admin.settings.widgets`, eine
+Plätze 2–4 füllt jeder Benutzer in seinen Einstellungen (`admin.settings.widgets`, eine
 Liste aus `module` und `position`). Ein Modul bietet ein Widget in seiner
 `install/settings.php` an:
 
@@ -490,10 +501,10 @@ Modulzugriff auf `Area` (`RecordBatch::fulltextAllowed()`).
 
 ## Ansichten-Katalog (`install/views.php`)
 
-Welche View-Scripte ein Werkzeug dem Admin als Layer öffnen darf – etwa der Assistent
+Welche View-Scripte ein Werkzeug dem Benutzer als Layer öffnen darf – etwa der Assistent
 des Zusatzmoduls Ai ([16](16-api.md#assistent-zusatzmodul-camindomodule-ai)) –,
 beschreibt jede Komponente in `install/views.php`. `Camindo\Core\BackendViews` liest
-die Kataloge der aktiven Module, zeigt nur, was der Admin öffnen darf
+die Kataloge der aktiven Module, zeigt nur, was der Benutzer öffnen darf
 (`Access::script()`: Modulzugriff, `script_access`, persönliche Scripte), und baut die
 Adresse nur aus den erlaubten Parametern.
 
@@ -522,7 +533,7 @@ return [
 ## Ohne Browser testen
 
 Backend-Scripte lassen sich auf der Kommandozeile ausführen – ohne Anmeldung, mit den
-Rechten eines Admins:
+Rechten eines Benutzers:
 
 ```php
 <?php

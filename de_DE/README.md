@@ -85,8 +85,13 @@ den Quellcode seiner Fassung anbieten (§ 13). Die Lizenzen der Fremdbibliotheke
 
 | Begriff | Bedeutung |
 |---|---|
-| **Administrator** | Backend-Benutzer (Tabelle `admin`) |
-| **User** | Website-Besucher mit Konto; sein Profil ist ein Datensatz in einem Bereich vom Typ `profile` |
+| **Benutzer** | jede Person, die im Backend arbeitet (Tabelle `admin`, Modul `Admin`) – gleich in welcher Rolle: Redakteur, Übersetzer, Administrator, Programmierer |
+| **Benutzergruppe** | legt die Rechte ihrer Benutzer fest (Tabelle `group`); jeder Benutzer gehört genau einer |
+| **Superuser** | Benutzer einer Benutzergruppe mit Superuser-Rechten (Benutzergruppe 1) |
+| **Administrator** | Benutzer in der Rolle, die Inhaltsbereiche, Felder, Instanzen und Rechte einrichtet; **Systemadministrator**: Server, Installation, Updates |
+| **Template-Programmierer** | Benutzer, der Templates programmiert (zuweisen kann sie auch ein Administrator) |
+| **Frontend-User** | registrierter Website-Besucher mit Konto (`CMS:USER_*`) |
+| **Profil-Datensatz** | das Abbild eines Frontend-Users im CMS: ein Datensatz in einem Bereich vom Typ `profile` |
 | **Instanz** | eine Website bzw. ein Mandant (Tabelle `instance`) |
 | **Inhaltsbereich** (Area) | Container mit eigener Felddefinition; Typen `record`, `profile`, `ugc`, `template`, `folder` |
 | **Feld** | benutzerdefiniertes Eingabefeld eines Bereichs |

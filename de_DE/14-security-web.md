@@ -2,8 +2,8 @@
 
 ## CSRF
 
-Ein angemeldeter Admin öffnet eine fremde Seite; die löst einen Request an das Backend
-aus. Schickt der Browser das Cookie mit, liefe der Request unter der Session des Admins.
+Ein angemeldeter Benutzer öffnet eine fremde Seite; die löst einen Request an das Backend
+aus. Schickt der Browser das Cookie mit, liefe der Request unter der Session des Benutzers.
 camindo setzt drei Hürden:
 
 | Hürde | Wo |
@@ -218,9 +218,9 @@ bei relativen.
 und Instanzrecht und leitet mit einem signierten Token auf die Hauptdomain der Instanz
 um (`?c9preview=…`) – mit fester Backend-Domain immer, sonst sobald das Backend nicht
 unter einer Domain der Instanz läuft (die Medien-`.htaccess` ließe unter fremder Domain
-keine Bilder zu). Das Token enthält Instanz, Pfad, Sprache, Admin, ein Kennzeichen der
+keine Bilder zu). Das Token enthält Instanz, Pfad, Sprache, Benutzer, ein Kennzeichen der
 Session (nicht die Session-Id) und einen Ablauf; gültig nur, solange die Backend-Session
-lebt und die Admin-Zeile gültig signiert ist, und nur unter einer Domain der Instanz.
+lebt und die Zeile des Benutzers in `admin` gültig signiert ist, und nur unter einer Domain der Instanz.
 
 ### Frontend-Editing
 

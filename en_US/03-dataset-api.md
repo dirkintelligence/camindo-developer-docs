@@ -160,7 +160,7 @@ $data['error_text']  = implode('<br>', (array)$result['errors']);
 $data['slug'] = $this->cms->textToUri($title);
 ```
 
-For records there are also **trigger templates** – event methods an administrator
+For records there are also **trigger templates** – event methods a user
 assigns per content area ([06](06-template-compiler.md#trigger-templates)).
 
 ## Reading and writing
@@ -187,7 +187,7 @@ inside a transaction). Not found → message in `Cms::$errors`
 * On UPDATE, fields that were not submitted stay unchanged.
 
 For tables with working copies (`record`), additionally: only a **working copy** of
-the session admin is saved (call `checkOut()` or `tmpInit()` first); `$stayTemporary =
+the session user is saved (call `checkOut()` or `tmpInit()` first); `$stayTemporary =
 true` only writes the working state (tab change), `false` is the check-in. On check-in,
 the **whole** record is validated – request and working state together. Meta fields not
 shown in the form keep their previous value.
@@ -195,6 +195,14 @@ shown in the form keep their previous value.
 `Record::importSave()` is the variant for imports and scripts: values are already in
 database format (`$storedFormatFields`), password hashes are taken over
 (`$prehashedFields`), the count check of links can be deferred.
+
+### `check(array $fields, array $data): bool`
+
+Checks like `save()` – `hookOnSave()`, validation, rights, uniqueness – and stops before
+writing (rollback): no INSERT/UPDATE, no `hookOnSaved()`, so no cache files either.
+Messages in `Cms::$errors` as with `save()`. For trial runs (`simulate` of the API,
+[16](16-api.md#configuration-datasets-datasetapi)); not for tables with working copies
+(`record` checks via `RecordService`).
 
 ### `transactional(callable $task, mixed $onError = null)`
 

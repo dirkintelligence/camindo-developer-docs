@@ -73,7 +73,7 @@ $cms->select(['relation' => 'any', 'dest_id' => 4902]);
 `filter[relation_any]=4902,4903` ist dasselbe als Filterwert (mehrere Ziele, ODER). Die
 Backend-Liste (`RecordBackendList`) reicht `relation` + `dest_id` aus dem Request geprüft
 weiter („Alle Verweise auf diesen Datensatz" im Metafeld-Reiter) und beschränkt ohne
-festen Bereich auf die lesbaren Bereiche der Gruppe (`Backend::areaAccessSql()`). Das
+festen Bereich auf die lesbaren Bereiche der Benutzergruppe (`Backend::areaAccessSql()`). Das
 Suchfeld `_url` (Id, Slug mit/ohne Slug-Präfix oder URL) löst
 `RecordService::urlFilter()` in `record_id` bzw. `slug` (+ `area_id`, `instance_id`) auf.
 
@@ -87,7 +87,7 @@ Suchfeld `_url` (Id, Slug mit/ohne Slug-Präfix oder URL) löst
   `Cms::setInstanceAccess()` gesetzt ist: im Frontend die Instanz der Domain plus ihre
   lesbaren Instanzen, im Backend die Instanzen der Benutzergruppe.
 * **Bereichsbeschränkung** für `record`, `template` (`Cms::setAreaAccess()`): im Backend
-  nur Bereiche, die die Gruppe lesen darf ([11](11-permissions.md)).
+  nur Bereiche, die die Benutzergruppe lesen darf ([11](11-permissions.md)).
 
 `select()` kennt **keinen** Veröffentlichungsfilter – das Backend sieht alles. Der
 Frontend-Befehl `CMS:SELECT` hängt ihn über `sql` an (`Cms::publishedSql()`: Status 0,

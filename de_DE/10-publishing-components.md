@@ -28,7 +28,7 @@ Zwei Regeln bestimmen alles Weitere:
 ```
 camindo-module-blog/                Repo-Name frei, üblich: camindo-{art}-{name}
 ├── composer.json
-├── README.md                       Installation: composer require + component install
+├── README.md                       kurz: Zweck, Installation, Lizenz, Links auf docs/
 ├── LICENSE
 ├── Blog.php
 ├── install/
@@ -38,6 +38,8 @@ camindo-module-blog/                Repo-Name frei, üblich: camindo-{art}-{name
 │   ├── Installer.php               optional
 │   └── migrations/                 1.1.0.sql, 1.1.0.php, 1.2.0.sql …
 ├── lang/  backend/  public/
+├── docs/de_DE/01-module-blog.md    Handbuch (siehe 08, „Handbuch einer Komponente“)
+├── docs/en_US/01-module-blog.md
 └── .gitignore                      /vendor/, composer.lock
 ```
 
@@ -155,4 +157,13 @@ erscheinen. Der Vendor-Name muss dort noch frei sein.
 | in einem privaten Repository | dito, dazu ein Zugangstoken (`composer config -g github-oauth.github.com …`) | dito |
 
 Und immer danach: `php Core/cron/camindo.php component install Blog --activate`. Die
-README der Komponente nennt beide Befehle.
+README der Komponente nennt beide Befehle. Alles Weitere steht im Handbuch der
+Komponente (`docs/`), das nach der Installation auch im Backend erscheint; die README
+verlinkt dessen Startseite je Sprache:
+
+```markdown
+## Manual
+
+- English: [docs/en_US/01-module-blog.md](docs/en_US/01-module-blog.md)
+- Deutsch: [docs/de_DE/01-module-blog.md](docs/de_DE/01-module-blog.md)
+```

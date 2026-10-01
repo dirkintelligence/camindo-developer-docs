@@ -88,7 +88,7 @@ sessions.
 ## Sessions and cookies
 
 * `Session::create()` **always** issues a new session id (against session fixation);
-  from a session of the same admin in the cookie, only expanded folders and open
+  from a session of the same user in the cookie, only expanded folders and open
   working copies are taken over.
 * Cookie `sessid`: always HttpOnly, `Secure` according to `admin.cookie_secure`
   (default `true`), `SameSite` according to `admin.cookie_samesite` (default `Lax`), no
@@ -96,7 +96,7 @@ sessions.
 * HttpOnly prevents **reading** the session id via JavaScript, not requests on behalf of
   the session – the HTML filter and the script policy help against that
   ([14](14-security-web.md)).
-* Working copies belong to the admin; `admin_session_record` records which one belongs
+* Working copies belong to the user; `admin_session_record` records which one belongs
   to which session. Logging out discards only this session's working copies; "log out
   on all devices" discards all working copies and sessions of the admin.
 * Every session belongs to one ***interface*** (`admin_session.interface`: `backend`,
@@ -105,7 +105,7 @@ sessions.
   (`Session::load($id, ['cli', 'php'])`). Command-line and PHP API sessions expire after
   `api.max_inactive_sec` of inactivity and at the latest at `expires_at` (maximum
   lifetime, capped by `api.max_lifetime`). They have no cookie and no login device. The
-  group must be allowed to use the interface – checked at login and on every load
+  user group must be allowed to use the interface – checked at login and on every load
   ([11](11-permissions.md#interfaces)).
 * Renewing the password and setting up TOTP only work in the backend login dialog; a
   login via the PHP API is refused until then (`admin.error_login_backend_first`).
@@ -128,12 +128,12 @@ it is a recognition feature, not a login secret.
 
 Notifications go to `LoginNotifierInterface::notify($event, $kind, $account,
 $context)`; the class comes from `security.login_notifier` (default `LoginNotifier`:
-e-mail to administrators; nothing for frontend accounts – the template sees the events
+e-mail to users; nothing for frontend accounts – the template sees the events
 in `$set`). Events: `new_device`, `password_changed`, `totp_enabled`, `totp_disabled`,
 `code_enabled`, `code_disabled`, `recovery_code_used`. A custom notifier (SMS, push) can
 request the default one in its constructor and call it as a fallback.
 
-Administrators see their devices and sessions under `Admin/devices.php` and can remove
+Users see their devices and sessions under `Admin/devices.php` and can remove
 them individually; `admin_session.device_id` makes sure a device's sessions end with it.
 
 ## Second factor in the backend
@@ -154,7 +154,7 @@ interface SecondFactorInterface {
 | `TotpFactor` | 6 digits from an authenticator app (RFC 6238, no library: `Totp`) or a recovery code |
 | `WebAuthnFactor` | passkey or security key (WebAuthn); alternatively the app code (if TOTP is active) or a recovery code |
 
-`Admin::secondFactor()` chooses per admin; `security.admin_2fa` = `email` | `totp`
+`Admin::secondFactor()` chooses per user; `security.admin_2fa` = `email` | `totp`
 (default, optional) | `totp_required` (superusers must). The login has two stages:
 after the password, a one-time `uid` in the form that exactly one verification attempt
 may redeem.
@@ -181,7 +181,7 @@ not evaluated – what counts is possession of the key, not where the device com
   independent of `security.admin_2fa`; a passkey also satisfies `totp_required`.
 * **Which factor:** `WebAuthnFactor::applies()` comes before TOTP and e-mail – with
   `second_factor = 'webauthn'` (passkeys only) or whenever passkeys exist (also alongside
-  TOTP; the form then accepts both). The `webauthn` marker is part of the admin row's
+  TOTP; the form then accepts both). The `webauthn` marker is part of the user row's
   signature: deleted passkey rows do not downgrade the account, the recovery codes remain.
 * **Sign-in:** the challenge is `Crypt::hash('webauthn-login|' . uid)` – the `uid` is random
   and good for exactly one attempt, and so is the challenge; no column is needed. The form
@@ -209,15 +209,15 @@ not evaluated – what counts is possession of the key, not where the device com
 Open: sign-in without a password (`residentKey: preferred` is already requested) and
 passkeys for frontend profiles.
 
-## Password obligations for administrators
+## Password obligations for users
 
-* A password set by **another** admin (creation, reset) must be changed at the next
+* A password set by **another** user (creation, reset) must be changed at the next
   login (`admin.password_change`).
 * `admin.password_retention_days` > 0 requires a change after that period.
 * Only someone who knows the current password can change their own; every change ends
   the account's other sessions.
 * The extra rights `admin_create` (create with an initial password) and `admin_change`
-  (change, lock) only apply to the own group; only a superuser sets the password of an
+  (change, lock) only apply to the own user group; only a superuser sets the password of an
   existing other admin.
 
 ## Key rotation
@@ -234,9 +234,9 @@ tries the retired ones, `hashAll()` returns the HMAC under all of them (for reco
 codes and devices).
 
 `KeyRotation::rotate()` (at most once per 24 hours): backup, maintenance mode, new key,
-then re-encrypt everything (`data_enc` including `hash`, `record_cache`, admin contact
+then re-encrypt everything (`data_enc` including `hash`, `record_cache`, user contact
 data and TOTP secrets, messages, scheduler passwords, frontend TOTP, audit files),
-rewrite all signatures (deletes all admin sessions), rebuild the group cache. Password
+rewrite all signatures (deletes all user sessions), rebuild the group cache. Password
 hashes stay valid and are renewed at the next login; `--invalidate-passwords` empties
 them instead. An abort loses nothing – `decrypt()` knows both keys, and `rotate` can be
 repeated. `retire` only removes an old key once nothing depends on it any more.
@@ -279,12 +279,14 @@ login, failed login, logout and exports of personal data.
 
 Display: tab "Changes" of the detail views – records and every other dataset info
 page (area, field, template, status, instance, language, converter, task, component,
-group; admin for superusers only) via `Backend::auditTabAdd()`, `auditTabActive()`,
+user group; user for superusers only) via `Backend::auditTabAdd()`, `auditTabActive()`,
 `auditHistory()`, or `infoAuditTabs()` for pages without tabs of their own –, module
 Audit (superusers), tab
-"Activity" of the admin detail view (superusers, `AdminBackend::audit()` →
+"Activity" of the user detail view (superusers, `AdminBackend::audit()` →
 `AuditBackend::adminActivity()`: recently edited records via
-`AuditLog::recentObjects()`, below them all entries of the admin).
+`AuditLog::recentObjects()`, below them all entries of the user). Through the API:
+`audit.search` and `audit.history` ([16](16-api.md)) – without superuser rights only
+records in readable areas, IP addresses for superusers only.
 
 ## Operation notices and update check
 

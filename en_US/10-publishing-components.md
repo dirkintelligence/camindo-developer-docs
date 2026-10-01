@@ -28,7 +28,7 @@ Two rules determine everything else:
 ```
 camindo-module-blog/                repository name is free, usually camindo-{kind}-{name}
 ├── composer.json
-├── README.md                       installation: composer require + component install
+├── README.md                       short: purpose, installation, license, links to docs/
 ├── LICENSE
 ├── Blog.php
 ├── install/
@@ -38,6 +38,8 @@ camindo-module-blog/                repository name is free, usually camindo-{ki
 │   ├── Installer.php               optional
 │   └── migrations/                 1.1.0.sql, 1.1.0.php, 1.2.0.sql …
 ├── lang/  backend/  public/
+├── docs/de_DE/01-module-blog.md    manual (see 08, "A component's manual")
+├── docs/en_US/01-module-blog.md
 └── .gitignore                      /vendor/, composer.lock
 ```
 
@@ -154,4 +156,13 @@ must still be available there.
 | in a private repository | the same, plus an access token (`composer config -g github-oauth.github.com …`) | the same |
 
 And always afterwards: `php Core/cron/camindo.php component install Blog --activate`.
-The component's README names both commands.
+The component's README names both commands. Everything else belongs in the component's
+manual (`docs/`), which also appears in the backend after installation; the README links
+its start page per language:
+
+```markdown
+## Manual
+
+- English: [docs/en_US/01-module-blog.md](docs/en_US/01-module-blog.md)
+- Deutsch: [docs/de_DE/01-module-blog.md](docs/de_DE/01-module-blog.md)
+```

@@ -178,7 +178,7 @@ zweiter, ungeschützter Weg in die Datenbank.
 | `sqlpwd` | `.sqlpwd` für `mysqldump` |
 | `dirs` | `var/…`, `public/media/default`, Symlink `public/backend/assets` (`--copy-assets`: Kopie) |
 | `database` | `schema.sql` + `seed.sql` |
-| `admin` | erster Administrator (Superuser); das Passwort muss der Richtlinie genügen |
+| `admin` | erster Benutzer (Superuser); das Passwort muss der Richtlinie genügen |
 | `core` | `system.core_version` |
 | `components` | Zusatzkomponenten **entdecken**, nicht installieren |
 | `runtime` | Laufzeitlisten, Caches, `.htaccess`-Block, Versionsstempel |

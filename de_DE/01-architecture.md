@@ -154,7 +154,7 @@ Wartungsmodus aktiv, antwortet das Frontend mit 503, bevor die Datenbank angespr
 wird ([09](09-installation-and-update.md#wartungsmodus)).
 
 **Vorschau aus dem Backend:** `backend/preview.php` → `Page::resolvePreview()`, derselbe
-Ablauf mit Admin-Session, der Instanz als Parameter, ohne Veröffentlichungsprüfung des
+Ablauf mit Benutzer-Session, der Instanz als Parameter, ohne Veröffentlichungsprüfung des
 aufgerufenen Datensatzes und ohne kanonische Umleitung. Mit fester Backend-Domain wird
 die Vorschau per signiertem Token an die Website-Domain übergeben
 ([14](14-security-web.md#feste-backend-domain)).
@@ -260,7 +260,7 @@ Nach Speichern, Löschen oder Import gilt einheitlich:
 | `Page` | Frontend-Request auflösen, Vorschau, Template ausführen |
 | `Database` | mysqli-Wrapper: Prepared Statements, Result-Stack, Transaktionen, `afterCommit()` |
 | `Config`, `Container`, `System` | Konfiguration, DI, Logging/Dateien/Verzeichnisse |
-| `Session`, `Access`, `Integrity` | Admin-Session, Gruppenrechte, Signaturen – [11](11-permissions.md), [13](13-security-authentication.md) |
+| `Session`, `Access`, `Integrity` | Benutzer-Session, Rechte der Benutzergruppen, Signaturen – [11](11-permissions.md), [13](13-security-authentication.md) |
 | `UserSession`, `MediaDelivery`, `MediaAccess` | Frontend-Community und geschützte Medien – [12](12-community.md) |
 | `InstanceCache` | Dateicache für Instanzen, Domains, Sprachen, Bereiche und Gruppenrechte |
 | `Crypt`, `KeyRotation`, `PasswordPolicy`, `Totp`, `LoginGuard`, `LoginDevices`, `RateLimiter`, `FormGuard`, `ClientIp` | Sicherheit – [13](13-security-authentication.md) |
@@ -293,7 +293,7 @@ Rückrufe nach dem äußersten Commit.
 
 | Modul | Aufgabe |
 |---|---|
-| `Admin` | Administratoren, Benutzergruppen, persönliche Einstellungen, zweiter Faktor, Geräte |
+| `Admin` | Benutzer, Benutzergruppen, persönliche Einstellungen, zweiter Faktor, Geräte |
 | `Area` | Inhaltsbereiche und Eingabefelder (`Area`, `Field`), Baupläne |
 | `Audit` | Audit-Log recherchieren (nur Superuser) |
 | `Component` | Komponenten verwalten (Oberfläche zum `ComponentManager`) |
@@ -301,7 +301,7 @@ Rückrufe nach dem äußersten Commit.
 | `Docs` | Handbücher im Backend, Volltext-Index |
 | `Instance`, `Language` | Websites und Sprachen |
 | `Logfiles` | Protokolle unter `var/log` (nur Superuser) |
-| `Messaging` | interne Nachrichten zwischen Administratoren |
+| `Messaging` | interne Nachrichten zwischen Benutzern |
 | `Record` | Datensätze: Maske, Liste, Suche, Import/Export, Stapelverarbeitung; `RecordUser` = Laufzeit der `CMS:USER_*`-Befehle |
 | `Scheduler` | Zeitgesteuerte Aufgaben |
 | `Snippets` | eigene Textbausteine je Instanz |

@@ -201,7 +201,7 @@ tmp, origin_id, locked, deleted                            ← working copies, t
 
 | Table | Purpose |
 |---|---|
-| `admin` | administrators; password hash, signature `sig`, encrypted contact data, `settings` JSON (language, time zone, widgets …), second factor |
+| `admin` | users; password hash, signature `sig`, encrypted contact data, `settings` JSON (language, time zone, widgets …), second factor |
 | `group`, `rel_group_instance`, `rel_group_area`, `rel_group_language` | user groups and their rights ([11](11-permissions.md)) |
 | `admin_session`, `admin_session_record` | backend sessions; which working copy belongs to which session |
 | `admin_login_attempt`, `admin_recovery_code`, `login_device`, `admin_passkey` | login protection, recovery codes, known devices, passkeys ([13](13-security-authentication.md)) |
@@ -216,7 +216,7 @@ tmp, origin_id, locked, deleted                            ← working copies, t
 | `bgproc` | background processes |
 | `scheduler` | scheduled tasks |
 | `message` | internal messages (encrypted) |
-| `history` | recently edited records and templates per admin |
+| `history` | recently edited records and templates per user |
 | `audit_log` | metadata of the audit log; the contents live in `var/audit/` |
 | `user_session`, `user_basket`, `user_token`, `user_login_attempt`, `user_second_factor`, `user_recovery_code` | frontend community |
 | `rate_limit` | request throttling |
@@ -362,12 +362,12 @@ state, under the copy's id; `VirtualFieldsTrait::_loadTmpData()`/`_saveTmpData()
 translate it into the working form (`field => [type, value]`, multilingual
 `{language_id: input}`).
 
-* **Edit lock:** a working copy locks the original for other admins as long as its
+* **Edit lock:** a working copy locks the original for other users as long as its
   `changed_at` is younger than `admin.max_inactive_sec`. On logout, the session's
   working copies are discarded.
 * **Uploads immediately, thumbnails later:** a file survives a failed validation, the
   expensive conversion runs only once.
-* An existing working copy of the same admin is reused (`findTemporaryByOrigin()`).
+* An existing working copy of the same user is reused (`findTemporaryByOrigin()`).
 
 ## Moving records
 
@@ -396,7 +396,7 @@ match. Access protection and delivery: [07](07-media-processing.md#storage-and-d
 
 ## Deleting
 
-**Administrators only soft-delete.** Only the trash deletes for good:
+**Users only soft-delete.** Only the trash deletes for good:
 
 ```
 delete()   → deleted = 1, files to var/deleted/          (restore() undoes this)
@@ -422,7 +422,7 @@ past its hooks. Details: [03](03-dataset-api.md#deleting-and-restoring).
 
 ## Time zones
 
-`Cms` sets `system.timezone`, then the admin's time zone (`admin.settings.timezone`)
+`Cms` sets `system.timezone`, then the user's time zone (`admin.settings.timezone`)
 or that of the content language (`language.timezone`) – for PHP and for the database
 connection. Conversion: `Cms::utcToUserTZ()`, formatting `Cms::_formatDate()` /
-`_formatTime()` (ICU, proleptic Gregorian) in the admin's locale.
+`_formatTime()` (ICU, proleptic Gregorian) in the user's locale.

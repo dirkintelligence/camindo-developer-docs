@@ -58,7 +58,7 @@ Ids and classes kebab-case, BEM variants with `--`. Project classes carry the pr
 | `module_label`, `module_description` | – |
 
 With prefix: `admin.field_admin_name`, `proc.imagegd.field_width`,
-`ext.markdown.label`. Keys contain no dots.
+`ext.markdownvisual.label`. Keys contain no dots.
 
 ## Code style
 
@@ -113,7 +113,7 @@ With prefix: `admin.field_admin_name`, `proc.imagegd.field_width`,
 | CLI, no session | `system.timezone` | `en_US` |
 
 Values are stored in UTC and displayed in `Cms::$userTZ`. Date and number formats follow
-the admin's locale or `system.locale` in the backend, and the content language in the
+the user's locale or `system.locale` in the backend, and the content language in the
 frontend (`language.code`, otherwise `language.backend_code`).
 
 **Text direction (RTL).** If a backend language from `Cms::RTL_LANGUAGES` is set

@@ -215,7 +215,7 @@ Abzeichen an der Sanduhr im Kopf.
 
 Aus dem Backend gestartete Hintergrundaufgaben (Massenlöschung, Stapelverarbeitung,
 Import, Export, Thumbnails) übergeben ihren Auftrag als JSON-Datei in `var/tmp/` und
-laufen mit den Rechten des auslösenden Admins (`Session::setCliAdmin($id, withAccess:
+laufen mit den Rechten des auslösenden Benutzers (`Session::setCliAdmin($id, withAccess:
 true)`); das Ergebnis kommt als interne Nachricht.
 
 ## Cron
@@ -273,8 +273,8 @@ Die Zeitsteuerung steht in Cron-Syntax (Minute, Stunde, Tag, Monat, Jahr, Wochen
 startet jede fällige Aufgabe als eigenen Prozess und hält Ergebnis und Meldung in
 `last_*` fest.
 
-**Unter welchem Admin.** Jede Aufgabe hat einen Admin (`scheduler.admin_id`, Vorgabe der
-vom Installer angelegte Admin `scheduler`, `Installer::createSchedulerAdmin()`).
+**Unter welchem Benutzer.** Jede Aufgabe hat einen Benutzer (`scheduler.admin_id`, Vorgabe der
+vom Installer angelegte Benutzer `scheduler`, `Installer::createSchedulerAdmin()`).
 `SchedulerRunner::run()` öffnet für ihn eine eigene Session – `ApiSession::runAs()`,
 Oberfläche `cli`, Kanal `scheduler` ([16](16-api.md)) – und schließt sie danach. Es
 gelten seine Gruppenrechte, das Audit-Log zeigt ihn mit der Herkunft `scheduler`. Ein
@@ -287,7 +287,7 @@ $result = $app->get(\Camindo\Core\Api\Api::class)->call('record.search', ['area_
 ```
 
 Ein Template läuft im selben Prozess in dieser Session. Einem `url`-Aufruf wird die
-Session nie mitgegeben. Ohne gültigen Admin (gelöscht, gesperrt, Gruppe ohne `cli`,
+Session nie mitgegeben. Ohne gültigen Benutzer (gelöscht, gesperrt, Benutzergruppe ohne `cli`,
 `Scheduler::adminError()`) scheitert der Lauf.
 
 **Typ `template`.** `Page::renderScheduled()` stellt die Umgebung eines Seitenaufrufs

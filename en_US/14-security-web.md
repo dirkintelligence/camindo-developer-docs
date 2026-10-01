@@ -2,8 +2,8 @@
 
 ## CSRF
 
-A logged-in admin opens a foreign page; that page triggers a request to the backend. If
-the browser sent the cookie along, the request would run under the admin's session.
+A logged-in user opens a foreign page; that page triggers a request to the backend. If
+the browser sent the cookie along, the request would run under the user's session.
 camindo sets three hurdles:
 
 | Hurdle | Where |
@@ -219,9 +219,9 @@ they stay relative.
 and instance permission and redirects with a signed token to the instance's primary
 domain (`?c9preview=…`) – always with a fixed backend domain, otherwise whenever the
 backend is not running under a domain of the instance (the media `.htaccess` would not
-allow images under a foreign domain). The token contains instance, path, language, admin, a marker of
+allow images under a foreign domain). The token contains instance, path, language, user, a marker of
 the session (not the session id) and an expiry; it is only valid while the backend
-session is alive and the admin row is validly signed, and only under a domain of the
+session is alive and the user row is validly signed, and only under a domain of the
 instance.
 
 ### Frontend editing

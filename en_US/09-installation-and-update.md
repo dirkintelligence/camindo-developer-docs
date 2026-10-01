@@ -179,7 +179,7 @@ second, unprotected path into the database.
 | `sqlpwd` | `.sqlpwd` for `mysqldump` |
 | `dirs` | `var/…`, `public/media/default`, symlink `public/backend/assets` (`--copy-assets`: copy) |
 | `database` | `schema.sql` + `seed.sql` |
-| `admin` | first administrator (superuser); the password must meet the policy |
+| `admin` | first user (superuser); the password must meet the policy |
 | `core` | `system.core_version` |
 | `components` | **discover** add-on components, do not install them |
 | `runtime` | runtime lists, caches, `.htaccess` block, version stamp |

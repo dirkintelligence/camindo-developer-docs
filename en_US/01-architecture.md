@@ -156,7 +156,7 @@ maintenance mode is on, the frontend answers with 503 before touching the databa
 ([09](09-installation-and-update.md#maintenance-mode)).
 
 **Preview from the backend:** `backend/preview.php` → `Page::resolvePreview()`, the same
-flow with an admin session, the instance as a parameter, without publication check for
+flow with a user session, the instance as a parameter, without publication check for
 the requested record and without canonical redirect. With a fixed backend domain, the
 preview is handed over to the website domain with a signed token
 ([14](14-security-web.md#fixed-backend-domain)).
@@ -261,9 +261,9 @@ After saving, deleting or importing, the rule is:
 | `Page` | resolve frontend requests, preview, run templates |
 | `Database` | mysqli wrapper: prepared statements, result stack, transactions, `afterCommit()` |
 | `Config`, `Container`, `System` | configuration, DI, logging/files/directories |
-| `Session`, `Access`, `Integrity` | admin session, group rights, signatures – [11](11-permissions.md), [13](13-security-authentication.md) |
+| `Session`, `Access`, `Integrity` | user session, user group rights, signatures – [11](11-permissions.md), [13](13-security-authentication.md) |
 | `UserSession`, `MediaDelivery`, `MediaAccess` | frontend community and protected media – [12](12-community.md) |
-| `InstanceCache` | file cache for instances, domains, languages, areas and group rights |
+| `InstanceCache` | file cache for instances, domains, languages, areas and user group rights |
 | `Crypt`, `KeyRotation`, `PasswordPolicy`, `Totp`, `LoginGuard`, `LoginDevices`, `RateLimiter`, `FormGuard`, `ClientIp` | security – [13](13-security-authentication.md) |
 | `SecurityHeaders`, `HtmlSanitizer`, `BackendDomain`, `FrontendHandover`, `CspReport` | web security – [14](14-security-web.md) |
 | `AuditLog`, `AuditStore`, `AuditDiff` | audit log |
@@ -294,7 +294,7 @@ callbacks after the outermost commit.
 
 | Module | Purpose |
 |---|---|
-| `Admin` | administrators, user groups, personal settings, second factor, devices |
+| `Admin` | users, user groups, personal settings, second factor, devices |
 | `Area` | content areas and input fields (`Area`, `Field`), blueprints |
 | `Audit` | browse the audit log (superusers only) |
 | `Component` | manage components (UI for the `ComponentManager`) |
@@ -302,7 +302,7 @@ callbacks after the outermost commit.
 | `Docs` | manuals in the backend, full-text index |
 | `Instance`, `Language` | websites and languages |
 | `Logfiles` | logs under `var/log` (superusers only) |
-| `Messaging` | internal messages between administrators |
+| `Messaging` | internal messages between users |
 | `Record` | records: form, list, search, import/export, batch processing; `RecordUser` = runtime of the `CMS:USER_*` commands |
 | `Scheduler` | scheduled tasks |
 | `Snippets` | custom text modules per instance |

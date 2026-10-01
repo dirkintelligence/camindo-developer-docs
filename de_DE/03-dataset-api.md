@@ -165,7 +165,7 @@ $data['slug'] = $this->cms->textToUri($titel);
 ```
 
 Für Datensätze gibt es zusätzlich **Trigger-Templates** – Ereignis-Methoden, die ein
-Administrator je Inhaltsbereich hinterlegt ([06](06-template-compiler.md#trigger-templates)).
+Benutzer je Inhaltsbereich hinterlegt ([06](06-template-compiler.md#trigger-templates)).
 
 ## Lesen und Schreiben
 
@@ -191,7 +191,7 @@ Passwort-Hashes werden nie zurückgegeben.
 * Nicht übermittelte Felder bleiben bei einem UPDATE unverändert.
 
 Bei Tabellen mit Arbeitskopien (`record`) gilt zusätzlich: gespeichert wird nur eine
-**Arbeitskopie** des Session-Admins (vorher `checkOut()` bzw. `tmpInit()`);
+**Arbeitskopie** des Session-Benutzers (vorher `checkOut()` bzw. `tmpInit()`);
 `$stayTemporary = true` schreibt nur den Arbeitsstand (Reiterwechsel), `false` ist der
 Check-in. Beim Check-in wird der **ganze** Datensatz geprüft – Request und Arbeitsstand
 zusammen. Metafelder, die die Maske nicht zeigt, behalten ihren bisherigen Wert.
@@ -199,6 +199,14 @@ zusammen. Metafelder, die die Maske nicht zeigt, behalten ihren bisherigen Wert.
 `Record::importSave()` ist die Variante für Importe und Skripte: Werte liegen bereits im
 Datenbankformat vor (`$storedFormatFields`), Passwort-Hashes werden übernommen
 (`$prehashedFields`), die Anzahlprüfung von Verknüpfungen lässt sich aufschieben.
+
+### `check(array $fields, array $data): bool`
+
+Prüft wie `save()` – `hookOnSave()`, Validierung, Rechte, Eindeutigkeit – und bricht vor
+dem Schreiben ab (Rollback): kein INSERT/UPDATE, kein `hookOnSaved()`, also auch keine
+Cache-Dateien. Meldungen wie bei `save()` in `Cms::$errors`. Für Probeläufe
+(`simulate` der API, [16](16-api.md#konfigurations-datasets-datasetapi)); nicht für
+Tabellen mit Arbeitskopien (`record` prüft über `RecordService`).
 
 ### `transactional(callable $task, mixed $onError = null)`
 

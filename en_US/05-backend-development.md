@@ -58,8 +58,8 @@ messages in `Cms::$errors`). Example `RecordService`:
 
 | Method | Purpose |
 |---|---|
-| `loadForAction($id, $action)` | load a productive record, group rights for `read`, `edit`, `delete`, `copy`, `move` |
-| `loadForChange($id, $action, $areaId, $unlock)` | plus area, foreign lock and the admin's own still open form |
+| `loadForAction($id, $action)` | load a productive record, user group rights for `read`, `edit`, `delete`, `copy`, `move` |
+| `loadForChange($id, $action, $areaId, $unlock)` | plus area, foreign lock and the user's own still open form |
 | `lockInfo()`, `lockMessage()`, `ownOpenCopy()` | edit locks |
 | `checkOut($data, $copy, $dependents)` | working copy including embedded content, assigned to the session |
 | `saveFields()`, `checkIn($tmpId, $fields, $data)` | check-in including embedded content in one transaction |
@@ -71,9 +71,9 @@ The edit form, moving, batch processing, the import and the API ([16](16-api.md)
 use it. Also shared: `RecordPresenter` – columns and values of the record list
 (`listFields()`, `listValue()`), the same in the backend list, the lookup preview and
 `record.search`. A working copy of the
-session admin does not lock the admin out – but `checkOut()` discards it. Code that
+session user does not lock the user out – but `checkOut()` discards it. Code that
 changes a record without the form therefore checks with `loadForChange()` whether the
-same admin still has it open in a form.
+same user still has it open in a form.
 
 ### The four standard pages
 
@@ -288,7 +288,8 @@ $backend->formField($blog, [
     'value' => $data['title'],
     'id'    => $id,
     // optional: colDef, varName, display_type, options, template, placeholder,
-    //           append, selectPlease, lookupOptions, attr, fullWidth, langId, langSuffix
+    //           append, selectPlease, lookupOptions, attr, fullWidth, langId, langSuffix,
+    //           textLang, dir
 ]);
 $backend->formStatic($blog, 'created_at', $html);
 echo $backend->form('edit_form_buttons', [], removePlaceholders: true);
@@ -297,6 +298,16 @@ echo $backend->form('edit_form_buttons', [], removePlaceholders: true);
 `formField()` replaces the placeholder `{data_{name}}`; with `'varName' => 'filter'`
 it becomes `{filter_{name}}` – that is how search forms are built. Multilingual fields
 get `'langId'` and `'langSuffix'`: the field name becomes `data[name][{language_id}]`.
+
+***Text direction:*** `'textLang'` (language code or locale of the content, default with
+`langId`: `langSuffix`) sets `dir` according to `Cms::isRtl()` – an `ar_SA` field is
+right-to-left even in a German backend. This applies to texts (`text`, `chars`,
+`encrypted` as `text`/`textarea`, also with an editor extension); email, phone, password
+and fields with the flag `name` are always `ltr`, everything else inherits the backend's
+direction (`<html dir>`). `'dir' => 'ltr'|'rtl'|'auto'` forces a direction. The same rule
+is available as `Backend::fieldDirection($colDef, $lang)` for your own output (info view,
+read-only languages). Editor extensions take over the field's direction
+(`getComputedStyle(el).direction`).
 
 `formField()` checks strictly against two lists in `Backend`: `$displayTypes[$type]`
 (which `display_type` fits which field type) and `$validationFlags[$type]`. If
@@ -394,7 +405,7 @@ and checks the total size against `cConfig.max_upload_bytes`.
 ## Start page widgets
 
 The start page is a grid of four slots; slot 1 holds the module tiles, slots 2–4 are
-filled by each admin in their settings (`admin.settings.widgets`, a list of `module`
+filled by each user in their settings (`admin.settings.widgets`, a list of `module`
 and `position`). A module offers a widget in its `install/settings.php`:
 
 ```php
@@ -409,7 +420,7 @@ and `position`). A module offers a widget in its `install/settings.php`:
 The class name is deliberately relative – a `settings.php` can only instantiate classes
 of its own module. The method takes no parameters and **returns the HTML**; the card
 around it comes from `Widgets`. An exception ends up in
-`var/log/{date}_widget-errors.log`, the start page keeps working. Only admins who may
+`var/log/{date}_widget-errors.log`, the start page keeps working. Only users who may
 use the module see its widget.
 
 ## Blueprints for new areas
@@ -486,10 +497,10 @@ access to `Area` (`RecordBatch::fulltextAllowed()`).
 
 ## View catalog (`install/views.php`)
 
-Which view scripts a tool may open for the admin as a layer – for example the assistant
+Which view scripts a tool may open for the user as a layer – for example the assistant
 of the add-on module Ai ([16](16-api.md#assistant-add-on-module-camindomodule-ai)) –
 each component describes in `install/views.php`. `Camindo\Core\BackendViews` reads the
-catalogs of the active modules, shows only what the admin may open (`Access::script()`:
+catalogs of the active modules, shows only what the user may open (`Access::script()`:
 module access, `script_access`, personal scripts) and builds the address only from the
 allowed parameters.
 
@@ -516,7 +527,7 @@ return [
 
 ## Testing without a browser
 
-Backend scripts can be run on the command line – without logging in, with an admin's
+Backend scripts can be run on the command line – without logging in, with a user's
 rights:
 
 ```php

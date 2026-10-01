@@ -27,7 +27,8 @@ Jede Komponente hat dasselbe Gerüst:
 │   └── migrations/            {version}.sql und {version}.php
 ├── lang/  backend/lang/       Snippets
 ├── backend/                   Backend-Scripte, html/, lang/
-└── public/                    nur Extension: js/, css/ (wird veröffentlicht)
+├── public/                    nur Extension: js/, css/ (wird veröffentlicht)
+└── docs/{Sprache}/            optional: Handbuch der Komponente (Markdown)
 ```
 
 Namespaces: `Camindo\Modules\{Name}`, `Camindo\Processors\{Name}`,
@@ -67,7 +68,7 @@ Nur Schlüssel aus einer festen Liste werden übernommen
 | `access` | Modul | Zusatzrechte `name => Snippet der Beschriftung` ([11](11-permissions.md#zusatzrechte)) |
 | `script_access` | Modul | `script.php => zusatzrecht` |
 | `shared` | Modul | Scripte, die andere Module ohne Modulzugriff als Lookup aufrufen dürfen |
-| `personal` | Modul | Scripte, die jeder Admin ohne Modulzugriff aufrufen darf (eigene Einstellungen) |
+| `personal` | Modul | Scripte, die jeder Benutzer ohne Modulzugriff aufrufen darf (eigene Einstellungen) |
 | `entries` | Modul | Einstiegsscripte der Kachel; der erste erlaubte gewinnt |
 | `button` | Modul | `false`: keine Kachel (etwa nur Widget) |
 | `superuser` | Modul | `true`: nur für Superuser, unabhängig von den Gruppenrechten |
@@ -141,7 +142,36 @@ Laufzeit aktiven** Komponenten (Core + aktiv) mit `path`, `namespace`, `version`
 übernommenen Schlüsseln der `settings.php`. Was fehlt, gibt es zur Laufzeit nicht. Die
 Listen werden je Request per `include` gelesen, nie aus der Datenbank.
 `Cms::componentPath($art, $name)` löst darüber auf; `Backend::backendPath()`,
-`ProcessorFactory`, `Access` und die Startseite nutzen sie.
+`ProcessorFactory`, `Access` und die Startseite nutzen sie. Nach jedem Schreiben der
+Listen baut `ComponentManager` den Suchindex der Handbücher neu auf – so kommen und gehen
+die Handbücher der Komponenten mit ihnen.
+
+### Handbuch einer Komponente
+
+Jede Komponente darf ein eigenes Handbuch mitbringen. Das Modul Docs nimmt es in die
+Handbücher des Backends auf (Auswahl, Suche, Stichwortverzeichnis, Druckansicht,
+Zurück/Weiter), sobald die Komponente aktiv ist:
+
+```
+{Name}/docs/{Sprache}/01-{art}-{name}.md     Startseite (Pflicht), z. B. Modules/Blog/docs/de_DE/01-module-blog.md
+{Name}/docs/{Sprache}/*.md                   weitere Kapitel, auch in Unterverzeichnissen
+{Name}/docs/{Sprache}/_/*.svg                Icons (Material Symbols), wie in Core/docs
+```
+
+| Regel | |
+|---|---|
+| `{art}` | `module`, `extension` oder `processor` |
+| `{name}` | Komponentenname in Kleinbuchstaben (`TinyMce` → `tinymce`) |
+| Sprachen | dieselben Codes wie `Core/docs/` (`de_DE`, `en_US` …); fehlt die Startseite in einer Sprache, gibt es das Handbuch dort nicht |
+| Titel | die erste Überschrift der Startseite – in Auswahl und Übersicht |
+| Reihenfolge | Startseite, dann ihre Links in Listen und Tabellen, übrige Seiten nach Dateinamen – nummerieren Sie die Kapitel (`02-…`, `03-…`) |
+| Links | relativ innerhalb des Handbuchs (`./02-befehle.md#abschnitt`); Links in die Handbücher des Core oder anderer Komponenten bleiben Text – nennen Sie Handbuch und Kapitel im Text |
+| Format | wie die Handbücher des Core: Sie-Form, Stichwörter als `***fett+kursiv***` |
+
+Intern heißt das Handbuch `{art}-{name}` (z. B. `module-blog`); unter diesem Namen
+erscheinen seine Seiten auch in der API (`docs.search`, `docs.read`, Parameter `book`).
+Die README der Komponente bleibt kurz: Zweck, Installation, Lizenz und je Sprache ein
+Link auf die Startseite in `docs/` (siehe [10](10-publishing-components.md#ein-repository-je-komponente)).
 
 ## Extensions
 
@@ -153,8 +183,7 @@ mit Markdown haben. Ein Feld hat höchstens eine Extension.
 | Core-Extension | Display-/Feldtyp | Zweck |
 |---|---|---|
 | `Calendar` | `text` / `datetime`, `timestampl`, `time` | native Datums-/Zeitauswahl |
-| `Datepicker` | `text` / `datetime`, `timestampl` | Kalender in der Locale des Admins |
-| `Markdown` | `textarea` / `text`, `chars` | Markdown-Editor mit Vorschau |
+| `Datepicker` | `text` / `datetime`, `timestampl` | Kalender in der Locale des Benutzers |
 | `MarkdownVisual` | `textarea` / `text`, `chars` | Markdown-Editor, bearbeitet wird die formatierte Ansicht |
 | `IconPicker` | `text` | Auswahl eines Material-Symbols |
 | `Snippets` | `text` | Snippet-Suche für Beschriftungsfelder |
@@ -253,7 +282,7 @@ aus erreichbar wird) und trägt sie mit `?v={version}` ins Manifest ein.
 Auch ein **Modul** darf `assets` nennen (`['js' => […], 'css' => […]]`, relativ zu
 `public/` des Moduls). Sie landen in `public/backend/mod/{name}/`, und das Backend
 bindet sie auf **jeder** Seite ein – Stylesheets im Kopf, Scripte vor
-`backend-init.js`, unabhängig vom Modulrecht des Admins (die Rechte prüft der Server).
+`backend-init.js`, unabhängig vom Modulrecht des Benutzers (die Rechte prüft der Server).
 Ein solches Script initialisiert sich selbst (`$(document).ready(…)`) und darf ohne
 Modulrecht nichts kaputt machen. Gedacht ist das für Dinge, die über das Modul hinaus
 wirken, etwa ein Tastaturkürzel. `camindo.php refresh` publiziert die Assets aller
@@ -287,7 +316,12 @@ im Editor ist maskiert, Link-Ziele sind auf `http(s)`, `mailto`, `tel`, `ftp` un
 relative Adressen beschränkt.
 
 Zum üblichen Markdown kommen `++unterstrichen++`, Ausrichtungscontainer
-`::: left|center|right … :::` und `<br>` in Tabellenzellen. Im Frontend rendert
+`::: left|center|right … :::`, `<br>` in Tabellenzellen und die Schreibrichtung als
+Unicode-Isolate: RLI `U+2067` (rechts nach links) bzw. LRI `U+2066` (links nach rechts)
+bis PDI `U+2069`, im Editor `bdi[dir]` (Schalter `dir`, auch `&#x2067;` … `&#x2069;` wird
+erkannt; ein Zeichen ohne Gegenstück bleibt Text). Hervorhebungen reichen nicht über die
+Grenze eines Isolats. Der Renderer reicht die Zeichen unverändert durch – Browser setzen
+sie selbst um. Im Frontend rendert
 `Camindo\Core\Markdown` (Parsedown im Safe Mode, erweitert um genau diese Syntax, dazu
 Entities und die Escapes `\:`, `\&`, `\=`, `\<`) – als Template-Befehl
 `(CMS:TEXT feld markdown=true)`. Script und Klasse müssen dieselbe Syntax kennen; wer

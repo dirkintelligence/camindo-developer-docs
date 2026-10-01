@@ -411,7 +411,7 @@ function onSave(array &$affectedFields, array &$data, array &$previousData): voi
 * Ein Ereignis läuft für denselben Datensatz nicht verschachtelt (Schutz gegen
   Endlosschleifen). Ein Template, das sich nicht laden lässt, löst eine Exception aus.
 * Die API steht über `$this->cms->api('record.search', [...])` bereit
-  ([16](16-api.md#aus-templates-und-custom-tools)) – im Backend als der Admin, der
+  ([16](16-api.md#aus-templates-und-custom-tools)) – im Backend als der Benutzer, der
   speichert; bei einem Frontend-Benutzer (`CMS:USER_INPUT`) gibt es keine.
 
 ## Editor-Unterstützung und Meldungen
@@ -426,7 +426,7 @@ HTML-Teil – beides blockiert eine aktive Script-Policy. Das Widget
 
 ## Frontend-Editing
 
-`(CMS:FED)` gibt für angemeldete Administratoren einen Knopf zur Eingabemaske des
+`(CMS:FED)` gibt für angemeldete Benutzer einen Knopf zur Eingabemaske des
 laufenden (oder mit `id` genannten) Datensatzes aus – als
 `<a href="#" data-c9-fed="42" class="c9-fed">`, ohne Handler-Attribut.
 `(CMS:FED_SCRIPT)` liefert einmal je Seite die Funktion `cFED()` und den Klick-Listener

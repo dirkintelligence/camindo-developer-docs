@@ -73,7 +73,7 @@ $cms->select(['relation' => 'any', 'dest_id' => 4902]);
 `filter[relation_any]=4902,4903` is the same as a filter value (several targets, OR).
 The backend list (`RecordBackendList`) passes `relation` + `dest_id` from the request
 after validation ("All references to this record" in the meta fields tab) and, without
-a fixed area, restricts to the areas the group may read (`Backend::areaAccessSql()`).
+a fixed area, restricts to the areas the user group may read (`Backend::areaAccessSql()`).
 The search field `_url` (id, slug with/without slug prefix, or URL) is resolved by
 `RecordService::urlFilter()` into `record_id` or `slug` (+ `area_id`, `instance_id`).
 
@@ -87,7 +87,7 @@ The search field `_url` (id, slug with/without slug prefix, or URL) is resolved 
   `Cms::setInstanceAccess()` is set: in the frontend, the domain's instance plus its
   readable instances; in the backend, the instances of the user group.
 * **Area restriction** for `record`, `template` (`Cms::setAreaAccess()`): in the
-  backend, only areas the group may read ([11](11-permissions.md)).
+  backend, only areas the user group may read ([11](11-permissions.md)).
 
 `select()` has **no** publication filter – the backend sees everything. The frontend
 command `CMS:SELECT` adds it via `sql` (`Cms::publishedSql()`: status 0, `online_at`

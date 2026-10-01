@@ -53,7 +53,7 @@ Parsedown, and jQuery and Bootstrap in the backend).
 | [09 – Installation, update, command line](09-installation-and-update.md) | Packages, installer, migrations, core update, maintenance mode, CLI |
 | [10 – Publishing components](10-publishing-components.md) | Composer packages, versioning rules, releases |
 | [11 – Permissions](11-permissions.md) | User groups, module, instance, area and language rights, the `Access` class |
-| [12 – Frontend community](12-community.md) | Website users, sessions, the `CMS:USER_*` commands, protected media |
+| [12 – Frontend community](12-community.md) | Frontend users, sessions, the `CMS:USER_*` commands, protected media |
 | [13 – Security I: authentication, keys, audit](13-security-authentication.md) | Passwords, signatures, sessions, second factor, key rotation, audit log |
 | [14 – Security II: web](14-security-web.md) | CSRF, HTML filter, security headers, script policy, uploads, ImageMagick, backend domain |
 | [15 – Conventions](15-conventions.md) | Names, code style, SQL, languages, text direction, file permissions |
@@ -87,8 +87,13 @@ libraries are listed in `Core/THIRD-PARTY-NOTICES.md`.
 
 | Term | Meaning |
 |---|---|
-| **Administrator** | backend user (table `admin`) |
-| **User** | website visitor with an account; the profile is a record in an area of type `profile` |
+| **User** | every person working in the backend (table `admin`, module `Admin`) – whatever the role: editor, translator, administrator, programmer |
+| **User group** | sets the rights of its users (table `group`); every user belongs to exactly one |
+| **Superuser** | a user in a user group with superuser rights (user group 1) |
+| **Administrator** | a user in the role that sets up content areas, fields, instances and rights; **system administrator**: server, installation, updates |
+| **Template programmer** | a user who programs templates (an administrator may assign them as well) |
+| **Frontend user** | registered website visitor with an account (`CMS:USER_*`) |
+| **Profile record** | a frontend user's representation in the CMS: a record in an area of type `profile` |
 | **Instance** | a website or tenant (table `instance`) |
 | **Content area** | container with its own field definition; types `record`, `profile`, `ugc`, `template`, `folder` |
 | **Field** | user-defined input field of an area |

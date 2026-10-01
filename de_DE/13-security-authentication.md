@@ -94,12 +94,17 @@ einem Schlüsselwechsel, für Entwicklungsdaten):
   offene Arbeitskopien übernommen.
 * Cookie `sessid`: HttpOnly immer, `Secure` nach `admin.cookie_secure` (Vorgabe `true`),
   `SameSite` nach `admin.cookie_samesite` (Vorgabe `Lax`), kein Ablaufdatum;
-  serverseitig verfällt die Session nach `admin.max_inactive_sec`.
+  serverseitig verfällt die Session nach `admin.max_inactive_sec`. Jeder Request setzt
+  `access_date` neu – außer Abfragen im Hintergrund (Polling von Nachrichten-Abzeichen und
+  Hintergrundprozessen: `cLoadContent({background: true})`, Header `X-Camindo-Background: 1`),
+  sonst hielte ein offenes Fenster die Session endlos am Leben.
 * HttpOnly verhindert das **Auslesen** der Session-Id per JavaScript, nicht Requests im
   Namen der Session – dagegen helfen HTML-Filter und Script-Policy ([14](14-security-web.md)).
 * Arbeitskopien hängen am Benutzer; `admin_session_record` hält fest, welche zu welcher
   Session gehört. Abmelden verwirft nur die Arbeitskopien dieser Session; „auf allen
-  Geräten abmelden" alle Arbeitskopien und Sessions des Benutzers.
+  Geräten abmelden" alle Arbeitskopien und Sessions des Benutzers; „Alle anderen
+  Sitzungen beenden" (Geräte und Sitzungen) die Arbeitskopien der übrigen Sessions
+  (`Record::cancelOtherSessions()`) und diese Sessions.
 * Jede Session gehört zu einer ***Oberfläche*** (`admin_session.interface`: `backend`,
   `cli`, `php`), die in ihrer Signatur steckt. Die Backend-Einstiege laden nur
   Backend-Sessions (`Session::load($id)`), die API nur ihre eigenen

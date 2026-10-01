@@ -15,6 +15,13 @@ camindo sets three hurdles:
 Failures answer with `##accessdenied##` and are recorded in the `security` log. On top,
 the session cookie has `SameSite=Lax`.
 
+**Login dialog with an existing session:** `Start/login.php` is exempt from the token
+check when a valid session already exists (e.g. logged in in a second window while the
+dialog was still open here). `StartBackend::login()` then does not log in again but only
+returns the token of the existing session and closes the dialog
+(`cApp.layers.loginComplete()`) – it changes nothing, and a foreign page cannot read the
+response. The origin check still applies.
+
 **Rules for new code:** a GET must not change anything. Reloading a page opened via
 POST turns into a GET that the server rejects – intended: a writing action should not
 repeat on F5. What a `<link>` or download window needs (editor style sheets, downloading

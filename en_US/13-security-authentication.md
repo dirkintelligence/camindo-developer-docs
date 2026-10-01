@@ -92,13 +92,18 @@ sessions.
   working copies are taken over.
 * Cookie `sessid`: always HttpOnly, `Secure` according to `admin.cookie_secure`
   (default `true`), `SameSite` according to `admin.cookie_samesite` (default `Lax`), no
-  expiry date; on the server, the session expires after `admin.max_inactive_sec`.
+  expiry date; on the server, the session expires after `admin.max_inactive_sec`. Every
+  request renews `access_date` – except background queries (polling of the message badge
+  and of background processes: `cLoadContent({background: true})`, header
+  `X-Camindo-Background: 1`); otherwise an open window would keep the session alive forever.
 * HttpOnly prevents **reading** the session id via JavaScript, not requests on behalf of
   the session – the HTML filter and the script policy help against that
   ([14](14-security-web.md)).
 * Working copies belong to the user; `admin_session_record` records which one belongs
   to which session. Logging out discards only this session's working copies; "log out
-  on all devices" discards all working copies and sessions of the admin.
+  on all devices" discards all working copies and sessions of the admin; "end all other
+  sessions" (devices and sessions) discards the working copies of the other sessions
+  (`Record::cancelOtherSessions()`) and those sessions.
 * Every session belongs to one ***interface*** (`admin_session.interface`: `backend`,
   `cli`, `php`), which is part of its signature. The backend entry points only load
   backend sessions (`Session::load($id)`), the API only its own

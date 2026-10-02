@@ -123,7 +123,7 @@ the overview.
 | `record.preview_url` | `record_id`, `language` | preview address – only after `attach()` |
 | `record.batch` | `area_id`, `mode` (`edit`, `move`, `delete`), scope: `ids` \| `filter`/`filterop`/`filtermode` \| `all`; `data`, `relations`, `files` (edit), `target_area_id`, `mapping`, `auto_map` (move), `simulate`, `background` (`auto`, `yes`, `no`) | `total`, `done`, `failed`, `errors` per record – or `background.token`; extra right "batch processing" |
 | `record.export_fields` | `area_id`, `type` (`csv`, `docx`) | selectable field keys with preselection and subfields |
-| `record.export` | `area_id`, `type` (`csv`, `docx`, `xml`), scope `ids` or `filter` (otherwise all), `fields`, `languages` (CSV: codes; DOCX: [from, to]), `options` (`header`, `bom`, `separator`, `enclosure`, `eol`; XML: `files`), `background` | `zip`, `path`, `size`, `records`, `valid_until` – or `background.token`; rights as in the form |
+| `record.export` | `area_id`, `type` (`csv`, `docx`, `xml`), scope `ids` or `filter` (otherwise all), `fields`, `languages` (CSV: codes; DOCX: [from, to]), `options` (`header`, `bom`, `separator`, `enclosure`, `eol`; XML: `files`; DOCX: `split` = one record per file), `background` | `zip`, `path`, `size`, `records`, `valid_until` – or `background.token`; rights as in the form |
 | `record.exports` | – | existing export files |
 | `system.processes`, `system.process`, `system.process_abort` | `token` | own background processes: `status` (`running`, `finished`, `timeout`, `failed`), `progress`, `message` |
 | `area.settings`, `area.update` | `area_id`, `with_schema` or `data`, `previous_id`, `simulate` | read and change all settings of an area or folder (`values`, `schema`) – module Structure |

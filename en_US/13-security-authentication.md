@@ -105,7 +105,7 @@ treated as if it did not exist and noted in the `security` log.
 | `admin` | `admin_id`, `name`, `password`, `group_id`, `status_id`, `second_factor` (if set) | login, `Session::load()` (every request) |
 | `admin_session` | `session_id`, `admin_id` | `Session::load()` |
 | `group` | `group_id`, `details` | building the group files |
-| `rel_group_instance`, `rel_group_area`, `rel_group_language` | all columns | building the group files |
+| `rel_group_instance`, `rel_group_area`, `rel_group_language`, `rel_group_status` | all columns | building the group files |
 | `admin_passkey` | `admin_id`, hash of the credential id, hash of the public key, `alg` (not the signature counter) | `Passkeys` on every read |
 
 This detects: a changed `group_id`, swapped names or passwords, a reset status, an

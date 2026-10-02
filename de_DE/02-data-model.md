@@ -202,7 +202,7 @@ tmp, origin_id, locked, deleted                            ← Arbeitskopien, Pa
 | Tabelle | Zweck |
 |---|---|
 | `admin` | Benutzer; Passwort-Hash, Signatur `sig`, verschlüsselte Kontaktdaten, `settings` JSON (Sprache, Zeitzone, Widgets …), zweiter Faktor |
-| `group`, `rel_group_instance`, `rel_group_area`, `rel_group_language` | Benutzergruppen und ihre Rechte ([11](11-permissions.md)) |
+| `group`, `rel_group_instance`, `rel_group_area`, `rel_group_language`, `rel_group_status` | Benutzergruppen und ihre Rechte ([11](11-permissions.md)) |
 | `admin_session`, `admin_session_record` | Backend-Sessions; welche Arbeitskopie zu welcher Session gehört |
 | `admin_login_attempt`, `admin_recovery_code`, `login_device`, `admin_passkey` | Anmeldeschutz, Wiederherstellungscodes, bekannte Geräte, Passkeys ([13](13-security-authentication.md)) |
 | `instance`, `rel_instance_language`, `rel_instance_domain`, `rel_instance_instance` | Websites, ihre Sprachen, Domains und lesbaren Instanzen |

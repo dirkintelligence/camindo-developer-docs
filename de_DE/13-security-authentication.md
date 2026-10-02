@@ -106,7 +106,7 @@ vermerkt.
 | `admin` | `admin_id`, `name`, `password`, `group_id`, `status_id`, `second_factor` (wenn gesetzt) | Anmeldung, `Session::load()` (jeder Request) |
 | `admin_session` | `session_id`, `admin_id` | `Session::load()` |
 | `group` | `group_id`, `details` | Bau der Gruppendateien |
-| `rel_group_instance`, `rel_group_area`, `rel_group_language` | alle Spalten | Bau der Gruppendateien |
+| `rel_group_instance`, `rel_group_area`, `rel_group_language`, `rel_group_status` | alle Spalten | Bau der Gruppendateien |
 | `admin_passkey` | `admin_id`, Hash der Credential-Id, Hash des öffentlichen Schlüssels, `alg` (nicht der Signaturzähler) | `Passkeys` bei jedem Lesen |
 
 Damit fallen auf: eine geänderte `group_id`, getauschte Namen oder Passwörter, ein

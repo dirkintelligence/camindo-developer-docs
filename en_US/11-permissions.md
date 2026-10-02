@@ -12,6 +12,7 @@ belongs to exactly one user group. The frontend community has its own permission
 | Module | user group → form | access yes/no per listed module, below it the module's **extra rights** |
 | Instance | same | assigned instances; only their areas appear |
 | Language | same (across instances) | no access / read / read and write – for content |
+| Status | same, and status → form ("May be set by") | which statuses the user group may give a record (flat workflow); everyone may read all statuses. New user group: all |
 | Area | user group → tab "Area rights" and area → tab "Access" | read · own user group: write/delete · other user group: write/delete · "extended" (change owner); template areas only read/write; folders have no rights |
 
 User group **1 (superuser)** may do everything, has no rights rows and cannot be edited.
@@ -24,6 +25,9 @@ Derivations that apply everywhere:
 * The **user group of a record** is the user group of its owner (`record.owner_id` →
   `admin.group_id`); accordingly, the "own user group" or "other user group" rights apply.
 * **Moving** requires write and delete in the source area and write in the target area.
+* **Editing** requires, besides the write right, the right to set the record's **current
+  status** (`Access::recordWrite()`): what the user group may not put into a status, it may
+  no longer edit in that status either.
 * **Linking** only requires read permission on the target area. Without read
   permission on at least one target area, a link field is not shown, not touched on
   save, and the record can neither be moved nor copied.
@@ -40,6 +44,7 @@ rel_group_instance    group_id, instance_id                                     
 rel_group_area        group_id, area_id, group_write, group_delete,
                       other_write, other_delete, set_owner, sig                 (row = read right)
 rel_group_language    group_id, language_id, can_write, sig                     (row = read right)
+rel_group_status      group_id, status_id, sig                                  (row = may set)
 record.owner_id       owner in the backend (FK admin, ON DELETE SET NULL)
 ```
 
@@ -52,7 +57,7 @@ All rights rows are **signed** – a row inserted or changed via SQL counts as n
 ## Runtime: group file and `Access`
 
 `InstanceCache` writes one file per user group, `var/cache/group-{id}.php` (visible
-instances, readable areas, module, area and language rights). `Session::load()` loads it
+instances, readable areas, module, area, language and status rights). `Session::load()` loads it
 into `Camindo\Core\Access` on every request – after that, all checks are array lookups.
 For non-superusers, the session also sets `Cms::setInstanceAccess()` and
 `Cms::setAreaAccess()`: **every** query via `Cms::select()` on `area`, `record`,
@@ -70,6 +75,8 @@ $access->areaWrite($areaId, $ownerId);   $access->areaDelete($areaId, $ownerId);
 $access->areaCreate($areaId);            $access->areaSetOwner($areaId);
 $access->templateRead($areaId);          $access->templateWrite($areaId);
 $access->languageRead($languageId);      $access->writableLanguageIds();
+$access->statusWrite($statusId);         $access->settableStatusIds();
+$access->recordWrite($areaId, $ownerId, $statusId);   // areaWrite() + statusWrite()
 $access->interface('php');               $access->groupInterface($groupId, 'cli');   // without loading
 $access->script('Tools', 'index_developer.php');
 $access->denied();                       // "access denied" message and exit
@@ -105,7 +112,12 @@ Developer.
    `purge()`, `checkOut()`, `tmpInit()`, `movePrepare()` refuses independently with
    `error_access_denied`. `record` and `template` are checked; the other tables (Admin,
    Field, Area …) are protected by module access. `save()` deliberately does not check
-   language rights – the form's `shown` mechanism takes care of that.
+   language rights – the form's `shown` mechanism takes care of that. `save()` does check
+   the **status** of a `record`: if `status_id` stays the same, there is nothing to check;
+   if it changes, the user group must be allowed to set the new status
+   (`error_status_denied`). Editing a record in a status the group may not set is blocked
+   by `RecordService::loadForAction('edit')` (form, batch processing, API) and by the UI
+   (button greyed out, no "Edit" in the context menu).
 
 In addition, `Backend::backendPath()` checks `Access::script()` for **every** script:
 module access, the script's extra right (`script_access`), exceptions (`shared`,

@@ -202,7 +202,7 @@ tmp, origin_id, locked, deleted                            ← working copies, t
 | Table | Purpose |
 |---|---|
 | `admin` | users; password hash, signature `sig`, encrypted contact data, `settings` JSON (language, time zone, widgets …), second factor |
-| `group`, `rel_group_instance`, `rel_group_area`, `rel_group_language` | user groups and their rights ([11](11-permissions.md)) |
+| `group`, `rel_group_instance`, `rel_group_area`, `rel_group_language`, `rel_group_status` | user groups and their rights ([11](11-permissions.md)) |
 | `admin_session`, `admin_session_record` | backend sessions; which working copy belongs to which session |
 | `admin_login_attempt`, `admin_recovery_code`, `login_device`, `admin_passkey` | login protection, recovery codes, known devices, passkeys ([13](13-security-authentication.md)) |
 | `instance`, `rel_instance_language`, `rel_instance_domain`, `rel_instance_instance` | websites, their languages, domains and readable instances |

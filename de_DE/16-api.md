@@ -122,7 +122,7 @@ Backend-Sprache (der Assistent nimmt `en_US`).
 | `record.restore` | `record_id` | aus dem Papierkorb zurück, wie im Modul Papierkorb |
 | `record.message` | `record_id`, `to` (Id oder Name), `subject`, `body` | interne Nachricht, der Datensatz ist verlinkt |
 | `record.preview_url` | `record_id`, `language` | Vorschau-Adresse – nur nach `attach()` |
-| `record.batch` | `area_id`, `mode` (`edit`, `move`, `delete`, `fulltext`), Umfang: `ids` \| `filter`/`filterop`/`filtermode` \| `all`; `data`, `relations`, `files` (edit), `target_area_id`, `mapping`, `auto_map` (move), `simulate`, `background` (`auto`, `yes`, `no`) | `total`, `done`, `failed`, `errors` je Datensatz – bzw. `background.token`; Zusatzrecht „Stapelverarbeitung" |
+| `record.batch` | `area_id`, `mode` (`edit`, `move`, `delete`), Umfang: `ids` \| `filter`/`filterop`/`filtermode` \| `all`; `data`, `relations`, `files` (edit), `target_area_id`, `mapping`, `auto_map` (move), `simulate`, `background` (`auto`, `yes`, `no`) | `total`, `done`, `failed`, `errors` je Datensatz – bzw. `background.token`; Zusatzrecht „Stapelverarbeitung" |
 | `record.export_fields` | `area_id`, `type` (`csv`, `docx`) | wählbare Feldschlüssel mit Vorauswahl und Unterfeldern |
 | `record.export` | `area_id`, `type` (`csv`, `docx`, `xml`), Umfang `ids` bzw. `filter` (sonst alle), `fields`, `languages` (CSV: Codes; DOCX: [von, nach]), `options` (`header`, `bom`, `separator`, `enclosure`, `eol`; XML: `files`), `background` | `zip`, `path`, `size`, `records`, `valid_until` – bzw. `background.token`; Rechte wie in der Maske |
 | `record.exports` | – | vorhandene Exportdateien |

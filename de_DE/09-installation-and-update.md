@@ -193,6 +193,9 @@ Umgebungsvariable – `--db-host` / `CAMINDO_DB_HOST`, `--db-name`, `--db-user`,
 `--db-pass-file`, `--admin-name`, `--admin-email`, `--admin-pass-file`, `--admin-lang`,
 `--timezone`, `--locale`, `--https=y|n`, `--backend-domain` (jeweils `CAMINDO_…`).
 Passwörter nur aus Dateien oder Umgebungsvariablen, nie als Argument (Prozessliste).
+`CAMINDO_DB_PASS` gilt auch im Betrieb ([13](13-security-authentication.md#geheimnisse-aus-der-umgebung)):
+Kommt das Passwort von dort, schreibt der Installer es nicht in `.camindo.php` und legt
+keine `.sqlpwd` an; mit `CAMINDO_KEY` entsteht keine `.camindo.key`.
 Mit `--no-interaction` bricht ein fehlender Pflichtwert mit Exit-Code 2 ab, bevor etwas
 geschrieben wird. `--create-db` legt die Datenbank an, `--fixtures` lädt statt der
 Stammdaten einen Entwicklungsbestand (`dev.sql`, falls vorhanden).

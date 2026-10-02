@@ -26,6 +26,41 @@ against that. The secret almost everything relies on is `.camindo.key`.
 Use these methods for new secrets, never home-made constructions, and bind ciphertexts
 to their row via AAD (`"purpose|{id}"`).
 
+## Secrets from the environment
+
+Passwords and the key can be kept in environment variables instead of files (Docker,
+PHP-FPM `env[…]`, the platform's secret management). A `.env` file is deliberately not
+read; there is no library for it.
+
+| Variable | replaces | Precedence |
+|---|---|---|
+| `CAMINDO_DB_PASS` | `db.pass` | variable |
+| `CAMINDO_SMTP_PASS` | `email.smtp.pass` | variable |
+| `CAMINDO_AI_API_KEY` | `ai.api_key` (add-on module Ai) | variable |
+| `CAMINDO_KEY` | content of `paths.key_file` | **file** |
+
+`Config` applies the values from `Config::ENV_SECRETS` after merging with
+`.camindo.php`; `fromEnv()` names the ones that came from the environment. Reading goes
+exclusively through `Config::env($name)`: the value is cached per process and then
+removed from the process environment, `$_ENV` and `$_SERVER` – child processes
+(`Execute`) do not inherit it, and `phpinfo()` does not show it (except Apache `SetEnv`
+under "Apache Environment"). A component with a secret of its own reads its variable
+through `Config::env()` as well and lets it take precedence over the value from
+`.camindo.php`.
+
+For the key, precedence is reversed: `Crypt` uses `paths.key_file` if the file is
+readable, otherwise `CAMINDO_KEY` (`keySource()`: `file`|`env`). That way, after
+`key rotate` – which always writes the new key to the file – the new key applies
+immediately, even while the variable still holds the old one. `envKeyState()` compares
+the variable with the key ring (`current`, `retired`, `other`); `key status`, `status`
+and `SystemHealth` (check `keyenv`) report an outdated variable. If the variable alone
+(without a file) holds a retired key, `Crypt` throws at startup: carrying on with it
+would encrypt new data under the old key and treat all signatures as tampered with.
+
+`Backup::mysqldump()` writes an option file (`0600`) under `paths.tmp_dir` for each run
+when `db.pass` comes from the environment (or `.sqlpwd` is missing) and deletes it
+afterwards.
+
 ## Passwords
 
 ```
@@ -233,7 +268,8 @@ php Core/cron/camindo.php key rotate [--invalidate-passwords] [--no-backup]
 php Core/cron/camindo.php key retire KID [--force]
 ```
 
-`Crypt` keeps a **key ring**: the current key in `.camindo.key`, retired ones in
+`Crypt` keeps a **key ring**: the current key in `.camindo.key` (or `CAMINDO_KEY`, see
+above), retired ones in
 `.camindo.key.retired`. `encrypt()`/`hash()` only use the current one, `decrypt()` then
 tries the retired ones, `hashAll()` returns the HMAC under all of them (for recovery
 codes and devices).

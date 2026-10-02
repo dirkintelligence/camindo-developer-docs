@@ -193,7 +193,10 @@ repeated with `--step=NAME` to repair a damaged installation.
 variable – `--db-host` / `CAMINDO_DB_HOST`, `--db-name`, `--db-user`, `--db-pass-file`,
 `--admin-name`, `--admin-email`, `--admin-pass-file`, `--admin-lang`, `--timezone`,
 `--locale`, `--https=y|n`, `--backend-domain` (each `CAMINDO_…`). Passwords only from
-files or environment variables, never as an argument (process list). With
+files or environment variables, never as an argument (process list).
+`CAMINDO_DB_PASS` also applies at runtime ([13](13-security-authentication.md#secrets-from-the-environment)):
+if the password comes from there, the installer does not write it to `.camindo.php` and
+creates no `.sqlpwd`; with `CAMINDO_KEY`, no `.camindo.key` is created. With
 `--no-interaction`, a missing mandatory value aborts with exit code 2 before anything
 is written. `--create-db` creates the database, `--fixtures` loads a development data
 set (`dev.sql`, if present) instead of the base data.

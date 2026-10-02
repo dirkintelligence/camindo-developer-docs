@@ -26,6 +26,40 @@ Kapitel. Das Geheimnis, auf dem fast alles beruht, ist `.camindo.key`.
 Nutzen Sie für neue Geheimnisse diese Methoden, nie eigene Konstruktionen, und binden
 Sie Geheimtexte per AAD an ihre Zeile (`"zweck|{id}"`).
 
+## Geheimnisse aus der Umgebung
+
+Passwörter und der Schlüssel können statt in Dateien in Umgebungsvariablen stehen
+(Docker, PHP-FPM `env[…]`, Secret-Verwaltung der Plattform). Eine `.env`-Datei wird
+bewusst nicht gelesen, es gibt keine Bibliothek dafür.
+
+| Variable | ersetzt | Vorrang |
+|---|---|---|
+| `CAMINDO_DB_PASS` | `db.pass` | Variable |
+| `CAMINDO_SMTP_PASS` | `email.smtp.pass` | Variable |
+| `CAMINDO_AI_API_KEY` | `ai.api_key` (Zusatzmodul Ai) | Variable |
+| `CAMINDO_KEY` | Inhalt von `paths.key_file` | **Datei** |
+
+`Config` setzt die Werte aus `Config::ENV_SECRETS` nach dem Zusammenführen mit
+`.camindo.php` ein; `fromEnv()` nennt, welche aus der Umgebung kamen. Gelesen wird
+ausschließlich über `Config::env($name)`: Der Wert wird je Prozess zwischengespeichert
+und danach aus Prozessumgebung, `$_ENV` und `$_SERVER` entfernt – Kindprozesse
+(`Execute`) erben ihn nicht, `phpinfo()` zeigt ihn nicht (außer Apache-`SetEnv` unter
+„Apache Environment“). Eine Komponente mit eigenem Geheimnis liest ihre Variable
+ebenfalls über `Config::env()` und lässt sie vor dem Wert aus `.camindo.php` gelten.
+
+Beim Schlüssel ist der Vorrang umgekehrt: `Crypt` nimmt `paths.key_file`, wenn die
+Datei lesbar ist, sonst `CAMINDO_KEY` (`keySource()`: `file`|`env`). So gilt nach
+`key rotate` – das den neuen Schlüssel immer in die Datei schreibt – sofort der neue,
+auch wenn die Variable noch den alten enthält. `envKeyState()` vergleicht die Variable
+mit dem Schlüsselbund (`current`, `retired`, `other`); `key status`, `status` und
+`SystemHealth` (Prüfung `keyenv`) melden eine veraltete Variable. Enthält die Variable
+allein (ohne Datei) einen abgelösten Schlüssel, wirft `Crypt` beim Start: Mit ihm
+weiterzuarbeiten hieße, Neues unter dem alten Schlüssel zu verschlüsseln und alle
+Signaturen für manipuliert zu halten.
+
+`Backup::mysqldump()` schreibt bei `db.pass` aus der Umgebung (oder ohne `.sqlpwd`) je
+Lauf eine Optionsdatei (`0600`) unter `paths.tmp_dir` und löscht sie danach.
+
 ## Passwörter
 
 ```
@@ -238,7 +272,8 @@ php Core/cron/camindo.php key rotate [--invalidate-passwords] [--no-backup]
 php Core/cron/camindo.php key retire KID [--force]
 ```
 
-`Crypt` führt einen **Schlüsselbund**: den aktuellen Schlüssel in `.camindo.key`,
+`Crypt` führt einen **Schlüsselbund**: den aktuellen Schlüssel in `.camindo.key` (oder
+`CAMINDO_KEY`, s. o.),
 abgelöste in `.camindo.key.retired`. `encrypt()`/`hash()` nutzen nur den aktuellen,
 `decrypt()` versucht danach die abgelösten, `hashAll()` liefert den HMAC unter allen
 (für Wiederherstellungscodes und Geräte).

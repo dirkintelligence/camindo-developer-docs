@@ -264,6 +264,7 @@ Scheduled tasks in the `scheduler` table:
 | `dbbackup` | `mysqldump` to `var/dbbackup/` with rotation (`Backup`) |
 | `logcleanup` | clean up log files and login attempts according to retention periods |
 | `template` | run a frontend template with `template.type = 'scheduler'` (`Page::renderScheduled()`) |
+| `fulltext` | rebuild the full text of the areas in `details.area_ids` (empty = all except folders) (`RecordService::rebuildFulltext()`); stops at `max_minutes` |
 
 Timing uses cron syntax (minute, hour, day, month, year, weekday).
 `TriggerCron::tick1m()` starts `cron/scheduler.php`; `SchedulerRunner::dispatch()`

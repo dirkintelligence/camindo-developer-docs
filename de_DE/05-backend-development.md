@@ -466,9 +466,9 @@ bleibt unverändert, weil die Kurzform das Set der laufenden Instanz meint.
 
 Die Stapelverarbeitung der Datensatzliste (`RecordBatch`) bearbeitet, verschiebt oder
 löscht viele Datensätze – je Datensatz über denselben Weg wie die Maske
-(`RecordService::updateOne()`: Check-out, `save()`, Check-in), optional als Simulation. Der Modus `fulltext` baut nur den Volltext
-neu auf (`refreshFulltext()`, ohne Check-out und ohne Audit-Eintrag) und verlangt
-Modulzugriff auf `Area` (`RecordBatch::fulltextAllowed()`).
+(`RecordService::updateOne()`: Check-out, `save()`, Check-in), optional als Simulation. Den Volltext ganzer Bereiche baut die Zeitplaner-Aufgabe
+`fulltext` neu auf (`RecordService::rebuildFulltext()`, ohne Check-out und ohne
+Audit-Eintrag).
 
 ## Neues Modul – Checkliste
 

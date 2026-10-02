@@ -267,6 +267,7 @@ Zeitgesteuerte Aufgaben in der Tabelle `scheduler`:
 | `dbbackup` | `mysqldump` nach `var/dbbackup/` mit Rotation (`Backup`) |
 | `logcleanup` | Logdateien und Anmeldeversuche nach Fristen aufräumen |
 | `template` | ein Frontend-Template mit `template.type = 'scheduler'` ausführen (`Page::renderScheduled()`) |
+| `fulltext` | Volltext der Bereiche `details.area_ids` (leer = alle außer Ordnern) neu aufbauen (`RecordService::rebuildFulltext()`); bricht bei `max_minutes` ab |
 
 Die Zeitsteuerung steht in Cron-Syntax (Minute, Stunde, Tag, Monat, Jahr, Wochentag).
 `TriggerCron::tick1m()` startet `cron/scheduler.php`; `SchedulerRunner::dispatch()`

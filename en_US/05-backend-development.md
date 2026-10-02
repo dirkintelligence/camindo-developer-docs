@@ -462,9 +462,9 @@ unchanged because the short form refers to the set of the running instance.
 
 Batch processing in the record list (`RecordBatch`) edits, moves or deletes many
 records – each one through the same path as the form
-(`RecordService::updateOne()`: check-out, `save()`, check-in), optionally as a simulation. Mode `fulltext` only rebuilds the full text
-(`refreshFulltext()`, without check-out and without audit entry) and requires module
-access to `Area` (`RecordBatch::fulltextAllowed()`).
+(`RecordService::updateOne()`: check-out, `save()`, check-in), optionally as a simulation. The full text of whole areas is rebuilt by the scheduler
+task `fulltext` (`RecordService::rebuildFulltext()`, without check-out and without audit
+entry).
 
 ## New module – checklist
 

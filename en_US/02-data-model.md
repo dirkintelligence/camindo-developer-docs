@@ -330,8 +330,9 @@ search forms offer it by themselves (`RecordBackendSearch`). The import skips a
 text" (`RecordBackendInfo::fulltext()`, all full texts per language); full-text fields do
 not appear in the "Contents" tab.
 
-Rebuilding afterwards: batch processing, mode `fulltext` (`RecordBatch`) – writes only
-`data_ftx`, without working copy, lock or audit entry; permission: module access `Area`.
+Rebuilding afterwards (after `rel_fulltext_text` has changed): scheduler task `fulltext`
+(`RecordService::rebuildFulltext()`) – writes only `data_ftx`, without working copy, lock
+or audit entry, for every record with `tmp = 0` (including the trash).
 Full-text fields are neither in `record_cache` nor in the audit snapshot.
 
 ## Working copies
@@ -363,7 +364,7 @@ translate it into the working form (`field => [type, value]`, multilingual
 `{language_id: input}`).
 
 * **Edit lock:** a working copy locks the original for other users as long as its
-  `changed_at` is younger than `admin.max_inactive_sec`. On logout, the session's
+  `changed_at` is younger than `admin.edit_lock_sec` (default 5400 s). On logout, the session's
   working copies are discarded.
 * **Uploads immediately, thumbnails later:** a file survives a failed validation, the
   expensive conversion runs only once.

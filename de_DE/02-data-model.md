@@ -332,8 +332,10 @@ Anzeige: Datensatz-Info, Reiter „Metadaten" → „Volltext anzeigen"
 (`RecordBackendInfo::fulltext()`, alle Volltexte je Sprache); im Reiter „Inhalte"
 erscheinen Volltextfelder nicht.
 
-Nachträglicher Neuaufbau: Stapelverarbeitung, Modus `fulltext` (`RecordBatch`) – schreibt
-nur `data_ftx`, ohne Arbeitskopie, Sperre und Audit-Eintrag; Recht: Modulzugriff `Area`.
+Nachträglicher Neuaufbau (nach einer Änderung von `rel_fulltext_text`): Zeitplaner-Aufgabe
+`fulltext` (`RecordService::rebuildFulltext()`) – schreibt nur `data_ftx`, ohne
+Arbeitskopie, Sperre und Audit-Eintrag, für jeden Datensatz mit `tmp = 0` (auch im
+Papierkorb).
 Volltextfelder stehen weder in `record_cache` noch im Audit-Schnappschuss.
 
 ## Arbeitskopien
@@ -366,7 +368,7 @@ unter der Id der Kopie; `VirtualFieldsTrait::_loadTmpData()`/`_saveTmpData()`
 `{language_id: eingabe}`).
 
 * **Bearbeitungssperre:** Eine Arbeitskopie sperrt das Original für andere Benutzer,
-  solange ihr `changed_at` jünger als `admin.max_inactive_sec` ist. Beim Abmelden
+  solange ihr `changed_at` jünger als `admin.edit_lock_sec` (Vorgabe 5400 s) ist. Beim Abmelden
   werden die Arbeitskopien der Session verworfen.
 * **Uploads sofort, Thumbnails später:** Eine Datei übersteht so eine gescheiterte
   Prüfung, die teure Umwandlung läuft nur einmal.

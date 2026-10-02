@@ -12,6 +12,7 @@ genau einer Benutzergruppe. Die Frontend-Community hat ein eigenes Rechtemodell
 | Modul | Benutzergruppe → Formular | Zugriff ja/nein je gelistetem Modul, darunter die **Zusatzrechte** des Moduls |
 | Instanz | dito | zugewiesene Instanzen; nur ihre Bereiche erscheinen |
 | Sprache | dito (instanzübergreifend) | kein Zugriff / lesen / lesen und schreiben – für Inhalte |
+| Status | dito und Status → Formular („Setzen dürfen") | welche Status die Benutzergruppe einem Datensatz geben darf (flacher Workflow); lesen dürfen alle alle Status. Neue Benutzergruppe: alle |
 | Bereich | Benutzergruppe → Reiter „Bereichsrechte" und Bereich → Reiter „Zugriff" | Lesen · eigene Benutzergruppe: Schreiben/Löschen · andere Benutzergruppe: Schreiben/Löschen · „Erweitert" (Owner ändern); Template-Bereiche nur Lesen/Schreiben; Ordner haben keine Rechte |
 
 Benutzergruppe **1 (Superuser)** darf alles, hat keine Rechte-Zeilen und ist nicht bearbeitbar.
@@ -25,6 +26,9 @@ Ableitungen, die überall gelten:
 * Die **Benutzergruppe eines Datensatzes** ist die Benutzergruppe seines Owners (`record.owner_id` →
   `admin.group_id`); danach gelten die Rechte „eigene Benutzergruppe" oder „andere Benutzergruppe".
 * **Verschieben** braucht im Quellbereich Schreiben und Löschen, im Zielbereich Schreiben.
+* **Ändern** braucht neben dem Schreibrecht das Recht, den **aktuellen Status** des
+  Datensatzes zu setzen (`Access::recordWrite()`): Was die Benutzergruppe nicht in einen
+  Status bringen darf, darf sie in diesem Status auch nicht mehr bearbeiten.
 * **Verknüpfen** braucht nur Leserecht auf den Zielbereich. Ohne Leserecht auf
   mindestens einen Zielbereich wird ein Verknüpfungsfeld nicht gezeigt, beim Speichern
   nicht angefasst, und der Datensatz lässt sich weder verschieben noch kopieren.
@@ -41,6 +45,7 @@ rel_group_instance    group_id, instance_id                                     
 rel_group_area        group_id, area_id, group_write, group_delete,
                       other_write, other_delete, set_owner, sig                 (Zeile = Leserecht)
 rel_group_language    group_id, language_id, can_write, sig                     (Zeile = Leserecht)
+rel_group_status      group_id, status_id, sig                                  (Zeile = darf setzen)
 record.owner_id       Besitzer im Backend (FK admin, ON DELETE SET NULL)
 ```
 
@@ -52,7 +57,7 @@ geänderte Zeile gilt als nicht vorhanden ([13](13-security-authentication.md#si
 ## Laufzeit: Gruppendatei und `Access`
 
 `InstanceCache` schreibt je Benutzergruppe eine Datei `var/cache/group-{id}.php` (sichtbare
-Instanzen, lesbare Bereiche, Modul-, Bereichs- und Sprachrechte). `Session::load()`
+Instanzen, lesbare Bereiche, Modul-, Bereichs-, Sprach- und Statusrechte). `Session::load()`
 lädt sie je Request in `Camindo\Core\Access` – danach sind alle Prüfungen
 Array-Zugriffe. Außerdem setzt die Session für Nicht-Superuser
 `Cms::setInstanceAccess()` und `Cms::setAreaAccess()`: **jede** Abfrage über
@@ -70,6 +75,8 @@ $access->areaWrite($areaId, $ownerId);   $access->areaDelete($areaId, $ownerId);
 $access->areaCreate($areaId);            $access->areaSetOwner($areaId);
 $access->templateRead($areaId);          $access->templateWrite($areaId);
 $access->languageRead($languageId);      $access->writableLanguageIds();
+$access->statusWrite($statusId);         $access->settableStatusIds();
+$access->recordWrite($areaId, $ownerId, $statusId);   // areaWrite() + statusWrite()
 $access->interface('php');               $access->groupInterface($groupId, 'cli');   // ohne Laden
 $access->script('Tools', 'index_developer.php');
 $access->denied();                       // Meldung „Zugriff verweigert" und Ende
@@ -105,7 +112,13 @@ Entwickler.
    `purge()`, `checkOut()`, `tmpInit()`, `movePrepare()` verweigert unabhängig davon mit
    `error_access_denied`. Geprüft werden `record` und `template`; die übrigen Tabellen
    (Admin, Field, Area …) schützt der Modulzugriff. Sprachrechte prüft `save()` bewusst
-   nicht – das erledigt der `shown`-Mechanismus der Maske.
+   nicht – das erledigt der `shown`-Mechanismus der Maske. Den **Status** prüft
+   `save()` bei `record`: Bleibt `status_id` unverändert, ist nichts zu beachten; ändert
+   er sich, muss die Benutzergruppe den neuen Status setzen dürfen
+   (`error_status_denied`). Den Bearbeiten-Zugang zu einem Datensatz in einem nicht
+   setzbaren Status sperren `RecordService::loadForAction('edit')` (Maske,
+   Stapelverarbeitung, API) und die Oberfläche (Knopf ausgegraut, Kontextmenü ohne
+   „Bearbeiten“).
 
 Dazu prüft `Backend::backendPath()` für **jedes** Script `Access::script()`:
 Modulzugriff, Zusatzrecht des Scripts (`script_access`), Ausnahmen (`shared`,

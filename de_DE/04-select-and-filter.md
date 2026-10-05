@@ -180,9 +180,10 @@ stehen auf der neutralen Kollation; weicht die Sprache ab, hängt `Cms::collate(
   Suchsprache; ergeben mehrere Suchsprachen (Backend) verschiedene Begriffe, wird mit
   jedem gesucht (`OR`). Metaspalten anderer Tabellen (`admin.ft`) bleiben ungefaltet.
   Ändern sich die Regeln einer Sprache für vorhandenen Volltext – Sprache kommt zu einer
-  Instanz, wird gelöscht (Ersatzsprache) oder bekommt ein anderes Kürzel –, bauen die
-  Hooks von Instance und Language ihn mit `LanguageData::refreshFulltext()` neu auf,
-  wenn `Collation::sameRules()` verneint.
+  Instanz oder bekommt ein anderes Kürzel –, markieren die Hooks von Instance und
+  Language ihn mit `LanguageData::markFulltextStale()` als veraltet, wenn
+  `Collation::sameRules()` verneint (Neuaufbau siehe
+  [Volltextsuche](02-data-model.md#volltextsuche)).
 * **MariaDB:** Kennt der Server `utf8mb4_0900_ai_ci` bzw. `_as_ci` nicht, ersetzt
   `SqlFile` sie beim Einspielen von `schema.sql` und Migrationen durch die nächstbeste
   (`Collation::portable()`: `uca1400_ai_ci`/`unicode_ci` bzw. `uca1400_as_ci`/`bin`);

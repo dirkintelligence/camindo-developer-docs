@@ -79,7 +79,8 @@ Die Gruppen entsprechen Arrays in `Cms` (`textTypes`, `numericTypes`, `dateTypes
 * `data_dft` – genau eine Zeile je Datensatz und Sprache mit dem Textinhalt des
   ***Default-Felds*** des Bereichs (`area.default_field_id`). So lässt sich der „Titel"
   jedes Datensatzes mit einem JOIN holen, ohne zu wissen, welches Feld es ist
-  (Pseudo-Feldname `_default` in `select()`).
+  (Pseudo-Feldname `_default` in `select()`). Ist das Default-Feld verschlüsselt, ein
+  Passwort oder JSON, steht dort `ID {record_id}` – kein Klartext.
 * `data_enc` – Klartext AES-verschlüsselt (Schlüssel `.camindo.key`), daneben ein
   deterministischer HMAC in `hash` für die Gleichheitssuche.
 * `data_fil` – statt `data` die Metadaten der Datei: `extension`, `mime_type`,
@@ -113,7 +114,11 @@ Mehrsprachig sein können `bit`, `chars`, `currency`, `datetime`, `decimal`,
 
 Geschrieben werden die Zeilen von `VirtualFieldsTrait::saveVirtualFields()`. Ändert
 sich die Sprachliste einer Instanz, zieht `LanguageData` den Bestand nach (neue Sprache:
-Zeilen der Hauptsprache kopieren; entfernte Sprache: Zeilen löschen).
+Zeilen der Hauptsprache kopieren; entfernte Sprache: Zeilen, `record_cache` und
+`privacy_template` löschen, eigene Dateien löschen – auch im Papierkorb –, Datei-Fallbacks
+auf die Hauptsprache umstellen). Eine Sprache, die systemweit gelöscht wird, verschwindet
+so aus allen Instanzen (`LanguageData::deleteLanguage()`); Hauptsprache einer Instanz
+darf sie dabei nicht sein.
 
 ### `record_cache` – Inhalts-Cache je Sprache
 
@@ -183,7 +188,13 @@ Typ und Mehrsprachigkeit eines bestehenden Felds ändert nur `Field::convert()` 
 „Typ ändern"): Text ↔ Zahl wird zeilenweise umkopiert, `relation` ↔ `relation1` behält
 bei `…1` nur die erste Verknüpfung, ein- ↔ mehrsprachig stellt das `empty`-Kennzeichen
 bzw. die Dateien um. `conversionTargets()` nennt die möglichen Ziele,
-`conversionLossy()` warnt vor Datenverlust.
+`conversionLossy()` warnt vor Datenverlust. Bearbeitungssperren hält die Umwandlung
+nicht auf: Der Arbeitsstand offener Arbeitskopien (ihr `record_cache`) bleibt stehen und
+bekommt den neuen Typ (`Record::retypeWorkingCopies()`, bei Datei-Feldern samt neu
+hochgeladener Dateien `Record::migrateWorkingCopyFiles()`), nur der Cache der produktiven
+Datensätze wird verworfen; `data_dft` zieht nach. Fällt ein Feld aus den
+Volltext-Quellen (etwa nach `encrypted`), werden die Volltexte aller nicht temporären
+Datensätze des Bereichs neu aufgebaut – auch der gelöschten.
 
 ### `record` – Datensätze
 
@@ -211,7 +222,7 @@ tmp, origin_id, locked, deleted                            ← Arbeitskopien, Pa
 | `rel_area_template` | welche Templates ein Bereich verwenden bzw. per URL erzwingen darf |
 | `status` | Datensatz-Status (Symbol, Beschriftung, Farbe) |
 | `converter`, `rel_field_converter` | konfigurierte Prozessoren und ihre Zuordnung zu Thumbnail-Feldern |
-| `rel_fulltext_text` | Quellfelder eines Volltextfelds (optional über eine Relation) |
+| `rel_fulltext_text` | Quellfelder eines Volltextfelds (optional über ein `link`-/`relation`-Feld: `rel_field_id`) |
 | `component`, `system` | installierte Komponenten; Versionsstand des Cores |
 | `bgproc` | Hintergrundprozesse |
 | `scheduler` | zeitgesteuerte Aufgaben |
@@ -301,11 +312,26 @@ kopiert oder – wenn keine Kante mehr an ihnen hängt – gelöscht
 
 ## Volltextsuche
 
-Ein Feld vom Typ `fulltext` sammelt den Inhalt anderer Felder (`text`, `chars`, `json`,
-optional über eine Relation hinweg; Zuordnung in `rel_fulltext_text`) in `data_ftx`.
-Geänderte Quellfelder werden beim Speichern gesammelt und **nach** dem Check-in
-verarbeitet (`refreshAffectedFulltext()`); `refreshFulltext($fieldId)` baut komplett neu
-auf. Der Text wird vorher mit `Cms::indexText()` normalisiert (HTML-Tags entfernt,
+Ein Feld vom Typ `fulltext` sammelt den Inhalt anderer Felder (`text`, `chars`, `json`)
+in `data_ftx`; Zuordnung in `rel_fulltext_text`. Quellen sind Felder des eigenen
+Bereichs oder – mit `rel_field_id` – Felder der Zielbereiche eines `link`-, `relation`-
+oder `relation1`-Felds des Bereichs (Kanten in `data_rel` mit `src_id` = Datensatz);
+`Field::fulltextSourceOptions()` nennt die wählbaren (die Maske gruppiert sie je
+Zielbereich), `Field::hookOnSave()` weist andere ab. Im Pseudo-Feld `source_fields`
+(Maske, API, XML) steht eine Quelle als `field_id` bzw. `"{rel_field_id}:{field_id}"`
+(`Field::sourceKey()`); der XML-Export schreibt `rel_field_id` als Attribut. Nicht
+wählbar: Felder hinter `pointer`/`pointer1` – ein Verweis ist eine lose, einseitige
+Referenz (oft auf mehrere Bereiche), deren Texte den Datensatz nicht beschreiben.
+Änderungen am **Zieldatensatz** erreichen den Volltext nur bei `link` (der Inhalt gehört
+dem Datensatz, siehe unten); bei `relation` erst beim nächsten Speichern des Datensatzes
+oder per Neuaufbau (Zeitplaner-Aufgabe `fulltext` ohne `only_stale`) – bewusst, ein
+Schlagwort kann an Tausenden Datensätzen hängen.
+Beim Speichern verarbeitet `refreshAffectedFulltext()` **nach** dem Check-in die
+Volltextfelder des eigenen Bereichs, in die ein geändertes Feld eingeht, und alle mit
+Quellen über ein `link`-/`relation`-Feld (die Kanten können sich geändert haben); ist
+der Datensatz Inhalt eines `link`-Felds, auch die seines Besitzers (Kante in
+`data_rel`). `refreshFulltext($fieldId)` baut komplett neu auf.
+Der Text wird vorher mit `Cms::indexText()` normalisiert (HTML-Tags entfernt,
 Entities aufgelöst, nur Buchstaben und Ziffern; `&shy;` verbindet, der Punkt trennt;
 mit Binde- oder Unterstrich verbundene Wörter kommen getrennt UND zusammengeschrieben
 hinein: `sofa-weiss` → `sofa weiss sofaweiss`; Suchbegriffe mit
@@ -321,10 +347,10 @@ ihn – ohne Zeile in `field`. Der Name ist reserviert (`Field::FULLTEXT`) und s
 in `fieldname` (Typ `fulltext`, Stammdaten in `seed.sql`; `Field::cleanupFieldname()`
 lässt ihn stehen, `VirtualFieldsTrait::standardFulltextFieldnameId()` legt ihn notfalls
 an). Seine `data_ftx`-Zeilen haben `field_id` NULL. Quellen sind immer alle Felder vom
-Typ `text`, `chars`, `json` und `file` (Upload, keine Thumbnails) des Bereichs
-(`standardFulltextSources()`); geschrieben wird er von `refreshStandardFulltext()` –
-nach jedem Speichern mit geänderten Quellfeldern (`refreshAffectedFulltext()`), nach
-`Field::convert()` und `Field::hookOnDeleted()` für den ganzen Bereich. `select()`
+Typ `text`, `chars`, `json` und `file` (Upload, keine Thumbnails) des Bereichs und über
+seine `link`-Felder die der Zielbereiche, eine Ebene (`standardFulltextSources()`);
+geschrieben wird er von `refreshStandardFulltext()` nach jedem Speichern
+(`refreshAffectedFulltext()`). `select()`
 filtert über den Feldnamen und braucht keine Felddefinition: `filter[fulltext]` wirkt
 in jedem Bereich und bereichsübergreifend; die Suchmasken bieten ihn von selbst an
 (`RecordBackendSearch`). Ein `fulltext` aus älteren Export-Dateien übergeht der Import.
@@ -332,10 +358,27 @@ Anzeige: Datensatz-Info, Reiter „Metadaten" → „Volltext anzeigen"
 (`RecordBackendInfo::fulltext()`, alle Volltexte je Sprache); im Reiter „Inhalte"
 erscheinen Volltextfelder nicht.
 
-Nachträglicher Neuaufbau (nach einer Änderung von `rel_fulltext_text`): Zeitplaner-Aufgabe
-`fulltext` (`RecordService::rebuildFulltext()`) – schreibt nur `data_ftx`, ohne
-Arbeitskopie, Sperre und Audit-Eintrag, für jeden Datensatz mit `tmp = 0` (auch im
-Papierkorb).
+**Veraltet statt sofort neu (`FulltextState`).** Strukturänderungen, nach denen der
+Volltext eines ganzen Bereichs nicht mehr zu den Quellen passt – Quellen eines
+Volltextfelds geändert oder neues Volltextfeld (`Field::hookOnSaved()`), Quellfeld
+gelöscht (`hookOnDeleted()`) oder umgewandelt (`convert()`, auch ein ↔ mehrsprachig),
+Zielbereiche eines `link`-Felds geändert, neue Faltungsregeln einer Sprache
+(`LanguageData::markFulltextStale()`, alle Bereiche der Instanz) –, bauen ihn nicht
+sofort neu auf, sondern setzen `area.fulltext_stale_at` (UTC, der früheste Zeitpunkt
+bleibt). Betroffen sind auch die Bereiche, die über ein `link`-Feld auf den Bereich des
+Felds zeigen (`FulltextState::areasUsingField()`). Ausnahme: `convert()` nach
+`encrypted` baut sofort neu auf, sonst stünde Klartext im Index.
+Die Detailansicht und die Feldliste des Bereichs zeigen dann den Hinweis mit
+„Jetzt aktualisieren“ (`AreaBackend::fulltextNotice()` / `fulltext()`): Hintergrundprozess
+`camindo.php fulltext --area=ID --token=…` (`Cli\FulltextCommand`).
+Neuaufbau: `RecordService::rebuildFulltext()` – aufgerufen vom CLI-Befehl `fulltext`
+(`--area=…`, `--stale`) und der Zeitplaner-Aufgabe `fulltext` (Option
+`details.only_stale`) – schreibt nur `data_ftx`, ohne Arbeitskopie, Sperre und
+Audit-Eintrag, für jeden Datensatz mit `tmp = 0` (auch im Papierkorb). Je Bereich läuft
+er unter einer Sperre (`var/tmp/fulltext-{area_id}.lock`, exklusiv angelegt, alle 50
+Datensätze aufgefrischt, nach 15 Minuten ohne Auffrischung verwaist); einen gesperrten
+Bereich überspringt ein zweiter Lauf. Nach einem vollständigen Lauf fällt die
+Markierung – nur, wenn sie nicht jünger ist als dessen Beginn.
 Volltextfelder stehen weder in `record_cache` noch im Audit-Schnappschuss.
 
 ## Arbeitskopien

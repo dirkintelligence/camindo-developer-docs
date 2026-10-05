@@ -79,7 +79,8 @@ The groups correspond to arrays in `Cms` (`textTypes`, `numericTypes`, `dateType
 * `data_dft` – exactly one row per record and language with the text content of the
   area's ***default field*** (`area.default_field_id`). This fetches the "title" of any
   record with one JOIN, without knowing which field it is (pseudo field name
-  `_default` in `select()`).
+  `_default` in `select()`). If the default field is encrypted, a password or JSON, it
+  holds `ID {record_id}` – no plain text.
 * `data_enc` – plain text AES-encrypted (key `.camindo.key`), next to it a
   deterministic HMAC in `hash` for equality searches.
 * `data_fil` – instead of `data`, the file's metadata: `extension`, `mime_type`,
@@ -113,7 +114,10 @@ Types that can be multilingual: `bit`, `chars`, `currency`, `datetime`, `decimal
 
 The rows are written by `VirtualFieldsTrait::saveVirtualFields()`. When the language
 list of an instance changes, `LanguageData` updates the existing data (new language:
-copy the primary language's rows; removed language: delete its rows).
+copy the primary language's rows; removed language: delete its rows, `record_cache` and
+`privacy_template`, delete its own files – in the trash too –, point file fallbacks to the
+primary language). A language deleted system-wide disappears from all instances this way
+(`LanguageData::deleteLanguage()`); it must not be the primary language of an instance.
 
 ### `record_cache` – content cache per language
 
@@ -183,7 +187,13 @@ Only `Field::convert()` (button "Change type") changes the type or the multiling
 flag of an existing field: text ↔ number is copied row by row, `relation` ↔
 `relation1` keeps only the first link for `…1`, mono- ↔ multilingual switches the
 `empty` flag or the files. `conversionTargets()` lists the possible targets,
-`conversionLossy()` warns about data loss.
+`conversionLossy()` warns about data loss. Edit locks do not stop a conversion: the
+working state of open working copies (their `record_cache`) is kept and gets the new
+type (`Record::retypeWorkingCopies()`, for file fields including newly uploaded files
+`Record::migrateWorkingCopyFiles()`); only the cache of productive records is
+discarded, and `data_dft` follows. If a field drops out of the full-text sources (e.g.
+after `encrypted`), the full texts of all non-temporary records of the area are rebuilt –
+deleted ones included.
 
 ### `record` – records
 
@@ -211,7 +221,7 @@ tmp, origin_id, locked, deleted                            ← working copies, t
 | `rel_area_template` | which templates an area may use or force via URL |
 | `status` | record status (icon, label, colour) |
 | `converter`, `rel_field_converter` | configured processors and their assignment to thumbnail fields |
-| `rel_fulltext_text` | source fields of a full-text field (optionally via a relation) |
+| `rel_fulltext_text` | source fields of a full-text field (optionally via a `link`/`relation` field: `rel_field_id`) |
 | `component`, `system` | installed components; version state of the core |
 | `bgproc` | background processes |
 | `scheduler` | scheduled tasks |
@@ -302,9 +312,23 @@ if no edge points to it any more – deleted in the same transaction
 ## Full-text search
 
 A field of type `fulltext` collects the content of other fields (`text`, `chars`,
-`json`, optionally across a relation; mapping in `rel_fulltext_text`) in `data_ftx`.
-Changed source fields are collected on save and processed **after** the check-in
-(`refreshAffectedFulltext()`); `refreshFulltext($fieldId)` rebuilds everything. The text
+`json`) in `data_ftx`; mapping in `rel_fulltext_text`. Sources are fields of the own area
+or – with `rel_field_id` – fields of the target areas of a `link`, `relation` or
+`relation1` field of the area (edges in `data_rel` with `src_id` = record);
+`Field::fulltextSourceOptions()` lists the selectable ones (the form groups them per
+target area), `Field::hookOnSave()` rejects others. In the pseudo field `source_fields`
+(form, API, XML) a source is a `field_id` or `"{rel_field_id}:{field_id}"`
+(`Field::sourceKey()`); the XML export writes `rel_field_id` as an attribute. Not
+selectable: fields behind `pointer`/`pointer1` – a pointer is a loose, one-way reference
+(often to several areas) whose texts do not describe the record.
+Changes to the **target record** reach the full text only for `link` (the content belongs
+to the record, see below); for `relation` only on the record's next save or by a rebuild
+(scheduler task `fulltext` without `only_stale`) – on purpose, a tag can be attached to
+thousands of records.
+On save, `refreshAffectedFulltext()` processes **after** the check-in the full-text fields
+of the own area that a changed field goes into, and all with sources via a link or
+relation field; if the record is content of a `link` field, those of its owner as well (edge in `data_rel`).
+`refreshFulltext($fieldId)` rebuilds everything. The text
 is normalised with `Cms::indexText()` first (HTML tags removed, entities decoded, only
 letters and digits; `&shy;` joins, the dot separates; words joined by hyphen or
 underscore are stored separated AND concatenated: `sofa-weiss` → `sofa weiss sofaweiss`;
@@ -320,19 +344,35 @@ without a row in `field`. The name is reserved (`Field::FULLTEXT`) and fixed in
 `fieldname` (type `fulltext`, master data in `seed.sql`; `Field::cleanupFieldname()`
 keeps it, `VirtualFieldsTrait::standardFulltextFieldnameId()` creates it if missing).
 Its `data_ftx` rows have `field_id` NULL. Its sources are always all fields of type
-`text`, `chars`, `json` and `file` (uploads, no thumbnails) in the area
-(`standardFulltextSources()`); it is written by `refreshStandardFulltext()` – after every
-save with changed source fields (`refreshAffectedFulltext()`), after `Field::convert()`
-and `Field::hookOnDeleted()` for the whole area. `select()` filters by field name and
+`text`, `chars`, `json` and `file` (uploads, no thumbnails) in the area and, via its
+`link` fields, those of the target areas, one level (`standardFulltextSources()`); it is
+written by `refreshStandardFulltext()` after every save (`refreshAffectedFulltext()`). `select()` filters by field name and
 needs no field definition: `filter[fulltext]` works in every area and across areas; the
 search forms offer it by themselves (`RecordBackendSearch`). The import skips a
 `fulltext` from older export files. Display: record info, tab "Meta data" → "Show full
 text" (`RecordBackendInfo::fulltext()`, all full texts per language); full-text fields do
 not appear in the "Contents" tab.
 
-Rebuilding afterwards (after `rel_fulltext_text` has changed): scheduler task `fulltext`
-(`RecordService::rebuildFulltext()`) – writes only `data_ftx`, without working copy, lock
-or audit entry, for every record with `tmp = 0` (including the trash).
+**Outdated instead of rebuilt at once (`FulltextState`).** Structural changes after which
+the full text of a whole area no longer matches its sources – sources of a full-text
+field changed or a new full-text field (`Field::hookOnSaved()`), source field deleted
+(`hookOnDeleted()`) or converted (`convert()`, also mono- ↔ multilingual), target areas
+of a `link` field changed, new folding rules of a language
+(`LanguageData::markFulltextStale()`, all areas of the instance) – do not rebuild it right
+away but set `area.fulltext_stale_at` (UTC, the earliest time is kept). The areas whose
+`link` fields point to the field's area are affected as well
+(`FulltextState::areasUsingField()`). Exception: `convert()` to `encrypted` rebuilds at
+once, otherwise plain text would remain in the index.
+The area's detail view and field list then show the notice with "Update now"
+(`AreaBackend::fulltextNotice()` / `fulltext()`): background process
+`camindo.php fulltext --area=ID --token=…` (`Cli\FulltextCommand`).
+Rebuild: `RecordService::rebuildFulltext()` – called by the CLI command `fulltext`
+(`--area=…`, `--stale`) and the scheduler task `fulltext` (option `details.only_stale`) –
+writes only `data_ftx`, without working copy, lock or audit entry, for every record with
+`tmp = 0` (including the trash). Per area it runs under a lock
+(`var/tmp/fulltext-{area_id}.lock`, created exclusively, refreshed every 50 records,
+orphaned after 15 minutes without refresh); a second run skips a locked area. After a
+complete run the mark is cleared – only if it is not newer than the run's start.
 Full-text fields are neither in `record_cache` nor in the audit snapshot.
 
 ## Working copies

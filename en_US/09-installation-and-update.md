@@ -308,6 +308,7 @@ php Core/cron/camindo.php <command> [arguments] [--options]
 | `admin password NAME [--pass-file=…] \| sign` | set a backend password; rewrite all signatures |
 | `key status \| rotate \| retire KID` | key ring of `.camindo.key` ([13](13-security-authentication.md#key-rotation)) |
 | `audit verify [TYPE ID] \| restore [--dry-run] \| migrate` | verify the audit log chain; after restoring a dump, cut the files back to the database state |
+| `fulltext [--area=ID,…] [--stale]` | rebuild the full text – all record areas, the given ones or those marked as outdated ([02](02-data-model.md#full-text-search)) |
 
 Exit codes: 0 ok, 1 error, 2 usage error; `--quiet` suppresses everything except
 errors. Commands are classes under `Core/src/Cli/{Name}Command.php`. Installation and

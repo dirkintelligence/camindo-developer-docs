@@ -177,9 +177,10 @@ the column expression – in conditions and in `ORDER BY`:
   in its language (`_refreshFulltext()`), the search term in the search language; if
   several search languages (backend) give different terms, each one is searched (`OR`).
   Meta columns of other tables (`admin.ft`) stay unfolded. When the rules of a language
-  change for existing full text – a language is added to an instance, deleted
-  (replacement language) or gets another code – the Instance and Language hooks rebuild
-  it with `LanguageData::refreshFulltext()` if `Collation::sameRules()` says no.
+  change for existing full text – a language is added to an instance or gets another
+  code – the Instance and Language hooks mark it as outdated with
+  `LanguageData::markFulltextStale()` if `Collation::sameRules()` says no (rebuild see
+  [Full-text search](02-data-model.md#full-text-search)).
 * **MariaDB:** If the server does not know `utf8mb4_0900_ai_ci` or `_as_ci`, `SqlFile`
   replaces them with the next best when running `schema.sql` and migrations
   (`Collation::portable()`: `uca1400_ai_ci`/`unicode_ci` or `uca1400_as_ci`/`bin`); the

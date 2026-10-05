@@ -306,6 +306,7 @@ php Core/cron/camindo.php <befehl> [argumente] [--optionen]
 | `admin password NAME [--pass-file=…] \| sign` | Backend-Passwort setzen; alle Signaturen neu schreiben |
 | `key status \| rotate \| retire KID` | Schlüsselbund von `.camindo.key` ([13](13-security-authentication.md#schlüsselrotation)) |
 | `audit verify [TYP ID] \| restore [--dry-run] \| migrate` | Kette des Audit-Logs prüfen; nach dem Zurückspielen eines Dumps die Dateien auf den Stand der Datenbank kürzen |
+| `fulltext [--area=ID,…] [--stale]` | Volltext neu aufbauen – alle Datensatzbereiche, die genannten oder die als veraltet markierten ([02](02-data-model.md#volltextsuche)) |
 
 Exit-Codes: 0 ok, 1 Fehler, 2 Bedienfehler; `--quiet` unterdrückt alles außer Fehlern.
 Befehle sind Klassen unter `Core/src/Cli/{Name}Command.php`. Installation und Core-Update

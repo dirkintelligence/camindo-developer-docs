@@ -160,6 +160,13 @@ Rules:
 * **Migrations do not build caches** – `upgrade` does that at the end.
 * No seed row with id 0 in tables that have an edit form (0 means "new" there).
 
+**SQL mode.** The schema assumes the non-strict mode: many `NOT NULL` columns have no
+`DEFAULT`, INSERTs omit them, and some columns have zero dates (`0000-00-00 00:00:00`).
+`Database` therefore runs `SET SESSION sql_mode` with `db.sql_mode` (default
+`NO_ENGINE_SUBSTITUTION`) on every connection, before the `db.init_querys` – regardless
+of the server's default (MySQL 8: `STRICT_TRANS_TABLES` and others). `null` keeps the
+server's mode.
+
 ## The installer
 
 ```
@@ -177,7 +184,7 @@ second, unprotected path into the database.
 | `key` | create `.camindo.key` (32 random bytes, `0600`) – **losing it = encrypted content unreadable** |
 | `config` | `.camindo.php` from `Core/install/templates/camindo.php.dist` |
 | `sqlpwd` | `.sqlpwd` for `mysqldump` |
-| `dirs` | `var/…`, `public/media/default`, symlink `public/backend/assets` (`--copy-assets`: copy) |
+| `dirs` | `var/…`, `public/media/default`, `public/backend/assets` as a copy of `Core/public_master/backend/assets` (`--symlink-assets`: relative symlink for work on the core; if it fails, the files are copied). `upgrade` refreshes a copy, a symlink stays |
 | `database` | `schema.sql` + `seed.sql` |
 | `admin` | first user (superuser); the password must meet the policy |
 | `core` | `system.core_version` |
@@ -219,7 +226,7 @@ on):
 5. `ComponentManager::refresh()`; unless `--no-components`, update all add-on
    components with a pending update in dependency order – one whose `requires.core`
    does not allow the new version stays inactive
-6. runtime: lists, snippet and HTML caches, extension assets, `InstanceCache`,
+6. runtime: lists, snippet and HTML caches, extension assets, copied backend assets, `InstanceCache`,
    `.htaccess` block, recompile templates, manual index
 7. `system.core_version`, `var/config/core.php`
 8. lift maintenance mode (only its own, or with `--unlock`)
@@ -290,7 +297,7 @@ php Core/cron/camindo.php <command> [arguments] [--options]
 | Command | Does |
 |---|---|
 | `status [--after-composer] [--json]` | files vs. database: versions, pending migrations and updates, maintenance mode |
-| `install [--no-interaction --fixtures --create-db --copy-assets --force --yes --step=…]` | first installation |
+| `install [--no-interaction --fixtures --create-db --symlink-assets --force --yes --step=…]` | first installation |
 | `upgrade [--no-components --no-backup --unlock]` | core migrations, component updates, runtime, caches |
 | `maintenance on [--reason=…] \| off \| status` | maintenance mode |
 | `backup [--reason=…] \| list \| prune --keep=N` | backups to `var/dbbackup/` |

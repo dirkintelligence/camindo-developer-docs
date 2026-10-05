@@ -127,7 +127,9 @@ Der generierte Block in `public/.htaccess` (zwischen `## CAMINDO SYNTAX START` u
 `Page::resolveRequest()` arbeitet in dieser Reihenfolge:
 
 1. **Instanz** aus dem Host: `primary_domain`, dann `rel_instance_domain` (wörtlich oder
-   als regulärer Ausdruck), sonst die Standard-Instanz. Quelle ist der Dateicache
+   als regulärer Ausdruck, in der Reihenfolge der Instanzen), sonst die Standard-Instanz.
+   Die Reihenfolge der Instanzen ist systemweit `Instance::orderSql()`: nach `position`,
+   die Standard-Instanz immer zuletzt. Quelle ist der Dateicache
    `var/cache/instances.php` + `instance-{id}.php` (`InstanceCache`), keine Datenbank.
    Daraus `Cms::setInstanceAccess()`: eigene Instanz plus die Instanzen, die sie lesen darf.
 2. **Sprache**: Das Kürzel aus der URL muss eine Sprache der Instanz sein. Fehlt es und

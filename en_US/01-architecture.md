@@ -127,7 +127,9 @@ with a checksum – do not edit by hand, written by `HtaccessWriter`) contains:
 `Page::resolveRequest()` works in this order:
 
 1. **Instance** from the host: `primary_domain`, then `rel_instance_domain` (literal or
-   regular expression), otherwise the default instance. The source is the file cache
+   regular expression, in the order of the instances), otherwise the default instance.
+   The order of the instances is `Instance::orderSql()` system-wide: by `position`, the
+   default instance always last. The source is the file cache
    `var/cache/instances.php` + `instance-{id}.php` (`InstanceCache`), not the database.
    From this, `Cms::setInstanceAccess()`: the instance itself plus the instances it may
    read.

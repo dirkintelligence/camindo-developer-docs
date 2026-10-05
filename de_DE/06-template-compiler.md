@@ -340,7 +340,7 @@ und gemerkt; ein unbekannter Verweis gilt als leerer Wert (`ifempty` greift).
   Sprachsegment verlangt den Schrägstrich, der Pfad kommt deshalb als Slug `en` an.
   Ist er ein Sprachkürzel des Auftritts (`InstanceCache::findByCode()`, dieselbe Regel
   wie für `/en/`), leitet `Page` mit 301 auf die Startseite dieser Sprache um – mit dem
-  Kürzel aus der Tabelle `language` (`/en_EN/`), bei nur einer Sprache auf `/`. Nur
+  Kürzel aus der Tabelle `language` (`/en_US/`), bei nur einer Sprache auf `/`. Nur
   GET/HEAD, nicht in der Vorschau. Bei einer Sprache geht ein Datensatz mit genau diesem
   Slug vor; bei mehreren trägt jede Datensatz-Adresse ohnehin ein Sprachsegment.
 * **404:** Unbekannter Datensatz (auch einer aus einer fremden Instanz), unbekanntes

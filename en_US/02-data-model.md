@@ -160,7 +160,7 @@ trigger_template_id, overview_template_id, login_name_field_id, login_password_f
 * `trigger_template_id`: template with event methods that run on every save and delete
   ([06](06-template-compiler.md#trigger-templates)).
 * `overview_template_id`: template for the address that consists only of the slug
-  prefix (`/en_EN/events`) – an overview without a record ([06](06-template-compiler.md#url-and-slug)).
+  prefix (`/en_US/events`) – an overview without a record ([06](06-template-compiler.md#url-and-slug)).
 * `details` (JSON): among others `tabs` (multilingual form with tabs), `slug_prefix`
   per language, `profile_area_ids` (`ugc`), `second_factor` (`profile`).
 

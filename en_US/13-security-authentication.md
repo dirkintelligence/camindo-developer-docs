@@ -290,7 +290,9 @@ no hook for that yet. Where possible, encrypt in fields of type `encrypted`.
 `Dataset` logs in `save()`, `softDelete()`, `restore()` and `purge()` – inside the
 operation's transaction; a rollback takes the entry with it. Snapshots are compared
 (`Dataset::auditSnapshot()`); a save without changes writes nothing. In addition:
-login, failed login, logout and exports of personal data.
+failed logins and exports of personal data; successful logins and logouts only with
+`audit.log_logins = true` (`AuditLog::login()`, off by default – they reveal working
+hours but no changes).
 
 * **Split:** `audit_log` holds the metadata (time, actor, origin, IP, action, object,
   names of changed fields); `AuditStore` writes the complete entries to
@@ -316,7 +318,14 @@ login, failed login, logout and exports of personal data.
   (`Template`: `styled_code`, derived from `code`; full-text fields never appear in a
   record snapshot).
 * **Retention** `audit.retention_days_*`; `AuditLog::purge()` shortens files and sets a
-  checkpoint in the chain.
+  checkpoint in the chain. Logins/logouts and failed logins have their own period
+  (`audit.retention_days_logins`, default 90 days); they sit in the middle of an
+  account's history and are removed via `AuditStore::rewriteObject()` – if the callback
+  returns `null`, the entry is dropped (checkpoint `retention`).
+* **Anonymising** `AuditLog::anonymizeObject()` (action `audit_anonymize` of a delete
+  policy): entries in which a website user acted lose `user_id` (0) and name – in the
+  database and the file, checkpoint `privacy`. `AuditDiff::actorLabel()` then shows
+  only “Frontend user” without an id.
 
 Display: tab "Changes" of the detail views – records and every other dataset info
 page (area, field, template, status, instance, language, converter, task, component,

@@ -334,7 +334,7 @@ remembered; an unknown reference counts as an empty value (`ifempty` applies).
   segment requires the slash, so the path arrives as the slug `en`. If it is a language
   code of the site (`InstanceCache::findByCode()`, the same rule as for `/en/`), `Page`
   redirects with 301 to the start page of that language – using the code from the
-  `language` table (`/en_EN/`), or to `/` if there is only one language. GET/HEAD only,
+  `language` table (`/en_US/`), or to `/` if there is only one language. GET/HEAD only,
   not in the preview. With a single language, a record with exactly this slug takes
   precedence; with several, every record address carries a language segment anyway.
 * **404:** an unknown record (including one from another instance), an unknown

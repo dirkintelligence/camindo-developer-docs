@@ -425,10 +425,18 @@ use the module see its widget.
 
 ## Blueprints for new areas
 
-`Core/Modules/Area/blueprints/{record|profile|ugc}/*.xml` appear as templates when an
-area is created. A blueprint is an XML export file with exactly one `<area>` including
-`<fields>` and no records; `RecordImport::importBlueprint()` creates the fields. Copying
-an area uses the same path.
+`Core/Modules/Area/blueprints/{record|profile|ugc}/*.xml` and an installation's own
+blueprints in `var/area_blueprints/*.xml` appear as templates when an area is created
+(`AreaService::blueprints()`). A blueprint is an XML export file with exactly one
+`<area>` including `<fields>` and no records; `RecordImport::importBlueprint()` creates
+the fields. Copying an area uses the same path.
+
+- The file name is the blueprint's name; the type comes from the file's `<area>`
+  (`var/area_blueprints/` has no per-type subfolders). An own blueprint replaces a
+  shipped one of the same name and type.
+- The area's `<label>` and `<note>` are the heading and explanation in the selection –
+  text or a snippet reference (`#key`, `#module.key`). The shipped blueprints use the
+  core's general labels (`#label_area_articles`, `#label_title` …).
 
 ## Import and export
 

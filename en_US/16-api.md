@@ -186,7 +186,7 @@ copy), validation against the field definitions, check-in in one transaction. Wi
 ```json
 {
   "record_id": 5508,
-  "data":      {"title": {"en_EN": "Summer sale", "de_DE": "Sommerschlussverkauf"},
+  "data":      {"title": {"en_US": "Summer sale", "de_DE": "Sommerschlussverkauf"},
                 "online_at": "2026-10-01T10:00:00+02:00", "price": "19.90"},
   "relations": {"tags": {"add": [3014], "remove": [3056]}, "categories": [2681]},
   "files":     {"image": {"serverfile": "fotos/sale.jpg"},

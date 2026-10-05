@@ -428,10 +428,19 @@ wer auch das Modul darf.
 
 ## Baupläne für neue Bereiche
 
-`Core/Modules/Area/blueprints/{record|profile|ugc}/*.xml` erscheinen beim Anlegen eines
-Bereichs als Vorlagen. Ein Bauplan ist eine XML-Exportdatei mit genau einem `<area>`
-samt `<fields>` und ohne Datensätze; `RecordImport::importBlueprint()` legt die Felder
-an. Das Kopieren eines Bereichs nutzt denselben Weg.
+`Core/Modules/Area/blueprints/{record|profile|ugc}/*.xml` und die eigenen Baupläne einer
+Installation in `var/area_blueprints/*.xml` erscheinen beim Anlegen eines Bereichs als
+Vorlagen (`AreaService::blueprints()`). Ein Bauplan ist eine XML-Exportdatei mit genau
+einem `<area>` samt `<fields>` und ohne Datensätze; `RecordImport::importBlueprint()`
+legt die Felder an. Das Kopieren eines Bereichs nutzt denselben Weg.
+
+- Der Dateiname ist der Name des Bauplans; der Typ kommt aus dem `<area>` der Datei
+  (in `var/area_blueprints/` gibt es keine Unterordner je Typ). Ein eigener Bauplan
+  ersetzt einen mitgelieferten gleichen Namens und Typs.
+- `<label>` und `<note>` des Bereichs sind Überschrift und Erklärung in der Auswahl –
+  Text oder Snippet-Verweis (`#key`, `#modul.key`). Die mitgelieferten Baupläne
+  verwenden die allgemeinen Beschriftungen des Cores (`#label_area_articles`,
+  `#label_title` …).
 
 ## Import und Export
 

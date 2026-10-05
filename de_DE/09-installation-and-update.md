@@ -159,6 +159,13 @@ Regeln:
 * **Migrationen bauen keine Caches** – das macht `upgrade` am Ende.
 * Keine Seed-Zeile mit der Id 0 in Tabellen mit Eingabemaske (0 heißt dort „neu").
 
+**SQL-Modus.** Das Schema setzt den nicht-strikten Modus voraus: Viele `NOT NULL`-Spalten
+haben kein `DEFAULT`, INSERTs lassen sie weg, und einige Spalten haben Null-Datumswerte
+(`0000-00-00 00:00:00`). `Database` setzt deshalb bei jeder Verbindung
+`SET SESSION sql_mode` auf `db.sql_mode` (Vorgabe `NO_ENGINE_SUBSTITUTION`), vor den
+`db.init_querys` – unabhängig vom Standard des Servers (MySQL 8: `STRICT_TRANS_TABLES`
+u. a.). `null` lässt den Modus des Servers stehen.
+
 ## Der Installer
 
 ```
@@ -176,7 +183,7 @@ zweiter, ungeschützter Weg in die Datenbank.
 | `key` | `.camindo.key` erzeugen (32 Zufallsbytes, `0600`) – **Verlust = verschlüsselte Inhalte unlesbar** |
 | `config` | `.camindo.php` aus `Core/install/templates/camindo.php.dist` |
 | `sqlpwd` | `.sqlpwd` für `mysqldump` |
-| `dirs` | `var/…`, `public/media/default`, Symlink `public/backend/assets` (`--copy-assets`: Kopie) |
+| `dirs` | `var/…`, `public/media/default`, `public/backend/assets` als Kopie von `Core/public_master/backend/assets` (`--symlink-assets`: relativer Symlink für die Arbeit am Core, scheitert er, wird kopiert). `upgrade` frischt eine Kopie auf, ein Symlink bleibt |
 | `database` | `schema.sql` + `seed.sql` |
 | `admin` | erster Benutzer (Superuser); das Passwort muss der Richtlinie genügen |
 | `core` | `system.core_version` |
@@ -218,7 +225,7 @@ Wartungsmodus stehen):
 5. `ComponentManager::refresh()`; ohne `--no-components` alle Zusatzkomponenten mit
    wartendem Update in Abhängigkeitsreihenfolge aktualisieren – eine, deren
    `requires.core` die neue Version nicht erlaubt, bleibt inaktiv
-6. Laufzeit: Listen, Snippet- und HTML-Cache, Extension-Assets, `InstanceCache`,
+6. Laufzeit: Listen, Snippet- und HTML-Cache, Extension-Assets, kopierte Backend-Assets, `InstanceCache`,
    `.htaccess`-Block, Templates neu kompilieren, Handbuch-Index
 7. `system.core_version`, `var/config/core.php`
 8. Wartungsmodus aufheben (nur den eigenen, oder mit `--unlock`)
@@ -288,7 +295,7 @@ php Core/cron/camindo.php <befehl> [argumente] [--optionen]
 | Befehl | Tut |
 |---|---|
 | `status [--after-composer] [--json]` | Dateien gegen Datenbank: Versionen, wartende Migrationen und Updates, Wartungsmodus |
-| `install [--no-interaction --fixtures --create-db --copy-assets --force --yes --step=…]` | Erstinstallation |
+| `install [--no-interaction --fixtures --create-db --symlink-assets --force --yes --step=…]` | Erstinstallation |
 | `upgrade [--no-components --no-backup --unlock]` | Core-Migrationen, Komponenten-Updates, Laufzeit, Caches |
 | `maintenance on [--reason=…] \| off \| status` | Wartungsmodus |
 | `backup [--reason=…] \| list \| prune --keep=N` | Sicherungen nach `var/dbbackup/` |

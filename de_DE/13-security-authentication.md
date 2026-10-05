@@ -297,7 +297,9 @@ Typ `encrypted`.
 `Dataset` protokolliert in `save()`, `softDelete()`, `restore()` und `purge()` – in der
 Transaktion des Vorgangs, ein Rollback nimmt den Eintrag mit. Verglichen werden
 Schnappschüsse (`Dataset::auditSnapshot()`); ein Speichern ohne Änderung schreibt
-nichts. Dazu Anmeldung, Fehlanmeldung, Abmeldung und Exporte personenbezogener Daten.
+nichts. Dazu Fehlanmeldungen und Exporte personenbezogener Daten; erfolgreiche An- und
+Abmeldungen nur mit `audit.log_logins = true` (`AuditLog::login()`, Vorgabe aus – sie
+verraten Arbeitszeiten, aber keine Änderungen).
 
 * **Aufteilung:** `audit_log` hält die Metadaten (Zeit, Handelnder, Herkunft, IP,
   Aktion, Objekt, Namen der geänderten Felder); die vollständigen Einträge schreibt
@@ -323,7 +325,14 @@ nichts. Dazu Anmeldung, Fehlanmeldung, Abmeldung und Exporte personenbezogener D
   (`Template`: `styled_code`, abgeleitet aus `code`; Volltextfelder stehen nie im
   Schnappschuss eines Datensatzes).
 * **Aufbewahrung** `audit.retention_days_*`; `AuditLog::purge()` kürzt Dateien und
-  setzt einen Kontrollpunkt in die Kette.
+  setzt einen Kontrollpunkt in die Kette. An-/Abmeldungen und Fehlversuche haben eine
+  eigene Frist (`audit.retention_days_logins`, Vorgabe 90 Tage); sie liegen mitten im
+  Verlauf eines Kontos und werden über `AuditStore::rewriteObject()` entfernt – gibt
+  die Funktion `null` zurück, fällt der Eintrag weg (Kontrollpunkt `retention`).
+* **Anonymisieren** `AuditLog::anonymizeObject()` (Aktion `audit_anonymize` einer
+  Lösch-Policy): Einträge, in denen ein Website-User gehandelt hat, verlieren
+  `user_id` (0) und Namen – in Datenbank und Datei, Kontrollpunkt `privacy`.
+  `AuditDiff::actorLabel()` zeigt dann nur noch „Frontend-User“ ohne Id.
 
 Anzeige: Reiter „Änderungen" der Detailansichten – Datensatz und jede andere
 Dataset-Info-Seite (Bereich, Feld, Template, Status, Instanz, Sprache, Konverter,

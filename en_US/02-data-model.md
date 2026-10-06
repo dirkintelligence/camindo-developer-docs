@@ -441,7 +441,7 @@ match. Access protection and delivery: [07](07-media-processing.md#storage-and-d
 
 ```
 delete()   → deleted = 1, files to var/deleted/          (restore() undoes this)
-purge()    → remove the row, delete the files for good   (cron trash.php after
+purge()    → remove the row, delete the files for good   (scheduler task trash after
                                                           admin.trash_retention_days)
 ```
 

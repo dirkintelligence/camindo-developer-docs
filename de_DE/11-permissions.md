@@ -54,6 +54,21 @@ Zusatzrechte. `group.details.interfaces`: erlaubte ***Oberflächen*** aus
 `Access::INTERFACES` (`backend`, `cli`, `php`); fehlt der Schlüssel, nur `backend`. Alle Rechte-Zeilen sind **signiert** – eine per SQL eingefügte oder
 geänderte Zeile gilt als nicht vorhanden ([13](13-security-authentication.md#signaturen)).
 
+Sprachrechte nimmt `Group::save()` je Sprache als Stufe (`Group::LANGUAGE_NONE|READ|WRITE`)
+oder als Liste davon – so schickt sie die Gruppenmaske (Hiddenfeld `0` plus Checkboxes
+„lesen“ `1` und „schreiben“ `2`, `data[languages][{id}][]`); es gilt die höchste. Auch
+abgewählte Sprachen kommen so an, damit `Group::grantInstance()` sie bei einer neu
+zugewiesenen Instanz nicht wieder mit Leserecht vorbelegt.
+
+Eine Gruppe löscht `Group::deleteReplacing($groupId, $replacementId)`: die aktiven
+Benutzer der Gruppe wechseln per `Admin::save(['group_id'])` (Signatur, Audit-Log) in die
+Ersatzgruppe, dann wird die Gruppe gelöscht; alles in einer Transaktion. Die
+Superuser-Gruppe ist als Ersatz ausgeschlossen. `Group::hookOnDelete()` weist eine Gruppe
+mit aktiven Benutzern weiterhin ab; ihre **gelöschten** Benutzer verlieren dort die
+Zuordnung (`admin.group_id` = NULL, nullable; der Fremdschlüssel verweist mit
+`ON DELETE RESTRICT`), neu signiert, mit Eintrag im Audit-Log des Kontos – gelöschte
+Benutzer lassen sich nicht wiederherstellen, ihre Gruppe ist nur Historie.
+
 ## Laufzeit: Gruppendatei und `Access`
 
 `InstanceCache` schreibt je Benutzergruppe eine Datei `var/cache/group-{id}.php` (sichtbare
@@ -117,7 +132,7 @@ Entwickler.
    er sich, muss die Benutzergruppe den neuen Status setzen dürfen
    (`error_status_denied`). Den Bearbeiten-Zugang zu einem Datensatz in einem nicht
    setzbaren Status sperren `RecordService::loadForAction('edit')` (Maske,
-   Stapelverarbeitung, API) und die Oberfläche (Knopf ausgegraut, Kontextmenü ohne
+   Stapelverarbeitung, API) und die Oberfläche (Schaltfläche ausgegraut, Kontextmenü ohne
    „Bearbeiten“).
 
 Dazu prüft `Backend::backendPath()` für **jedes** Script `Access::script()`:

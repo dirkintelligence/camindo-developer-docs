@@ -335,7 +335,14 @@ und gemerkt; ein unbekannter Verweis gilt als leerer Wert (`ifempty` greift).
   Datensatz ein – wie ein vom CMS gewähltes Template, ohne Standalone-Flag und ohne
   kanonische Umleitung. `Cms::$overviewAreaId` hält den Bereich; `CMS:URL` ohne `id`
   verweist dann auf dieselbe Übersicht (Sprachumschalter), `(CMS:URL area=…)` baut die
-  Adresse von außen (`Cms::areaUrl()`). Ohne Übersichts-Template: 404.
+  Adresse von außen (`Cms::areaUrl()`). Ohne Übersichts-Template: 404. `$cms` hält
+  statt eines Datensatzes die Angaben des Bereichs (`Page::overviewData()`):
+  `record_id` (0), `area_id`, `area`, `area_label` (Snippet aufgelöst), `area_type`,
+  `area_icon`, `instance_id`, `parent_id`, `language_id`, `slug_prefix` (Sprache des
+  Aufrufs), `overview` (true) – etwa für `filter[area]="{$cms['area_id']}"`. Im Backend
+  gibt `Backend::buttonAddAreaPreview()` Bereichen mit Übersichts-Template und Präfix
+  eine Vorschau-Schaltfläche (Bereichs-Info, Datensatzliste); `buttonAddPreview()` nimmt
+  dafür statt eines Pfads auch `language_id => Pfad` (der Präfix ist je Sprache übersetzt).
 * **Nur das Sprachkürzel** (`/en`, ohne Schrägstrich): Die Rewrite-Regel für das
   Sprachsegment verlangt den Schrägstrich, der Pfad kommt deshalb als Slug `en` an.
   Ist er ein Sprachkürzel des Auftritts (`InstanceCache::findByCode()`, dieselbe Regel
@@ -426,7 +433,7 @@ HTML-Teil – beides blockiert eine aktive Script-Policy. Das Widget
 
 ## Frontend-Editing
 
-`(CMS:FED)` gibt für angemeldete Benutzer einen Knopf zur Eingabemaske des
+`(CMS:FED)` gibt für angemeldete Benutzer eine Schaltfläche zur Eingabemaske des
 laufenden (oder mit `id` genannten) Datensatzes aus – als
 `<a href="#" data-c9-fed="42" class="c9-fed">`, ohne Handler-Attribut.
 `(CMS:FED_SCRIPT)` liefert einmal je Seite die Funktion `cFED()` und den Klick-Listener

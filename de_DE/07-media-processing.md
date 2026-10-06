@@ -222,8 +222,9 @@ true)`); das Ergebnis kommt als interne Nachricht.
 
 ```
 * * * * *  php /pfad/zum/projekt/Core/cron/cron.php
-15 3 * * * php /pfad/zum/projekt/Core/cron/trash.php
 ```
+
+Das ist der **einzige** Cronjob.
 
 `cron.php` startet `TriggerCron::run()`, eine **selbstsperrende Schleife**: eine
 Sperrdatei verhindert parallele Durchläufe, nach knapp zehn Minuten endet sie und der
@@ -232,7 +233,7 @@ nächste Cron-Aufruf übernimmt. Im Wartungsmodus beendet sie sich sofort.
 | Takt | Aufgabe |
 |---|---|
 | `tick2s()` | Trigger für Hintergrund-Umwandlungen (`trigger_ff.php`, `trigger_magick.php`) |
-| `tick1m()` | Zeitplaner, Template-Abgleich, Herzschlag für die Betriebshinweise, stündliches Aufräumen (`var/tmp`, abgelaufene Exporte, Audit-Log, unbestätigte Profile), tägliche Update-Prüfung und Prüfung des Audit-Logs |
+| `tick1m()` | Zeitplaner (`scheduler.php`), Template-Abgleich (`template_sync.php`), Herzschlag für die Betriebshinweise. Alles Periodische darüber hinaus – auch die Wartung – ist eine Aufgabe des Zeitplaners |
 
 ### Trigger
 
@@ -268,6 +269,22 @@ Zeitgesteuerte Aufgaben in der Tabelle `scheduler`:
 | `logcleanup` | Logdateien und Anmeldeversuche nach Fristen aufräumen |
 | `template` | ein Frontend-Template mit `template.type = 'scheduler'` ausführen (`Page::renderScheduled()`) |
 | `fulltext` | Volltext der Bereiche `details.area_ids` (leer = alle außer Ordnern) neu aufbauen (`RecordService::rebuildFulltext()`); bricht bei `max_minutes` ab |
+| `cachecleanup` | Ausgabe-Cache von `CMS:INCLUDE` aufräumen (`IncludeCache::cleanup()`) |
+| `trash` | Papierkorb leeren (`ToolDatabase::purgeTrash()`, `admin.trash_retention_days`), Sperre `trash`, Audit-Herkunft `trash` |
+| `tmpcleanup` | `var/tmp` (`admin.tmp_retention_hours`; `*.lock`, `*.stamp` bleiben) und `RecordExport::cleanup()` |
+| `privacy` | `PrivacyJobs::runDue()` in Runden zu `RUN_LIMIT`, solange eine Runde voll und fehlerfrei war |
+| `retention` | `IpAnonymizer::run()`, `AuditLog::purge()`, `Message::purgeExpired()`, `RecordUser::purgeUnconfirmed()` – jeder Schritt für sich |
+| `auditverify` | `AuditLog::verifyAll()` + `storeVerifyResult()` (für `SystemHealth`); Befunde = Fehler |
+| `updatecheck` | `UpdateCheck::run()`; ohne `paths.composer` nichts zu tun |
+
+Die letzten sechs (`Scheduler::MAINTENANCE_TYPES`) haben keine `details`; sie waren
+früher in `TriggerCron` bzw. einem eigenen Cronjob fest verdrahtet. Der Installer legt
+`Scheduler::DEFAULT_TASKS` an (`Scheduler::createDefaults()`, Schritt `tasks` nach
+`runtime`, weil `adminError()` die Gruppendateien braucht): nachts zwischen 2 und 4 Uhr
+verteilt, `tmpcleanup` stündlich, Beschriftung als Snippet `#scheduler.label_type_{typ}`.
+`camindo.php scheduler defaults` ergänzt fehlende Typen, `scheduler list` und
+`scheduler run ID|TYP` dienen Betrieb und Test. `SystemHealth` meldet
+Wartungstypen ohne eingeschaltete Aufgabe (Prüfung `maintenance`).
 
 Die Zeitsteuerung steht in Cron-Syntax (Minute, Stunde, Tag, Monat, Jahr, Wochentag).
 `TriggerCron::tick1m()` startet `cron/scheduler.php`; `SchedulerRunner::dispatch()`

@@ -189,7 +189,8 @@ zweiter, ungeschützter Weg in die Datenbank.
 | `core` | `system.core_version` |
 | `components` | Zusatzkomponenten **entdecken**, nicht installieren |
 | `runtime` | Laufzeitlisten, Caches, `.htaccess`-Block, Versionsstempel |
-| `finish` | `var/install.lock`, Zusammenfassung mit Cron-Zeilen |
+| `tasks` | Wartungsaufgaben des Zeitplaners (`Scheduler::createDefaults()`, nur fehlende Typen) |
+| `finish` | `var/install.lock`, Zusammenfassung mit der Cron-Zeile |
 
 Existiert `var/install.lock`, endet `install` sofort mit Exit-Code 0; `--force --yes`
 setzt bewusst neu auf (Datenbank wird geleert). Einzelne Schritte lassen sich mit
@@ -307,12 +308,13 @@ php Core/cron/camindo.php <befehl> [argumente] [--optionen]
 | `key status \| rotate \| retire KID` | Schlüsselbund von `.camindo.key` ([13](13-security-authentication.md#schlüsselrotation)) |
 | `audit verify [TYP ID] \| restore [--dry-run] \| migrate` | Kette des Audit-Logs prüfen; nach dem Zurückspielen eines Dumps die Dateien auf den Stand der Datenbank kürzen |
 | `fulltext [--area=ID,…] [--stale]` | Volltext neu aufbauen – alle Datensatzbereiche, die genannten oder die als veraltet markierten ([02](02-data-model.md#volltextsuche)) |
+| `scheduler list \| defaults \| run ID\|TYP` | Aufgaben des Zeitplaners auflisten, fehlende Wartungsaufgaben anlegen, eine Aufgabe sofort ausführen (etwa `run trash`) ([07](07-media-processing.md#zeitplaner-modul-scheduler)) |
 
 Exit-Codes: 0 ok, 1 Fehler, 2 Bedienfehler; `--quiet` unterdrückt alles außer Fehlern.
 Befehle sind Klassen unter `Core/src/Cli/{Name}Command.php`. Installation und Core-Update
 gibt es bewusst nur auf der Kommandozeile – ein Core-Update aus dem Backend tauschte den
 Code aus, der es gerade ausführt.
 
-Weitere Scripts unter `Core/cron/`: `cron.php` und `trash.php` (Cron),
+Weitere Scripts unter `Core/cron/`: `cron.php` (der einzige Cronjob), `scheduler.php` (von ihm gestartet),
 `rebuild_trees.php` (Bäume reparieren), `check_dateparse.php`,
 `check_nested_select.php`, `check_tree_positions.php`, `check_webauthn.php` (Selbsttests).

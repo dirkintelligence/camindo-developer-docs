@@ -137,7 +137,7 @@ if (!$access->areaRead($areaId)) {                 // Leserecht der Benutzergrup
     echo $this->backend->template('container_footer');
     return;
 }
-if ($access->areaWrite($areaId, $ownerId)) { … }   // Bearbeiten-Knopf nur mit Recht
+if ($access->areaWrite($areaId, $ownerId)) { … }   // Bearbeiten-Schaltfläche nur mit Recht
 if ($access->moduleRight('Blog', 'publish')) { … } // Zusatzrecht des Moduls
 ```
 

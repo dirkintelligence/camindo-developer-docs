@@ -218,9 +218,11 @@ protected files and downloads in the frontend.
 
 ```
 php Core/cron/camindo.php <command>     installation, update, caches, components, keys …
-php Core/cron/cron.php                  every minute via cron: TriggerCron (background work)
-php Core/cron/trash.php                 nightly: empty the trash
+php Core/cron/cron.php                  every minute via cron (the only cron job): TriggerCron
 ```
+
+Maintenance (trash, `var/tmp`, delete policies, retention periods, audit verification,
+update check) are scheduler tasks ([07](07-media-processing.md#scheduler-module-scheduler)).
 
 All scripts under `Core/cron/` refuse to run if `PHP_SAPI !== 'cli'` and define
 `CAMINDO_CLI`. Details: [07](07-media-processing.md#cron) and

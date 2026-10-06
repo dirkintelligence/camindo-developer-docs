@@ -217,9 +217,11 @@ Downloads im Frontend.
 
 ```
 php Core/cron/camindo.php <befehl>      Installation, Update, Caches, Komponenten, Schlüssel …
-php Core/cron/cron.php                  minütlich per Cron: TriggerCron (Hintergrundarbeit)
-php Core/cron/trash.php                 nachts: Papierkorb leeren
+php Core/cron/cron.php                  minütlich per Cron (der einzige Cronjob): TriggerCron
 ```
+
+Wartung (Papierkorb, `var/tmp`, Lösch-Policies, Fristen, Audit-Prüfung, Update-Prüfung)
+sind Aufgaben des Zeitplaners ([07](07-media-processing.md#zeitplaner-modul-scheduler)).
 
 Alle Scripts unter `Core/cron/` verweigern den Dienst, wenn `PHP_SAPI !== 'cli'`, und
 setzen `CAMINDO_CLI`. Einzelheiten: [07](07-media-processing.md#cron) und

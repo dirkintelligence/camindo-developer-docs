@@ -220,8 +220,9 @@ result arrives as an internal message.
 
 ```
 * * * * *  php /path/to/project/Core/cron/cron.php
-15 3 * * * php /path/to/project/Core/cron/trash.php
 ```
+
+This is the **only** cron job.
 
 `cron.php` starts `TriggerCron::run()`, a **self-locking loop**: a lock file prevents
 parallel runs; after almost ten minutes it ends and the next cron call takes over. In
@@ -230,7 +231,7 @@ maintenance mode it exits immediately.
 | Interval | Task |
 |---|---|
 | `tick2s()` | triggers for background conversions (`trigger_ff.php`, `trigger_magick.php`) |
-| `tick1m()` | scheduler, template sync, heartbeat for the operation notices, hourly clean-up (`var/tmp`, expired exports, audit log, unconfirmed profiles), daily update check and audit log verification |
+| `tick1m()` | scheduler (`scheduler.php`), template sync (`template_sync.php`), heartbeat for the operation notices. Everything else that recurs – maintenance included – is a scheduler task |
 
 ### Triggers
 
@@ -265,6 +266,22 @@ Scheduled tasks in the `scheduler` table:
 | `logcleanup` | clean up log files and login attempts according to retention periods |
 | `template` | run a frontend template with `template.type = 'scheduler'` (`Page::renderScheduled()`) |
 | `fulltext` | rebuild the full text of the areas in `details.area_ids` (empty = all except folders) (`RecordService::rebuildFulltext()`); stops at `max_minutes` |
+| `cachecleanup` | clean up the `CMS:INCLUDE` output cache (`IncludeCache::cleanup()`) |
+| `trash` | empty the trash (`ToolDatabase::purgeTrash()`, `admin.trash_retention_days`), lock `trash`, audit origin `trash` |
+| `tmpcleanup` | `var/tmp` (`admin.tmp_retention_hours`; `*.lock`, `*.stamp` stay) and `RecordExport::cleanup()` |
+| `privacy` | `PrivacyJobs::runDue()` in rounds of `RUN_LIMIT` as long as a round was full and without errors |
+| `retention` | `IpAnonymizer::run()`, `AuditLog::purge()`, `Message::purgeExpired()`, `RecordUser::purgeUnconfirmed()` – each step on its own |
+| `auditverify` | `AuditLog::verifyAll()` + `storeVerifyResult()` (for `SystemHealth`); findings = error |
+| `updatecheck` | `UpdateCheck::run()`; nothing to do without `paths.composer` |
+
+The last six (`Scheduler::MAINTENANCE_TYPES`) have no `details`; they used to be
+hard-wired in `TriggerCron` or a separate cron job. The installer creates
+`Scheduler::DEFAULT_TASKS` (`Scheduler::createDefaults()`, step `tasks` after `runtime`,
+because `adminError()` needs the group files): spread between 2 and 4 a.m., `tmpcleanup`
+hourly, label as the snippet `#scheduler.label_type_{type}`. `camindo.php scheduler
+defaults` adds missing types; `scheduler list` and `scheduler run ID|TYPE` serve
+operation and testing. `SystemHealth` reports maintenance types without an enabled task
+(check `maintenance`).
 
 Timing uses cron syntax (minute, hour, day, month, year, weekday).
 `TriggerCron::tick1m()` starts `cron/scheduler.php`; `SchedulerRunner::dispatch()`

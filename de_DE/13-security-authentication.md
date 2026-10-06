@@ -262,7 +262,14 @@ Passkeys für Frontend-Profile.
   anderen Sessions des Kontos.
 * Zusatzrechte `admin_create` (anlegen mit Startpasswort) und `admin_change` (ändern,
   sperren) gelten nur für die eigene Benutzergruppe; das Passwort eines bestehenden anderen
-  Benutzer setzt nur ein Superuser.
+  Benutzer setzt nur ein Superuser – und nur mit seinem **eigenen** Passwort im Feld
+  `password_current` (`AdminBackend::_editPasswordCurrentOk()`, Fehlversuche zählen im
+  `LoginGuard`). Eine offen stehende Sitzung reicht so weder für das eigene noch für ein
+  fremdes Konto. Ein Konto ohne Passwort (nur per CLI angelegt) braucht keins.
+* **Löschen** eines Benutzers (Soft-Delete, `Admin::hookOnSoftDelete()` →
+  `removeCredentials()`): Sessions, Geräte, Passkeys, Wiederherstellungscodes und
+  `history` werden entfernt, das Audit-Log bleibt. Das eigene Konto lässt sich nicht
+  löschen.
 
 ## Schlüsselrotation
 
@@ -333,6 +340,32 @@ verraten Arbeitszeiten, aber keine Änderungen).
   Lösch-Policy): Einträge, in denen ein Website-User gehandelt hat, verlieren
   `user_id` (0) und Namen – in Datenbank und Datei, Kontrollpunkt `privacy`.
   `AuditDiff::actorLabel()` zeigt dann nur noch „Frontend-User“ ohne Id.
+* **Gelöschte Benutzer anonymisieren** `Modules\Privacy\AdminAnonymizer` (Modul Privacy,
+  Reiter „Gelöschte Benutzer“, Zusatzrecht `admin_anonymize`): Name → `admin_{id}`
+  (reserviert, `Admin::hookOnSave()`), persönliche Felder, Einstellungen, Passwort und
+  zweiter Faktor geleert, neu signiert. Im Audit-Log nur der Verlauf seines Kontos
+  (Bezeichnung, Vorher/Nachher der persönlichen Felder, seine Fehlversuche) und ältere
+  Fehlversuche unter Objekt 0 mit seinem Namen – höchstens zwei Dateien
+  (`AuditStore::rewriteObject()`, Kontrollpunkt `privacy`). Wo er gehandelt hat, steht er
+  nur als Id (siehe unten), die Anzeige zeigt nach dem Umbenennen `admin_{id}`. Jeder
+  Schritt ist wiederholbar, die Zeile wird zuletzt umbenannt – ein abgebrochener Lauf
+  wird einfach wiederholt; `admin_{id}` kennzeichnet den Abschluss. Eintrag `privacy` am
+  Konto, Zeile im Log `security`.
+* **Handelnde nur als Id:** `actor.admin_id` bzw. `actor.user_id`, kein Name – weder in
+  `audit_log.actor_name` noch in der Datei. `AuditDiff::actorLabel()` setzt den Namen
+  beim Anzeigen aus `admin` ein; die Recherche sucht Namen über `admin`
+  (`AuditLog::where()`), die Auswahlliste der Handelnden ebenso (`actors()`). Ein
+  Fehlversuch mit dem Namen eines bestehenden Kontos steht unter dessen `admin_id`
+  (`AuditLog::login()`), nur ein unbekannter Name wird mitgeschrieben (Objekt 0).
+  Altbestand: `camindo.php audit strip-names` (`AuditLog::stripActorNames()`,
+  Kontrollpunkt `strip-names`).
+* **IP-Adressen** stehen gekürzt mit Nullen in Datenbank und Dateien (gültige Adressen,
+  `ClientIp::anonymize()` bleibt idempotent); `ClientIp::display()` zeigt die gekürzten
+  Stellen als `xxx` (Datenauskunft, Audit-Anzeige, Geräteliste) – alle Null-Oktette am
+  Ende (höchstens zwei), unabhängig von der heutigen Einstellung. Wird
+  `privacy.ip_v4_octets` erhöht, kürzt der nächste Lauf von `IpAnonymizer` Datenbank und
+  Logdateien vollständig nach und die Dateien unter `var/audit`
+  (`AuditLog::anonymizeFileIps()`); gesenkt bringt nichts zurück.
 
 Anzeige: Reiter „Änderungen" der Detailansichten – Datensatz und jede andere
 Dataset-Info-Seite (Bereich, Feld, Template, Status, Instanz, Sprache, Konverter,

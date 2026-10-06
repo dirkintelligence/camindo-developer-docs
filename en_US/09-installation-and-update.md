@@ -190,7 +190,8 @@ second, unprotected path into the database.
 | `core` | `system.core_version` |
 | `components` | **discover** add-on components, do not install them |
 | `runtime` | runtime lists, caches, `.htaccess` block, version stamp |
-| `finish` | `var/install.lock`, summary with cron lines |
+| `tasks` | maintenance tasks of the scheduler (`Scheduler::createDefaults()`, missing types only) |
+| `finish` | `var/install.lock`, summary with the cron line |
 
 If `var/install.lock` exists, `install` ends immediately with exit code 0;
 `--force --yes` deliberately starts over (the database is emptied). Single steps can be
@@ -309,12 +310,13 @@ php Core/cron/camindo.php <command> [arguments] [--options]
 | `key status \| rotate \| retire KID` | key ring of `.camindo.key` ([13](13-security-authentication.md#key-rotation)) |
 | `audit verify [TYPE ID] \| restore [--dry-run] \| migrate` | verify the audit log chain; after restoring a dump, cut the files back to the database state |
 | `fulltext [--area=ID,…] [--stale]` | rebuild the full text – all record areas, the given ones or those marked as outdated ([02](02-data-model.md#full-text-search)) |
+| `scheduler list \| defaults \| run ID\|TYPE` | list scheduler tasks, add missing maintenance tasks, run one task now (e.g. `run trash`) ([07](07-media-processing.md#scheduler-module-scheduler)) |
 
 Exit codes: 0 ok, 1 error, 2 usage error; `--quiet` suppresses everything except
 errors. Commands are classes under `Core/src/Cli/{Name}Command.php`. Installation and
 core update exist on the command line only – a core update from the backend would
 replace the code that is running it.
 
-Further scripts under `Core/cron/`: `cron.php` and `trash.php` (cron),
+Further scripts under `Core/cron/`: `cron.php` (the only cron job), `scheduler.php` (started by it),
 `rebuild_trees.php` (repair trees), `check_dateparse.php`, `check_nested_select.php`,
 `check_tree_positions.php`, `check_webauthn.php` (self-tests).

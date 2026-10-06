@@ -449,8 +449,8 @@ zusammenpassen. Zugriffsschutz und Auslieferung: [07](07-media-processing.md#abl
 
 ```
 delete()   → deleted = 1, Dateien nach var/deleted/     (restore() macht das rückgängig)
-purge()    → Zeile entfernen, Dateien endgültig löschen  (Cron trash.php nach
-                                                          admin.trash_retention_days)
+purge()    → Zeile entfernen, Dateien endgültig löschen  (Zeitplaner-Aufgabe trash
+                                                          nach admin.trash_retention_days)
 ```
 
 Soft-Delete kennen `record`, `area` und `admin`; Tabellen ohne `deleted`-Spalte löschen

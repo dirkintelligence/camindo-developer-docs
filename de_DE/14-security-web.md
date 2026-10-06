@@ -29,7 +29,7 @@ braucht (Stylesheets der Editoren, Download einer Exportdatei, `file.php`,
 `preview.php`), kommt ohne Token aus und darf deshalb nur lesen.
 
 **Eingabemaske und Arbeitskopie:** Ein GET auf `record_edit.php` (Lesezeichen, F5, Link
-von außen, Frontend-Editing) zeigt nur einen Platzhalter mit dem Knopf „Bearbeiten";
+von außen, Frontend-Editing) zeigt nur einen Platzhalter mit der Schaltfläche „Bearbeiten";
 erst ein POST legt Arbeitskopie und Sperre an. Aus der Oberfläche geöffnete Layer tragen
 ein Merkmal und laden die Maske sofort per POST – der Nutzer merkt nichts.
 
@@ -235,7 +235,7 @@ Das Cookie `fed` trägt einen signierten Wert `{Modus}.{admin_id}.{Ablauf}.{HMAC
 `Cms::fedActive()` prüft ihn ohne Datenbankabfrage. Unter der Website-Domain setzt es die
 Vorschau; `cFED()` öffnet das Backend über `BackendDomain::url()`.
 
-Außerdem je Website ein Knopf in den persönlichen Einstellungen
+Außerdem je Website eine Schaltfläche in den persönlichen Einstellungen
 (`AdminBackend::_settingsFedSites()`): ein Link `https://{domain}/index.php?c9fed={token}`
 (`FrontendHandover::fedUrl()`, Modus = gespeicherte Einstellung, eine Stunde gültig, an die
 Session gebunden wie die Vorschau). `Page::switchFedOn()` prüft Token und Domain, setzt das
@@ -244,7 +244,7 @@ Backend-Domain, für alle Hauptdomains außer der, unter der das Backend läuft.
 
 **Abgleich mit allen Websites.** Ein Cookie für eine fremde Domain lässt sich weder per
 Ajax noch per iframe zuverlässig setzen (Drittanbieter-Cookies werden gesperrt bzw.
-partitioniert). Nach dem Speichern einer geänderten Einstellung – und über den Knopf
+partitioniert). Nach dem Speichern einer geänderten Einstellung – und über die Schaltfläche
 „Auf allen Websites übernehmen" – läuft der Browser deshalb als normale Navigation durch
 die Websites: `FrontendHandover::fedSyncData()` signiert die Liste der Domains, den Modus
 (auch 0 = Cookie löschen) und die Rücksprung-Adresse ins Backend; der Parameter `c9hops`

@@ -54,6 +54,22 @@ record.owner_id       owner in the backend (FK admin, ON DELETE SET NULL)
 All rights rows are **signed** – a row inserted or changed via SQL counts as not present
 ([13](13-security-authentication.md#signatures)).
 
+`Group::save()` takes language rights per language as a level
+(`Group::LANGUAGE_NONE|READ|WRITE`) or as a list of levels – which is how the group form
+sends them (hidden field `0` plus checkboxes “read” `1` and “write” `2`,
+`data[languages][{id}][]`); the highest one counts. Deselected languages arrive as well,
+so `Group::grantInstance()` does not grant them read access again for a newly assigned
+instance.
+
+A group is deleted by `Group::deleteReplacing($groupId, $replacementId)`: the active
+users of the group move to the replacement group via `Admin::save(['group_id'])`
+(signature, audit log), then the group is deleted; all in one transaction. The superuser
+group is excluded as a replacement. `Group::hookOnDelete()` still rejects a group with
+active users; its **deleted** users lose the assignment there (`admin.group_id` = NULL,
+nullable; the foreign key references it with `ON DELETE RESTRICT`), re-signed, with an
+entry in the account's audit log – deleted users cannot be restored, their group is
+history only.
+
 ## Runtime: group file and `Access`
 
 `InstanceCache` writes one file per user group, `var/cache/group-{id}.php` (visible

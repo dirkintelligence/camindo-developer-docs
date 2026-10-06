@@ -329,7 +329,14 @@ remembered; an unknown reference counts as an empty value (`ifempty` applies).
   chosen by the CMS, without the standalone flag and without canonical redirect.
   `Cms::$overviewAreaId` holds the area; `CMS:URL` without `id` then points to the same
   overview (language switcher), `(CMS:URL area=…)` builds the address from elsewhere
-  (`Cms::areaUrl()`). Without an overview template: 404.
+  (`Cms::areaUrl()`). Without an overview template: 404. Instead of a record, `$cms`
+  holds the area's details (`Page::overviewData()`): `record_id` (0), `area_id`, `area`,
+  `area_label` (snippet resolved), `area_type`, `area_icon`, `instance_id`, `parent_id`,
+  `language_id`, `slug_prefix` (request language), `overview` (true) – e.g. for
+  `filter[area]="{$cms['area_id']}"`. In the backend, `Backend::buttonAddAreaPreview()`
+  gives areas with an overview template and a prefix a preview button (area info, record
+  list); for this, `buttonAddPreview()` also accepts `language_id => path` instead of a
+  path (the prefix is translated per language).
 * **Language code only** (`/en`, without a slash): the rewrite rule for the language
   segment requires the slash, so the path arrives as the slug `en`. If it is a language
   code of the site (`InstanceCache::findByCode()`, the same rule as for `/en/`), `Page`

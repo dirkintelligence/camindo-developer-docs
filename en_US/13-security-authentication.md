@@ -258,7 +258,14 @@ passkeys for frontend profiles.
   the account's other sessions.
 * The extra rights `admin_create` (create with an initial password) and `admin_change`
   (change, lock) only apply to the own user group; only a superuser sets the password of an
-  existing other admin.
+  existing other admin – and only with their **own** password in the field
+  `password_current` (`AdminBackend::_editPasswordCurrentOk()`, failed attempts count in
+  the `LoginGuard`). An unattended open session is thus not enough to take over either the
+  own account or someone else's. An account without a password (created via CLI only)
+  needs none.
+* **Deleting** a user (soft delete, `Admin::hookOnSoftDelete()` → `removeCredentials()`)
+  removes sessions, devices, passkeys, recovery codes and `history`; the audit log stays.
+  The own account cannot be deleted.
 
 ## Key rotation
 
@@ -326,6 +333,30 @@ hours but no changes).
   policy): entries in which a website user acted lose `user_id` (0) and name – in the
   database and the file, checkpoint `privacy`. `AuditDiff::actorLabel()` then shows
   only “Frontend user” without an id.
+* **Anonymizing deleted users** `Modules\Privacy\AdminAnonymizer` (module Privacy, tab
+  “Deleted users”, extra right `admin_anonymize`): name → `admin_{id}` (reserved,
+  `Admin::hookOnSave()`), personal fields, settings, password and second factor cleared,
+  re-signed. In the audit log only the account's own history (label, before/after of the
+  personal fields, its failed logins) and older failed logins under object 0 with their
+  name – two files at most (`AuditStore::rewriteObject()`, checkpoint `privacy`). Where
+  they acted they are stored as an id only (see below); after the rename the display shows
+  `admin_{id}`. Every step can be repeated and the row is renamed last – an interrupted
+  run is simply run again; `admin_{id}` marks completion. Entry `privacy` on the account,
+  a line in the `security` log.
+* **Actors as ids only:** `actor.admin_id` or `actor.user_id`, no name – neither in
+  `audit_log.actor_name` nor in the file. `AuditDiff::actorLabel()` inserts the name from
+  `admin` when displaying; the search looks up names via `admin` (`AuditLog::where()`), as
+  does the list of actors (`actors()`). A failed login with the name of an existing account
+  is stored under its `admin_id` (`AuditLog::login()`); only an unknown name is written
+  (object 0). Existing entries: `camindo.php audit strip-names`
+  (`AuditLog::stripActorNames()`, checkpoint `strip-names`).
+* **IP addresses** are stored truncated with zeros in the database and files (valid
+  addresses, `ClientIp::anonymize()` stays idempotent); `ClientIp::display()` shows the
+  truncated parts as `xxx` (personal data export, audit display, device list) – all trailing
+  zero octets (two at most), regardless of the current setting. If `privacy.ip_v4_octets`
+  is raised, the next `IpAnonymizer` run re-truncates the database and log files completely,
+  and the files under `var/audit` (`AuditLog::anonymizeFileIps()`); lowering it restores
+  nothing.
 
 Display: tab "Changes" of the detail views – records and every other dataset info
 page (area, field, template, status, instance, language, converter, task, component,

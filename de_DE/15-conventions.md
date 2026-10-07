@@ -142,7 +142,7 @@ Schreibbar ist nur `var/` und `public/media/`:
 var/cache/       Snippets, HTML-Vorlagen, Instanzen, Benutzergruppen, Trigger, Update-Prüfung
 var/config/      Laufzeitlisten, Versionsstempel, ImageMagick-Policy
 var/templates/   Quelltexte der Templates          var/php/      kompilierte Templates
-var/custom/      Snippets je Instanz, Scripts des Zeitplaners
+var/custom/      Snippets je Instanz (snippets/), Zeitplaner: Scripte (php/), Ausgaben (html/)
 var/extensions/  projekteigene Dateien der Extensions
 var/audit/       Inhalte des Audit-Logs            var/log/      Protokolle
 var/tmp/ var/upload/ var/import/ var/export/ var/download/ var/deleted/ var/dbbackup/

@@ -134,7 +134,8 @@ e-mails). For modules and extensions to follow:
 
 Files created by the CMS `0664`, directories `0775` (default, configurable in
 `permissions.file` / `permissions.dir`), owned by the web server user; `.camindo.php`, `.camindo.key`,
-`.sqlpwd` with `0600`. `System::createDir()` creates directories with the configured
+`.sqlpwd` with `0600` (`key rotate` keeps the permissions of the previous
+`.camindo.key`, without a file `permissions.key_file`). `System::createDir()` creates directories with the configured
 permissions.
 
 Only `var/` and `public/media/` are writable:

@@ -133,7 +133,8 @@ E-Mails). Damit Module und Extensions mitdrehen:
 
 Vom CMS erzeugte Dateien `0664`, Verzeichnisse `0775` (Vorgabe, konfigurierbar in
 `permissions.file` / `permissions.dir`), Eigentümer der Webserver-Benutzer; `.camindo.php`, `.camindo.key`,
-`.sqlpwd` mit `0600`. Verzeichnisse legt `System::createDir()` mit den konfigurierten
+`.sqlpwd` mit `0600` (`key rotate` behält die Rechte der bisherigen `.camindo.key`, ohne
+Datei `permissions.key_file`). Verzeichnisse legt `System::createDir()` mit den konfigurierten
 Rechten an.
 
 Schreibbar ist nur `var/` und `public/media/`:

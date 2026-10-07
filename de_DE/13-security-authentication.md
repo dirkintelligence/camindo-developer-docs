@@ -315,7 +315,9 @@ verraten Arbeitszeiten, aber keine Änderungen).
 * **HMAC-Kette:** jede Zeile trägt den HMAC über ihren Inhalt und den der Vorzeile.
   `camindo.php audit verify` (täglich per Cron, Ergebnis in den Betriebshinweisen) prüft
   die Kette und gleicht mit der Datenbank ab – eine geänderte oder entfernte Zeile fällt
-  auf. Wer Dateisystem **und** Schlüssel hat, kann trotzdem alles neu schreiben.
+  auf, ebenso eine Metazeile, die fehlt, hinzukommt oder deren Spalten (Zeit, Aktion,
+  Handelnder, Herkunft, Objekt-Bezug, Bezeichnung, Feldnamen, IP auf zwei Oktette
+  gekürzt) nicht zum signierten Eintrag der Datei passen (`AuditLog::verifyObject()`). Wer Dateisystem **und** Schlüssel hat, kann trotzdem alles neu schreiben.
 * **Dump zurückgespielt:** `camindo.php audit restore` (`AuditLog::restoreToDatabase()`)
   entfernt Einträge mit `audit_id` über dem Maximum der Datenbank
   (`AuditStore::cutAfter()`): Zeilen davor bleiben unverändert, danach folgt ein

@@ -308,7 +308,9 @@ hours but no changes).
 * **HMAC chain:** every line carries the HMAC over its content and that of the previous
   line. `camindo.php audit verify` (daily via cron, result in the operation notices)
   checks the chain and reconciles it with the database – a changed or removed line is
-  detected. Whoever has file system **and** key can still rewrite everything.
+  detected, as is a metadata row that is missing, added, or whose columns (time, action,
+  actor, origin, object reference, label, field names, IP truncated to two octets) do
+  not match the signed entry in the file (`AuditLog::verifyObject()`). Whoever has file system **and** key can still rewrite everything.
 * **Dump restored:** `camindo.php audit restore` (`AuditLog::restoreToDatabase()`)
   removes entries with an `audit_id` above the database maximum
   (`AuditStore::cutAfter()`): lines before stay unchanged, followed by a `restore`

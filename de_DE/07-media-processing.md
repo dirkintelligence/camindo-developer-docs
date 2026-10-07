@@ -263,8 +263,8 @@ Zeitgesteuerte Aufgaben in der Tabelle `scheduler`:
 
 | Typ | Aufgabe |
 |---|---|
-| `url` | Adresse abrufen (optional mit HTTP-Basic-Auth) |
-| `php` | ein Script aus `var/custom/` auf der Kommandozeile ausführen |
+| `url` | Adresse abrufen (optional mit HTTP-Basic-Auth); Ausgabe nach `var/custom/html/` |
+| `php` | ein Script aus `var/custom/php/` auf der Kommandozeile ausführen |
 | `dbbackup` | `mysqldump` nach `var/dbbackup/` mit Rotation (`Backup`) |
 | `logcleanup` | Logdateien und Anmeldeversuche nach Fristen aufräumen |
 | `template` | ein Frontend-Template mit `template.type = 'scheduler'` ausführen (`Page::renderScheduled()`) |
@@ -290,6 +290,16 @@ Die Zeitsteuerung steht in Cron-Syntax (Minute, Stunde, Tag, Monat, Jahr, Wochen
 `TriggerCron::tick1m()` startet `cron/scheduler.php`; `SchedulerRunner::dispatch()`
 startet jede fällige Aufgabe als eigenen Prozess und hält Ergebnis und Meldung in
 `last_*` fest.
+
+**Ausgaben und Scripte getrennt.** Ausgaben von `url`, `php` und `template` schreibt
+der Runner nur nach `var/custom/html/` (`Scheduler::outputPath()`, `outputDir()`),
+Scripte des Typs `php` kommen nur aus `var/custom/php/` (`Scheduler::scriptFile()`,
+`scriptDir()`). Eine abgeholte Antwort kann so nie als Script ausgeführt werden;
+Ausgabedateien mit PHP-Endung (`php*`, `phtml`, `phar`, `pht`, `phps`) sind zusätzlich
+gesperrt. `Scheduler::cleanPath()` verwirft `.`/`..`-Segmente und ungewöhnliche Zeichen;
+beim Ausführen bzw. Schreiben prüft der Runner zusätzlich den per `realpath()`
+aufgelösten Pfad, damit kein Symlink aus dem Verzeichnis führt, und schreibt nicht in
+eine bestehende Verknüpfung.
 
 **Unter welchem Benutzer.** Jede Aufgabe hat einen Benutzer (`scheduler.admin_id`, Vorgabe der
 vom Installer angelegte Benutzer `scheduler`, `Installer::createSchedulerAdmin()`).

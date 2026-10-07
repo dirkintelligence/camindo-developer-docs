@@ -143,7 +143,7 @@ Only `var/` and `public/media/` are writable:
 var/cache/       snippets, HTML templates, instances, groups, triggers, update check
 var/config/      runtime lists, version stamp, ImageMagick policy
 var/templates/   template sources                  var/php/      compiled templates
-var/custom/      snippets per instance, scheduler scripts
+var/custom/      snippets per instance (snippets/), scheduler: scripts (php/), output (html/)
 var/extensions/  project-specific extension files
 var/audit/       audit log contents                var/log/      logs
 var/tmp/ var/upload/ var/import/ var/export/ var/download/ var/deleted/ var/dbbackup/

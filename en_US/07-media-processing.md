@@ -260,8 +260,8 @@ Scheduled tasks in the `scheduler` table:
 
 | Type | Task |
 |---|---|
-| `url` | fetch a URL (optionally with HTTP basic auth) |
-| `php` | run a script from `var/custom/` on the command line |
+| `url` | fetch a URL (optionally with HTTP basic auth); output to `var/custom/html/` |
+| `php` | run a script from `var/custom/php/` on the command line |
 | `dbbackup` | `mysqldump` to `var/dbbackup/` with rotation (`Backup`) |
 | `logcleanup` | clean up log files and login attempts according to retention periods |
 | `template` | run a frontend template with `template.type = 'scheduler'` (`Page::renderScheduled()`) |
@@ -287,6 +287,15 @@ Timing uses cron syntax (minute, hour, day, month, year, weekday).
 `TriggerCron::tick1m()` starts `cron/scheduler.php`; `SchedulerRunner::dispatch()`
 starts every due task as a separate process and records result and message in
 `last_*`.
+
+**Output and scripts kept apart.** The runner writes the output of `url`, `php` and
+`template` only to `var/custom/html/` (`Scheduler::outputPath()`, `outputDir()`);
+scripts of type `php` come only from `var/custom/php/` (`Scheduler::scriptFile()`,
+`scriptDir()`). A fetched response can therefore never be executed as a script; output
+files with a PHP extension (`php*`, `phtml`, `phar`, `pht`, `phps`) are rejected as well.
+`Scheduler::cleanPath()` rejects `.`/`..` segments and unusual characters; when running
+or writing, the runner also checks the path resolved by `realpath()` so that no symlink
+leads out of the directory, and it does not write into an existing link.
 
 **As which user.** Every task has a user (`scheduler.admin_id`, by default the user
 `scheduler` created by the installer, `Installer::createSchedulerAdmin()`).

@@ -295,6 +295,11 @@ Abbruch verliert nichts – `decrypt()` kennt beide Schlüssel, `rotate` lässt 
 wiederholen. `retire` entfernt einen alten Schlüssel erst, wenn nichts mehr von ihm
 abhängt.
 
+Dateirechte (`KeyRotation::keyFileMode()`): Neuer Schlüssel und `.camindo.key.retired`
+übernehmen die Rechte der bisherigen `.camindo.key` (nicht jedes System erlaubt `0600`);
+ohne Datei (Schlüssel aus `CAMINDO_KEY`) gilt `permissions.key_file` (Vorgabe `0600`).
+`key status` warnt bei Abweichung von `permissions.key_file`.
+
 **Werte, die ein Zusatzmodul selbst verschlüsselt, erfasst die Rotation nicht** – es
 gibt dafür noch keinen Einhängepunkt. Verschlüsseln Sie nach Möglichkeit in Feldern vom
 Typ `encrypted`.
@@ -328,6 +333,11 @@ verraten Arbeitszeiten, aber keine Änderungen).
   einen gültigen HMAC hat (die Einträge sind echt, nur die Verkettung stimmt nicht);
   sonst verweigert und erst mit `--force` (der Kontrollpunkt vermerkt `unverified`).
   Kopie nach `var/audit-reseal-{Zeitpunkt}/`, Eintrag im Protokoll `security`.
+* **Von Hand löschen:** `camindo.php audit delete TYP ID` bzw. `--area=ID --force`
+  (`AuditLog::deleteObjects()`, `recordIdsOfArea()`) entfernt den ganzen Verlauf –
+  Metazeilen und Dateien, ohne Kontrollpunkt. Bei Datensätzen dazu die Aufträge
+  (`PrivacyJobs::forget()`): erledigte immer, offene nur, wenn es den Datensatz nicht
+  mehr gibt. Eintrag im Protokoll `security` (nur Anzahlen).
 * **Werte:** Passwörter nur als `***`; verschlüsselte Werte als Geheimtext, entschlüsselt
   erst in der Anzeige (`AuditDiff`).
 * **Kindklassen** steuern mit `$audit = false`, `$auditIgnore` und `auditSecret()`

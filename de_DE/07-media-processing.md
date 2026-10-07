@@ -276,12 +276,13 @@ Zeitgesteuerte Aufgaben in der Tabelle `scheduler`:
 | `retention` | `IpAnonymizer::run()`, `AuditLog::purge()`, `Message::purgeExpired()`, `RecordUser::purgeUnconfirmed()` – jeder Schritt für sich |
 | `auditverify` | `AuditLog::verifyAll()` + `storeVerifyResult()` (für `SystemHealth`); Befunde = Fehler |
 | `updatecheck` | `UpdateCheck::run()`; ohne `paths.composer` nichts zu tun |
+| `messagedigest` | `MessageDigest::run()`: Zusammenfassung neuer Nachrichten per E-Mail an Admins mit `settings.message_digest = 1`; neu = seit dem vorigen Lauf (`last_run` vor dem Start) |
 
-Die letzten sechs (`Scheduler::MAINTENANCE_TYPES`) haben keine `details`; sie waren
+Die sechs Typen von `trash` bis `updatecheck` (`Scheduler::MAINTENANCE_TYPES`) haben keine `details`; sie waren
 früher in `TriggerCron` bzw. einem eigenen Cronjob fest verdrahtet. Der Installer legt
 `Scheduler::DEFAULT_TASKS` an (`Scheduler::createDefaults()`, Schritt `tasks` nach
 `runtime`, weil `adminError()` die Gruppendateien braucht): nachts zwischen 2 und 4 Uhr
-verteilt, `tmpcleanup` stündlich, Beschriftung als Snippet `#scheduler.label_type_{typ}`.
+verteilt, `tmpcleanup` stündlich, `messagedigest` um 7 Uhr, Beschriftung als Snippet `#scheduler.label_type_{typ}`.
 `camindo.php scheduler defaults` ergänzt fehlende Typen, `scheduler list` und
 `scheduler run ID|TYP` dienen Betrieb und Test. `SystemHealth` meldet
 Wartungstypen ohne eingeschaltete Aufgabe (Prüfung `maintenance`).

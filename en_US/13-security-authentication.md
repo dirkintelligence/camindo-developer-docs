@@ -289,6 +289,11 @@ hashes stay valid and are renewed at the next login; `--invalidate-passwords` em
 them instead. An abort loses nothing – `decrypt()` knows both keys, and `rotate` can be
 repeated. `retire` only removes an old key once nothing depends on it any more.
 
+File permissions (`KeyRotation::keyFileMode()`): the new key and `.camindo.key.retired`
+take over the permissions of the previous `.camindo.key` (not every system allows
+`0600`); without a file (key from `CAMINDO_KEY`) `permissions.key_file` applies (default
+`0600`). `key status` warns if the file differs from `permissions.key_file`.
+
 **Values an add-on module encrypts itself are not covered by the rotation** – there is
 no hook for that yet. Where possible, encrypt in fields of type `encrypted`.
 
@@ -321,6 +326,11 @@ hours but no changes).
   genuine, only the linking is wrong); otherwise refused, and only done with `--force`
   (the checkpoint records `unverified`). Copy to `var/audit-reseal-{timestamp}/`, entry
   in the `security` log.
+* **Manual deletion:** `camindo.php audit delete TYPE ID` or `--area=ID --force`
+  (`AuditLog::deleteObjects()`, `recordIdsOfArea()`) removes the whole history –
+  metadata rows and files, without a checkpoint. For records also their jobs
+  (`PrivacyJobs::forget()`): completed ones always, pending ones only if the record no
+  longer exists. Entry in the `security` log (counts only).
 * **Values:** passwords only as `***`; encrypted values as ciphertext, decrypted only for
   display (`AuditDiff`).
 * **Subclasses** control it with `$audit = false`, `$auditIgnore` and `auditSecret()`

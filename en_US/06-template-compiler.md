@@ -409,6 +409,11 @@ function onSave(array &$affectedFields, array &$data, array &$previousData): voi
 * Several templates run one after the other by `position`; all receive the same
   references, so each one sees the changes of the previous ones. An exception ends the
   chain. The ids are kept per area in the `InstanceCache` (`trigger_template_ids`).
+* During the call `$GLOBALS['cms']` holds only `['record_id' => …]` (restored
+  afterwards): `CMS:SELECT relation=…` needs no `src_id`, but reads the stored state –
+  in `onSave` the old relations of an existing record (they stay on the working copy
+  until check-in). The publication condition and the group rights of the caller apply
+  as usual.
 * When moving, the trigger templates of the **target area** apply.
 * An event does not run nested for the same record per template (protection against
   endless loops).

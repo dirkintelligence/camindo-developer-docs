@@ -417,6 +417,11 @@ function onSave(array &$affectedFields, array &$data, array &$previousData): voi
 * Mehrere Templates laufen nacheinander nach `position`; alle bekommen dieselben
   Referenzen, jedes sieht also die Änderungen der vorigen. Eine Exception beendet die
   Kette. Die Ids stehen je Bereich im `InstanceCache` (`trigger_template_ids`).
+* Während des Aufrufs steht in `$GLOBALS['cms']` nur `['record_id' => …]` (danach
+  wiederhergestellt): `CMS:SELECT relation=…` braucht kein `src_id`, liest aber den
+  gespeicherten Stand – in `onSave` also noch die alten Verknüpfungen eines
+  vorhandenen Datensatzes (sie liegen bis zum Check-in an der Arbeitskopie).
+  Veröffentlichungsbedingung und Gruppenrechte des Auslösers gelten wie sonst auch.
 * Beim Verschieben gelten die Trigger-Templates des **Zielbereichs**.
 * Ein Ereignis läuft je Template für denselben Datensatz nicht verschachtelt (Schutz
   gegen Endlosschleifen). Ein Template, das sich nicht laden lässt, löst eine Exception aus.

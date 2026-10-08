@@ -384,9 +384,9 @@ Zelle, die Liste läuft weiter.
 
 ## Trigger-Templates
 
-Ein Inhaltsbereich kann ein ***Trigger-Template*** haben (`area.trigger_template_id`):
-ein Template, das statt Ausgabe **Ereignis-Methoden** enthält. `Record` ruft sie aus
-seinen Hooks auf (`TriggerTemplates::run()`):
+Ein Inhaltsbereich kann ***Trigger-Templates*** haben (`rel_area_trigger`, beliebig
+viele mit `position`): Templates, die statt Ausgabe **Ereignis-Methoden** enthalten.
+`Record` ruft sie aus seinen Hooks auf (`TriggerTemplates::run()`):
 
 ```php
 // Template "person_trigger" im Template-Bereich – nur Methoden, keine Ausgabe
@@ -414,9 +414,12 @@ function onSave(array &$affectedFields, array &$data, array &$previousData): voi
 * Außer `onCreate`/`onLoaded` läuft alles in der Transaktion des Vorgangs; eine
   Exception (`throw new \Exception('Meldung')`) bricht ihn ab, die Meldung erscheint in
   der Maske.
-* Beim Verschieben gilt das Trigger-Template des **Zielbereichs**.
-* Ein Ereignis läuft für denselben Datensatz nicht verschachtelt (Schutz gegen
-  Endlosschleifen). Ein Template, das sich nicht laden lässt, löst eine Exception aus.
+* Mehrere Templates laufen nacheinander nach `position`; alle bekommen dieselben
+  Referenzen, jedes sieht also die Änderungen der vorigen. Eine Exception beendet die
+  Kette. Die Ids stehen je Bereich im `InstanceCache` (`trigger_template_ids`).
+* Beim Verschieben gelten die Trigger-Templates des **Zielbereichs**.
+* Ein Ereignis läuft je Template für denselben Datensatz nicht verschachtelt (Schutz
+  gegen Endlosschleifen). Ein Template, das sich nicht laden lässt, löst eine Exception aus.
 * Die API steht über `$this->cms->api('record.search', [...])` bereit
   ([16](16-api.md#aus-templates-und-custom-tools)) – im Backend als der Benutzer, der
   speichert; bei einem Frontend-Benutzer (`CMS:USER_INPUT`) gibt es keine.

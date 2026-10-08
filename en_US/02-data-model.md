@@ -147,7 +147,7 @@ area_id, instance_id, type ENUM('record','template','folder','profile','ugc'), n
 icon, details JSON, dependent,
 position, depth, parent_id, parent_ids JSON, lft, rgt,       ← tree
 default_field_id, sort_field_id, sort_order, default_template_id, list_template_id,
-trigger_template_id, overview_template_id, login_name_field_id, login_password_field_id, deleted …
+overview_template_id, login_name_field_id, login_password_field_id, deleted …
 ```
 
 * `name` (`^[a-z][a-z0-9_]+$`, unique within the instance group) is the identifier used
@@ -161,8 +161,9 @@ trigger_template_id, overview_template_id, login_name_field_id, login_password_f
   that holds them via a field of type `link` (see below).
 * `list_template_id`: template used only for the backend display (last column of the
   record list, detailed lookup preview).
-* `trigger_template_id`: template with event methods that run on every save and delete
-  ([06](06-template-compiler.md#trigger-templates)).
+* Trigger templates (event methods that run on every save and delete,
+  [06](06-template-compiler.md#trigger-templates)) are not stored in `area` but in
+  `rel_area_trigger` (see below).
 * `overview_template_id`: template for the address that consists only of the slug
   prefix (`/en_US/events`) – an overview without a record ([06](06-template-compiler.md#url-and-slug)).
 * `details` (JSON): among others `tabs` (multilingual form with tabs), `slug_prefix`
@@ -219,6 +220,7 @@ tmp, origin_id, locked, deleted                            ← working copies, t
 | `language` | languages: `code` (URL segment, e.g. `de_DE`), `backend_code` (snippet language), `timezone` |
 | `template` | templates: `code` (copy of the source, for searching only), `styled_code`, `error_text`, `standalone`, `type` (`scheduler` = scheduled) |
 | `rel_area_template` | which templates an area may use or force via URL |
+| `rel_area_trigger` | trigger templates of an area, `position` = execution order |
 | `status` | record status (icon, label, colour) |
 | `converter`, `rel_field_converter` | configured processors and their assignment to thumbnail fields |
 | `rel_fulltext_text` | source fields of a full-text field (optionally via a `link`/`relation` field: `rel_field_id`) |

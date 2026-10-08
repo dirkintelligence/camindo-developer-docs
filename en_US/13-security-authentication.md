@@ -341,10 +341,14 @@ hours but no changes).
   (`audit.retention_days_logins`, default 90 days); they sit in the middle of an
   account's history and are removed via `AuditStore::rewriteObject()` – if the callback
   returns `null`, the entry is dropped (checkpoint `retention`).
-* **Anonymising** `AuditLog::anonymizeObject()` (action `audit_anonymize` of a delete
-  policy): entries in which a website user acted lose `user_id` (0) and name – in the
-  database and the file, checkpoint `privacy`. `AuditDiff::actorLabel()` then shows
-  only “Frontend user” without an id.
+* **Delete policies** (`Modules\Privacy\DeletePolicy`, `PrivacyJobs`): sources `record`
+  (every way of deleting, including child records – tree children with `$withChilds`
+  and dependent link content get the blocks of their own area without
+  `soft_delete`/`purge`), `profile` (always for all records with the `record.user_id` of
+  a deleted profile, also when it is deleted together with its area) and `area` (`PrivacyJobs::scheduleArea()` from
+  `Area::hookOnSoftDelete()`). `AuditLog::overwriteObject()` (action `audit_set_fields`)
+  replaces values and the label, checkpoint `privacy`. The actors' `user_id` always
+  stays: an entry becomes anonymous once the profile is deleted permanently or emptied.
 * **Anonymizing deleted users** `Modules\Privacy\AdminAnonymizer` (module Privacy, tab
   “Deleted users”, extra right `admin_anonymize`): name → `admin_{id}` (reserved,
   `Admin::hookOnSave()`), personal fields, settings, password and second factor cleared,

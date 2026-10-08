@@ -348,10 +348,15 @@ verraten Arbeitszeiten, aber keine Änderungen).
   eigene Frist (`audit.retention_days_logins`, Vorgabe 90 Tage); sie liegen mitten im
   Verlauf eines Kontos und werden über `AuditStore::rewriteObject()` entfernt – gibt
   die Funktion `null` zurück, fällt der Eintrag weg (Kontrollpunkt `retention`).
-* **Anonymisieren** `AuditLog::anonymizeObject()` (Aktion `audit_anonymize` einer
-  Lösch-Policy): Einträge, in denen ein Website-User gehandelt hat, verlieren
-  `user_id` (0) und Namen – in Datenbank und Datei, Kontrollpunkt `privacy`.
-  `AuditDiff::actorLabel()` zeigt dann nur noch „Frontend-User“ ohne Id.
+* **Lösch-Policies** (`Modules\Privacy\DeletePolicy`, `PrivacyJobs`): Auslöser
+  `record` (jeder Löschweg, auch Unterdatensätze – Kinder bei `$withChilds` und fest
+  verknüpfte Inhalte bekommen die Blöcke ihres Bereichs ohne `soft_delete`/`purge`),
+  `profile` (immer für alle Datensätze mit `record.user_id` eines gelöschten Profils, auch wenn es mit seinem Bereich gelöscht wird)
+  und `area` (`PrivacyJobs::scheduleArea()` aus `Area::hookOnSoftDelete()`).
+  `AuditLog::overwriteObject()` (Aktion `audit_set_fields`) ersetzt Werte und
+  Bezeichnung, Kontrollpunkt `privacy`. Die `user_id` der Handelnden bleibt immer
+  stehen: Anonym wird ein Eintrag, indem das Profil endgültig gelöscht oder geleert
+  wird.
 * **Gelöschte Benutzer anonymisieren** `Modules\Privacy\AdminAnonymizer` (Modul Privacy,
   Reiter „Gelöschte Benutzer“, Zusatzrecht `admin_anonymize`): Name → `admin_{id}`
   (reserviert, `Admin::hookOnSave()`), persönliche Felder, Einstellungen, Passwort und

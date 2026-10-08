@@ -222,6 +222,7 @@ tmp, origin_id, locked, deleted                            ← Arbeitskopien, Pa
 | `template` | Templates: `code` (Kopie des Quelltexts, nur zur Suche), `styled_code`, `error_text`, `standalone`, `type` (`scheduler` = zeitgesteuert) |
 | `rel_area_template` | welche Templates ein Bereich verwenden bzw. per URL erzwingen darf |
 | `rel_area_trigger` | Trigger-Templates eines Bereichs, `position` = Ausführungsreihenfolge |
+| `data_rel_checkout` | Verknüpfungen einer Arbeitskopie beim Check-out – Vergleichsstand für den Check-in |
 | `status` | Datensatz-Status (Symbol, Beschriftung, Farbe) |
 | `converter`, `rel_field_converter` | konfigurierte Prozessoren und ihre Zuordnung zu Thumbnail-Feldern |
 | `rel_fulltext_text` | Quellfelder eines Volltextfelds (optional über ein `link`-/`relation`-Feld: `rel_field_id`) |
@@ -391,7 +392,8 @@ Volltextfelder stehen weder in `record_cache` noch im Audit-Schnappschuss.
 ```
 checkOut()        Kopie anlegen: tmp = 1, origin_id = Original
                   record_cache-Zeilen des Originals → Arbeitsstand der Kopie
-                  Verknüpfungen mitkopieren, Bearbeitungssperre setzen
+                  Verknüpfungen mitkopieren (ausgehende und eingehende),
+                  ihren Stand in data_rel_checkout merken, Bearbeitungssperre setzen
 
 save(…, stayTemporary: true)
                   Zwischenspeichern (Reiterwechsel): nur der Arbeitsstand in record_cache
@@ -401,7 +403,7 @@ save(…)  = checkIn()
                   Arbeitsstand + Eingaben zusammenführen und als Ganzes prüfen
                   data_*-Zeilen und record_cache des Originals schreiben
                   Dateien umbenennen (tmp-Id → record_id), data_fil schreiben
-                  Thumbnails EINMAL erzeugen, Verknüpfungen zurückkopieren
+                  Thumbnails EINMAL erzeugen, Verknüpfungen abgleichen (s. u.)
                   Arbeitskopie löschen
 
 cancel($tmpId)    Arbeitskopie samt Dateien verwerfen
@@ -419,6 +421,16 @@ unter der Id der Kopie; `VirtualFieldsTrait::_loadTmpData()`/`_saveTmpData()`
   Prüfung, die teure Umwandlung läuft nur einmal.
 * Eine vorhandene Arbeitskopie desselben Benutzers wird wiederverwendet
   (`findTemporaryByOrigin()`).
+* **Verknüpfungen beim Check-in:** Übertragen wird nur, was sich an der Arbeitskopie
+  seit dem Check-out geändert hat – der Vergleich mit dem Stand in
+  `data_rel_checkout` (`TemporaryTrait::_copyRelationsBack()`, drei Mengen-Abfragen:
+  entfernte Kanten löschen, neue/geänderte anlegen bzw. aktualisieren, die eigenen
+  Listen neu nummerieren). Was andere Datensätze währenddessen am Original geändert
+  haben, bleibt so erhalten – ein Verweis B → A, gesetzt während A ausgecheckt war,
+  ebenso die Spiegelkante eines bidirektionalen Felds. Kanten zu anderen
+  Arbeitskopien werden immer übertragen: über sie wandern fest verknüpfte Inhalte
+  (`LinkTrait`). `data_rel_checkout` fällt mit der Arbeitskopie weg (FK `ON DELETE
+  CASCADE`).
 
 ## Datensätze verschieben
 

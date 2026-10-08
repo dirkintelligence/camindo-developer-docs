@@ -418,9 +418,12 @@ function onSave(array &$affectedFields, array &$data, array &$previousData): voi
   Referenzen, jedes sieht also die Änderungen der vorigen. Eine Exception beendet die
   Kette. Die Ids stehen je Bereich im `InstanceCache` (`trigger_template_ids`).
 * Während des Aufrufs steht in `$GLOBALS['cms']` nur `['record_id' => …]` (danach
-  wiederhergestellt): `CMS:SELECT relation=…` braucht kein `src_id`, liest aber den
-  gespeicherten Stand – in `onSave` also noch die alten Verknüpfungen eines
-  vorhandenen Datensatzes (sie liegen bis zum Check-in an der Arbeitskopie).
+  wiederhergestellt). In `onSave` und in `onSaved` beim Zwischenspeichern ist das die
+  Arbeitskopie (`Dataset::savingWorkingCopyId()`), an der die Verknüpfungen bis zum
+  Check-in hängen (ausgehende und eingehende, `TemporaryTrait::_copyRelations()`):
+  `CMS:SELECT relation=…` / `CMS:RELATION` ohne Quelle sehen so den neuen Stand, mit
+  `dest_id` auf die Arbeitskopie auch die Gegenrichtung; `$data['record_id']` bleibt
+  die Id des Originals (gespeicherter Stand).
   Veröffentlichungsbedingung und Gruppenrechte des Auslösers gelten wie sonst auch.
 * Beim Verschieben gelten die Trigger-Templates des **Zielbereichs**.
 * Ein Ereignis läuft je Template für denselben Datensatz nicht verschachtelt (Schutz

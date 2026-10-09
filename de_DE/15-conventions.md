@@ -65,7 +65,10 @@ Mit Präfix: `admin.field_admin_name`, `proc.imagegd.field_width`,
   Abhängigkeiten.
 * Klammern: Klassen und Funktionen in der nächsten Zeile, Kontrollstrukturen in
   derselben.
-* Bezeichner (Klassen, Methoden, Variablen, Spalten, Snippet-Schlüssel) englisch.
+* Bezeichner (Klassen, Methoden, Variablen, Spalten, Snippet-Schlüssel) und Kommentare
+  englisch (US-Schreibweise). Verweise auf diese Dokumentation als
+  `developer docs, chapter NN (Titel)`. Texte für Benutzer gehören in Snippets, nicht in
+  den Code.
 * Eingaben immer typisiert übernehmen (`(int)$_REQUEST['id']`); `bit` über
   `filter_var(…, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE)`.
 * Includes schützen: `if (!defined('CAMINDO_STARTED')) die('access denied.');`

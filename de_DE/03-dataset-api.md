@@ -89,6 +89,8 @@ geschrieben: Die Kindklasse schreibt ihn in `hookOnSaved()` und liest ihn in
 werden abgewiesen, nicht stillschweigend angehoben. SQL-Funktionen (`NOW()`,
 `UTC_TIMESTAMP()` – nur aus `Cms::$funcWhitelist`) sind von `min`/`max` ausgenommen.
 `created_at`/`created_by` werden bei Änderungen weder geschrieben noch geprüft.
+Die Spaltenvorgabe `0000-00-00 00:00:00` in `schema.sql` (etwa bei `data_dat`) ist nur
+ein Platzhalter für INSERTs ohne Wert; das CMS selbst schreibt immer `DATE_MIN`.
 
 **Vorgaben (`default`).** Skalare Typen: der Wert. Array-Typen (`file`, `json`,
 Relationen, `reltable`): **jede Zeile** ist eine wählbare Option. Datumstypen: `now`,
@@ -145,6 +147,7 @@ abstrakt.
 | `hookOnSoftDelete($data)` | beim Markieren `deleted = 1` |
 | `hookOnRestore($data)` | beim Wiederherstellen |
 | `hookOnDelete($data)` | beim **endgültigen** Löschen, vor dem `DELETE` |
+| `hookOnDeleted($data)` | beim **endgültigen** Löschen, nach dem `DELETE`, vor dem Commit |
 
 **Fehler in Hooks: Exception werfen.** Nur so greift der Rollback der umgebenden
 Transaktion. Beginnt die Meldung mit `#`, gilt sie als bereits in `Cms::$errors`
@@ -227,7 +230,7 @@ Orchestrierungen sammeln nur Ids:
 |---|---|
 | `softDelete(int $id): bool` | `deleted = 1`, `hookOnSoftDelete()` |
 | `restoreOne(int $id): bool` | `deleted = 0`, `hookOnRestore()` |
-| `finalDelete(int $id): bool` | Zeile entfernen, `hookOnDelete()` |
+| `finalDelete(int $id): bool` | Zeile entfernen, `hookOnDelete()`, `hookOnDeleted()` |
 
 | Orchestrierung | ruft |
 |---|---|

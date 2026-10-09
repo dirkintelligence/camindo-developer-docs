@@ -166,6 +166,7 @@ output including the snippets (list template, included template): the parser put
 | `pagination` | `Pagination` | on first access |
 | `recordUser` | `Modules\Record\RecordUser` | on first access |
 | `email` | `Email` | on first access |
+| `zip` | `CmsZip` | on first access |
 
 The snippets live in `Core/Modules/Template/php/`:
 
@@ -196,7 +197,7 @@ An add-on module brings its own commands by setting two keys in its
 * `services` extends the lazily loaded services of `Page`: `'method' =>
   'pdf.cmsPdfPage'` becomes `$this->pdf->cmsPdfPage($_a)`, and the class comes from
   the container on first access (autowiring). The names `cms`, `db`, `pagination`,
-  `recordUser`, `email` are reserved.
+  `recordUser`, `email`, `zip` are reserved.
 * The method receives the parameter array `$_a` and either outputs or returns text,
   or – for commands with `include` – returns the name of the template to include.
 
@@ -223,7 +224,7 @@ module.
 | `CMS:FED`, `CMS:FED_SCRIPT`, `CMS:FED_CODE` | `cms.cmsFed…` | frontend editing |
 | `CMS:JUMP_LIST`, `JUMP_PREV`, `JUMP_NEXT` | `pagination.cmsJump…` | page navigation |
 | `CMS:EMAIL` | `email.cmsEmail` | send e-mail from templates |
-| `CMS:ZIP` | `zip.cmsZip` | files of several records as a ZIP download; `CmsZip` is a lazily loaded service (`Page::$lazyServices`) |
+| `CMS:ZIP` | `zip.cmsZip` | files of several records as a ZIP download |
 | `CMS:USER_*` | `recordUser.cms…` | frontend community ([12](12-community.md)) |
 
 ## Runtime of `CMS:SELECT`

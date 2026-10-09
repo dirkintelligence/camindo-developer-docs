@@ -211,9 +211,10 @@ nichts (`1=0`) – bewusst nicht „Bedingung weglassen", das gäbe alle Datens�
 
 Boolean-Syntax von MySQL: `müller`, `+müller -gesperrt`, `müller meier`. Keine
 Platzhalter. Ein Wort, das `indexText()` in mehrere zerlegt (`sofa-weiss`), wird zur
-Wortfolge `"sofa weiss"` (mit `*` am Ende: jedes Wort mit dem Operator). Bleibt nach `Cms::indexText()` kein Wort übrig (nur Tags, Satzzeichen),
-trifft die Bedingung nichts (`1=0`) statt wegzufallen. `filter[fulltext]` trifft den [Standard-Volltext](02-data-model.md#volltextsuche)
-jedes Bereichs – auch ohne `area`. Index und Suchbegriff sind nach den Regeln der
+Wortfolge `"sofa weiss"` (mit `*` am Ende: jedes Wort mit dem Operator). Bleibt nach
+`Cms::indexText()` kein Wort übrig (nur Tags, Satzzeichen), trifft die Bedingung nichts
+(`1=0`) statt wegzufallen. `filter[fulltext]` trifft den
+[Standard-Volltext](02-data-model.md#standard-volltext-fulltext) jedes Bereichs – auch ohne `area`. Index und Suchbegriff sind nach den Regeln der
 Sprache gefaltet, siehe [Kollation je Sprache](#kollation-je-sprache).
 
 ### Baum-Filter

@@ -258,7 +258,7 @@ passkeys for frontend profiles.
   the account's other sessions.
 * The extra rights `admin_create` (create with an initial password) and `admin_change`
   (change, lock) only apply to the own user group; only a superuser sets the password of an
-  existing other admin – and only with their **own** password in the field
+  existing other user – and only with their **own** password in the field
   `password_current` (`AdminBackend::_editPasswordCurrentOk()`, failed attempts count in
   the `LoginGuard`). An unattended open session is thus not enough to take over either the
   own account or someone else's. An account without a password (created via CLI only)
@@ -311,7 +311,7 @@ hours but no changes).
   `var/audit/{type}/{id/1000}/{id}[.{page}].jsonl` – after the commit
   (`Database::afterCommit()`).
 * **HMAC chain:** every line carries the HMAC over its content and that of the previous
-  line. `camindo.php audit verify` (daily via cron, result in the operation notices)
+  line. `camindo.php audit verify` (daily as the scheduler task `auditverify`, result in the operation notices)
   checks the chain and reconciles it with the database – a changed or removed line is
   detected, as is a metadata row that is missing, added, or whose columns (time, action,
   actor, origin, object reference, label, field names, IP truncated to two octets) do

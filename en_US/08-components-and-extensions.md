@@ -183,6 +183,7 @@ field has at most one extension.
 | `Calendar` | `text` / `datetime`, `timestampl`, `time` | native date/time picker |
 | `Datepicker` | `text` / `datetime`, `timestampl` | calendar in the user's locale |
 | `MarkdownVisual` | `textarea` / `text`, `chars` | Markdown editor that edits the formatted view |
+| `HTMLVisual` | `textarea` / `text`, `chars` | HTML editor with the same interface, source view via the `<>` button; output with `(CMS:TEXT field entitydecode=false lbrconvert=false)` |
 | `IconPicker` | `text` | choose a Material symbol |
 | `Snippets` | `text` | snippet search for label fields |
 | `Password` | `password` | strength meter and password policy |

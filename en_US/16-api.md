@@ -16,7 +16,13 @@ Classes: `Camindo\Core\Api\` (directory `Core/src/Api/`).
 | `ApiMethod` | attribute that makes a method callable |
 | `ApiException` | error with a machine-readable code |
 | `ApiValues` | field values in neutral format |
-| `SystemApi`, `RecordApi`, `AreaApi` | the methods (see below) |
+| `SystemApi` | `system.*` |
+| `DatasetApi`, `DatasetWriter` | base for the configuration tables ([below](#configuration-datasets-datasetapi)) |
+
+The other methods live in the modules (`RecordApi`, `AreaApi`, `AreaAdminApi`,
+`FieldApi`, `DocsApi`, `AuditApi`, `TrashApi`, `TemplateApi`, `StatusApi`, `LanguageApi`,
+`InstanceApi`, `ConverterApi`, `SchedulerApi`) and are registered like custom methods via
+`settings.php['api']` ([below](#custom-api-methods)).
 
 ## Interfaces and channels
 
@@ -126,7 +132,7 @@ the overview.
 | `record.export` | `area_id`, `type` (`csv`, `docx`, `xml`), scope `ids` or `filter` (otherwise all), `fields`, `languages` (CSV: codes; DOCX: [from, to]), `options` (`header`, `bom`, `separator`, `enclosure`, `eol`; XML: `files`; DOCX: `split` = one record per file), `background` | `zip`, `path`, `size`, `records`, `valid_until` – or `background.token`; rights as in the form |
 | `record.exports` | – | existing export files |
 | `system.processes`, `system.process`, `system.process_abort` | `token` | own background processes: `status` (`running`, `finished`, `timeout`, `failed`), `progress`, `message` |
-| `area.settings`, `area.update` | `area_id`, `with_schema` or `data`, `previous_id`, `simulate` | read and change all settings of an area or folder (`values`, `schema`) – module Structure |
+| `area.settings`, `area.update` | `area_id`, `with_schema` or `data`, `previous_id`, `simulate` | read and change all settings of an area or folder (`values`, `schema`) – module `Area` |
 | `area.create`, `area.copy`, `area.blueprints` | `data`, `blueprint`, `previous_id`, `simulate` or `area_id`, `data` or `type` | create (also from a blueprint, with its fields), copy (settings, rights, fields), blueprints of a type |
 | `area.access`, `area.access_update` | `area_id`, `access` (group_id => rights), `simulate` | read and set area rights per user group |
 | `field.types`, `field.info`, `field.create`, `field.update`, `field.convert` | `area_id`, `type`, `data`, `source_fields`, `remove_links`, `to_type`, `to_multilingual`, `simulate` | field types with display types and flags; read, create, change a field (like the form), convert type or multilingualism (`lossy`) |
@@ -270,11 +276,11 @@ class BlogApi
 }
 ```
 
-The texts live in `Modules/Blog/backend/lang/{language}.php`:
+The texts live in `Modules/Blog/backend/lang/{code}.ini`:
 
-```php
-'api_post' => 'Read a post.',
-'api__post_id' => 'Post (post_id)',
+```ini
+api_post     = "Read a post."
+api__post_id = "Post (post_id)"
 ```
 
 After changing `settings.php`: `camindo.php refresh`.

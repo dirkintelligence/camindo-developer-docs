@@ -13,7 +13,7 @@ Modules/Blog/                    (core modules: Core/Modules/{Name}/)
 │   ├── views.php                views for tools such as the AI assistant (below)
 │   ├── schema.sql               tables (CREATE TABLE IF NOT EXISTS)
 │   └── migrations/              version steps
-├── lang/{locale}.php            snippets for backend AND frontend   (prefix 'blog')
+├── lang/{code}.ini              snippets for backend AND frontend   (prefix 'blog')
 └── backend/
     ├── index.php                entry point of the module tile
     ├── blog_list.php            view scripts, three lines each
@@ -21,7 +21,7 @@ Modules/Blog/                    (core modules: Core/Modules/{Name}/)
     ├── blog_edit.php
     ├── blog_search.php
     ├── html/*.html              HTML templates                      (prefix 'blog')
-    └── lang/{locale}.php        backend-only snippets               (prefix 'blog')
+    └── lang/{code}.ini          backend-only snippets               (prefix 'blog')
 ```
 
 Namespaces: core modules `Camindo\Core\Modules\{Name}`, add-on modules
@@ -152,28 +152,45 @@ not offer what would fail. Context menus hide entries per row via
 
 | Directory | Prefix | applies to |
 |---|---|---|
-| `Core/lang/{locale}.php` | – | backend and frontend |
-| `Core/backend/lang/{locale}.php` | – | backend only |
-| `{Module}/lang/{locale}.php` | `{module}` (lower case) | backend and frontend |
-| `{Module}/backend/lang/{locale}.php` | `{module}` | backend only |
+| `Core/lang/{code}.ini` | – | backend and frontend |
+| `Core/backend/lang/{code}.ini` | – | backend only |
+| `{Module}/lang/{code}.ini` | `{module}` (lower case) | backend and frontend |
+| `{Module}/backend/lang/{code}.ini` | `{module}` | backend only |
 | `{Processor}/lang/…`, `…/backend/lang/…` | `proc.{name}` | likewise |
 | `{Extension}/lang/…`, `…/backend/lang/…` | `ext.{name}` | likewise |
-| `var/custom/snippets/{instance_id}/lang/{locale}.php` | `custom.{instance_id}` | snippets of an instance (Snippets module) |
+| `var/translation/translated/*.ini` | in the key | translation packages (see below) |
+| `var/custom/snippets/{instance_id}/lang/{code}.ini` | `custom.{instance_id}` | snippets of an instance (Snippets module) |
 
-`{locale}` is a backend language code in the form `de_DE`, `en_US` (13 languages in the
-core). `en_US.php` is mandatory and serves as the fallback. Only texts that can appear
+`{code}` is a backend language code in the form `de_DE`, `en_US` (12 languages in the
+core). `en_US.ini` is mandatory and serves as the fallback. Only texts that can appear
 in the frontend belong in `lang/` (error messages, labels of meta fields); a frontend
-request never loads a `backend/lang` file.
+request never loads a `backend/lang` file. Other files in a `lang` directory are
+skipped.
 
-```php
-<?php
-return [
-    'field_blog_title'   => 'Title',                 // field_{table}_{column}
-    'message_blog_saved' => 'The entry has been saved.',
-    'alert_blog_delete'  => 'Really delete the entry?',
-    'count_entries'      => '{n, plural, one{# entry} other{# entries}}',   // ICU
-];
+```ini
+; Modules/Blog/backend/lang/en_US.ini
+field_blog_title   = "Title"
+message_blog_saved = "The entry has been saved."
+alert_blog_delete  = "Really delete the entry?"
+count_entries      = "{n, plural, one{# entry} other{# entries}}"
 ```
+
+The format is read and written by `SnippetIni` – deliberately not `parse_ini_file()`, so
+that a file from outside cannot trigger anything (no environment variables, no
+constants, `yes`/`no` allowed as keys). Values are in double quotes and may span several
+lines; only `\"` and `\\` are escapes, `\n` stays literal text. Comments start with
+`;` or `#`.
+
+**Translation packages.** An additional backend language needs no change to the
+components: a file `var/translation/translated/{code}.ini` (or `{code}_{anything}.ini`)
+holds the texts of any number of components, keys with prefix
+(`ext.datepicker.option_mode`, no dot = core), split into the sections `[frontend]`
+(like `lang/`) and `[backend]`. Every language with such a file becomes a backend
+language; its name in its own language goes into `en_US_{code}.ini`
+(`backend_language_{code} = "…"`). Packages override the component files, the snippet
+sets of the instances override the packages. Every full build writes templates to
+`var/translation/blueprint/` (`en_US_core.ini`: all English core texts with sections and
+prefix).
 
 ICU formats (`plural`, `select`) are only evaluated if the **whole** snippet starts with
 them.
@@ -189,7 +206,8 @@ $cms->snippet('blog.count_entries', ['n' => 3]);        // with parameters
 
 Resolution uses the current language; if a key is missing, the English text was
 already filled in when the cache was built; if it is missing there too, the key itself
-appears – so every gap is visible during development.
+appears – so every gap is visible during development. ICU snippets are compiled to
+closures when the cache is built.
 
 **Labels with `#`.** Schema definitions contain `'label' => '#blog.field_blog_title'`.
 `Cms::textOrSnippet()` resolves a leading `#` as a snippet; everything else stays plain
@@ -199,7 +217,8 @@ snippets (`Core/backend/lang`, e.g. `#label_customers`, `#label_images`, `#label
 – editors need no set of their own for them.
 
 **Snippets per instance.** The Snippets module maintains one set per instance
-(`custom.{instance_id}`), written exclusively via `var_export()`. In the frontend, the
+(`custom.{instance_id}`) as files in the same format, written exclusively through
+`SnippetIni::quote()` – whatever is entered always stays a value. In the frontend, the
 short form `custom.{key}` is enough – `Cms::snippet()` adds the instance itself; in the
 backend, the explicit form `custom.31.welcome` is required. The frontend chooses the
 snippet language via `language.backend_code`.
@@ -470,9 +489,7 @@ unchanged because the short form refers to the set of the running instance.
 
 Batch processing in the record list (`RecordBatch`) edits, moves or deletes many
 records – each one through the same path as the form
-(`RecordService::updateOne()`: check-out, `save()`, check-in), optionally as a simulation. The full text of whole areas is rebuilt by the scheduler
-task `fulltext` (`RecordService::rebuildFulltext()`, without check-out and without audit
-entry).
+(`RecordService::updateOne()`: check-out, `save()`, check-in), optionally as a simulation.
 
 ## New module – checklist
 
@@ -488,14 +505,15 @@ entry).
        'listed'      => true,
        'requires'    => ['core' => '^9.0'],
        // optional: position, access, shared, personal, script_access, entries,
-       //           button, superuser, widget, commands, services, tables (chapter 08)
+       //           button, superuser, widget, api, assets, commands, services, tables
+       //           (chapter 08)
    ];
    ```
 2. Table in `install/schema.sql` (`CREATE TABLE IF NOT EXISTS`, column `{table}_id`).
 3. Dataset class with `hookDefinition()` ([03](03-dataset-api.md)).
 4. `{Name}Backend.php` with `list()`, `info()`, `edit()`, `search()`.
 5. View scripts in `backend/`, including `index.php`.
-6. Snippets `lang/en_US.php` (mandatory) and further languages; `module_label`,
+6. Snippets `lang/en_US.ini` (mandatory) and further languages; `module_label`,
    `module_description`.
 7. HTML templates in `backend/html/` – handlers only there or via `$backend->on()`.
    Plus `install/views.php`: the views a tool may open (below).

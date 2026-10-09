@@ -16,7 +16,13 @@ Klassen: `Camindo\Core\Api\` (Verzeichnis `Core/src/Api/`).
 | `ApiMethod` | Attribut, das eine Methode aufrufbar macht |
 | `ApiException` | Fehler mit maschinenlesbarem Code |
 | `ApiValues` | Feldwerte im neutralen Format |
-| `SystemApi`, `RecordApi`, `AreaApi` | die Methoden (siehe unten) |
+| `SystemApi` | `system.*` |
+| `DatasetApi`, `DatasetWriter` | Basis für die Konfigurations-Tabellen ([unten](#konfigurations-datasets-datasetapi)) |
+
+Die übrigen Methoden liegen in den Modulen (`RecordApi`, `AreaApi`, `AreaAdminApi`,
+`FieldApi`, `DocsApi`, `AuditApi`, `TrashApi`, `TemplateApi`, `StatusApi`, `LanguageApi`,
+`InstanceApi`, `ConverterApi`, `SchedulerApi`) und werden wie eigene Methoden über
+`settings.php['api']` angemeldet ([unten](#eigene-api-methoden)).
 
 ## Oberflächen und Kanäle
 
@@ -127,7 +133,7 @@ Backend-Sprache (der Assistent nimmt `en_US`).
 | `record.export` | `area_id`, `type` (`csv`, `docx`, `xml`), Umfang `ids` bzw. `filter` (sonst alle), `fields`, `languages` (CSV: Codes; DOCX: [von, nach]), `options` (`header`, `bom`, `separator`, `enclosure`, `eol`; XML: `files`; DOCX: `split` = ein Datensatz je Datei), `background` | `zip`, `path`, `size`, `records`, `valid_until` – bzw. `background.token`; Rechte wie in der Maske |
 | `record.exports` | – | vorhandene Exportdateien |
 | `system.processes`, `system.process`, `system.process_abort` | `token` | eigene Hintergrundprozesse: `status` (`running`, `finished`, `timeout`, `failed`), `progress`, `message` |
-| `area.settings`, `area.update` | `area_id`, `with_schema` bzw. `data`, `previous_id`, `simulate` | alle Einstellungen eines Bereichs oder Ordners (`values`, `schema`) lesen und ändern – Modul Struktur |
+| `area.settings`, `area.update` | `area_id`, `with_schema` bzw. `data`, `previous_id`, `simulate` | alle Einstellungen eines Bereichs oder Ordners (`values`, `schema`) lesen und ändern – Modul `Area` |
 | `area.create`, `area.copy`, `area.blueprints` | `data`, `blueprint`, `previous_id`, `simulate` bzw. `area_id`, `data` bzw. `type` | anlegen (auch aus einem Bauplan, samt Feldern), kopieren (Einstellungen, Rechte, Felder), Baupläne eines Typs |
 | `area.access`, `area.access_update` | `area_id`, `access` (group_id => Rechte), `simulate` | Bereichsrechte je Benutzergruppe lesen und setzen |
 | `field.types`, `field.info`, `field.create`, `field.update`, `field.convert` | `area_id`, `type`, `data`, `source_fields`, `remove_links`, `to_type`, `to_multilingual`, `simulate` | Feldtypen mit Darstellungsarten und Kennzeichen; Feld lesen, anlegen, ändern (wie die Maske), Typ oder Mehrsprachigkeit umwandeln (`lossy`) |
@@ -237,7 +243,7 @@ php Core/cron/camindo.php api logout
 ```
 
 Ausgabe ist JSON; der Exit-Code ist 1, wenn die API einen Fehler meldet. Die Benutzergruppe des
-Benutzer braucht die Oberfläche „Kommandozeile".
+Benutzers braucht die Oberfläche „Kommandozeile".
 
 ## Eigene API-Methoden
 
@@ -272,11 +278,11 @@ class BlogApi
 }
 ```
 
-Die Texte stehen in `Modules/Blog/backend/lang/{sprache}.php`:
+Die Texte stehen in `Modules/Blog/backend/lang/{code}.ini`:
 
-```php
-'api_post' => 'Einen Beitrag lesen.',
-'api__post_id' => 'Beitrag (post_id)',
+```ini
+api_post     = "Einen Beitrag lesen."
+api__post_id = "Beitrag (post_id)"
 ```
 
 Nach einer Änderung an `settings.php`: `camindo.php refresh`.

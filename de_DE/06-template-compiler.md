@@ -168,6 +168,7 @@ Ausgabe samt Schnipseln (Listentemplate, eingebundenes Template): Der Parser set
 | `pagination` | `Pagination` | beim ersten Zugriff |
 | `recordUser` | `Modules\Record\RecordUser` | beim ersten Zugriff |
 | `email` | `Email` | beim ersten Zugriff |
+| `zip` | `CmsZip` | beim ersten Zugriff |
 
 Die Schnipsel liegen in `Core/Modules/Template/php/`:
 
@@ -198,7 +199,7 @@ Schlüssel setzt:
 * `services` erweitert die nachladbaren Dienste von `Page`: `'method' =>
   'pdf.cmsPdfPage'` wird zu `$this->pdf->cmsPdfPage($_a)`, und die Klasse kommt beim
   ersten Zugriff aus dem Container (Autowiring). Die Namen `cms`, `db`, `pagination`,
-  `recordUser`, `email` sind reserviert.
+  `recordUser`, `email`, `zip` sind reserviert.
 * Die Methode bekommt das Parameter-Array `$_a` und gibt entweder Text aus bzw. zurück
   oder – bei Befehlen mit `include` – den Namen des einzubindenden Templates.
 
@@ -225,7 +226,7 @@ das Modul `Pdf`.
 | `CMS:FED`, `CMS:FED_SCRIPT`, `CMS:FED_CODE` | `cms.cmsFed…` | Frontend-Editing |
 | `CMS:JUMP_LIST`, `JUMP_PREV`, `JUMP_NEXT` | `pagination.cmsJump…` | Blätterleisten |
 | `CMS:EMAIL` | `email.cmsEmail` | E-Mail aus Templates versenden |
-| `CMS:ZIP` | `zip.cmsZip` | Dateien mehrerer Datensätze als ZIP-Download; `CmsZip` ist ein nachgeladener Dienst (`Page::$lazyServices`) |
+| `CMS:ZIP` | `zip.cmsZip` | Dateien mehrerer Datensätze als ZIP-Download |
 | `CMS:USER_*` | `recordUser.cms…` | Frontend-Community ([12](12-community.md)) |
 
 ## Laufzeit von `CMS:SELECT`

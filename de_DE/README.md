@@ -11,7 +11,7 @@ Begriffe voraus und beschreibt, was dahinter liegt.
 
 ## Voraussetzungen
 
-* PHP ≥ 8.1 mit den Erweiterungen `mysqli`, `intl`, `gd`, `json`, `mbstring`
+* PHP ≥ 8.3 mit den Erweiterungen `mysqli`, `intl`, `gd`, `json`, `mbstring`
 * MySQL ≥ 8.0.17 (JSON-Spalten, Multi-Value-Indizes)
 * Composer 2
 * optional: ImageMagick (`magick`/`convert`), `ffmpeg`/`ffprobe`, `mysqldump`

@@ -3,8 +3,8 @@
 Referenz ist `Core/install/database/schema.sql` (Struktur) mit `seed.sql`
 (Stammdaten). Alle Tabellen: InnoDB, `utf8mb4`, Kollation `utf8mb4_0900_ai_ci` (neutral,
 unabhängig von Akzenten und Groß-/Kleinschreibung; Ausnahmen wie Hashes und Tokens sind
-`ascii`/`latin1`; `data_ftx.data` ist akzentgenau `utf8mb4_0900_as_ci`). Sprachabhängige Vergleiche setzt `Cms::select()` per `COLLATE`, siehe
-[Kollation je Sprache](04-select-and-filter.md#kollation-je-sprache). Datums- und
+`ascii`/`latin1`; `data_ftx.data` ist akzentgenau `utf8mb4_0900_as_ci`). Sprachabhängige
+Vergleiche setzt `Cms::select()` per `COLLATE`, siehe [Kollation je Sprache](04-select-and-filter.md#kollation-je-sprache). Datums- und
 Zeitwerte werden **in UTC** gespeichert und erst für die Anzeige umgerechnet.
 
 ## Das Grundprinzip: benutzerdefinierte Felder in typgetrennten Tabellen
@@ -326,14 +326,16 @@ Zielbereich), `Field::hookOnSave()` weist andere ab. Im Pseudo-Feld `source_fiel
 wählbar: Felder hinter `pointer`/`pointer1` – ein Verweis ist eine lose, einseitige
 Referenz (oft auf mehrere Bereiche), deren Texte den Datensatz nicht beschreiben.
 Änderungen am **Zieldatensatz** erreichen den Volltext nur bei `link` (der Inhalt gehört
-dem Datensatz, siehe unten); bei `relation` erst beim nächsten Speichern des Datensatzes
+dem Datensatz, siehe [oben](#fest-verknüpfte-inhalte-link)); bei `relation` erst beim nächsten Speichern des Datensatzes
 oder per Neuaufbau (Zeitplaner-Aufgabe `fulltext` ohne `only_stale`) – bewusst, ein
 Schlagwort kann an Tausenden Datensätzen hängen.
+
 Beim Speichern verarbeitet `refreshAffectedFulltext()` **nach** dem Check-in die
 Volltextfelder des eigenen Bereichs, in die ein geändertes Feld eingeht, und alle mit
 Quellen über ein `link`-/`relation`-Feld (die Kanten können sich geändert haben); ist
 der Datensatz Inhalt eines `link`-Felds, auch die seines Besitzers (Kante in
 `data_rel`). `refreshFulltext($fieldId)` baut komplett neu auf.
+
 Der Text wird vorher mit `Cms::indexText()` normalisiert (HTML-Tags entfernt,
 Entities aufgelöst, nur Buchstaben und Ziffern; `&shy;` verbindet, der Punkt trennt;
 mit Binde- oder Unterstrich verbundene Wörter kommen getrennt UND zusammengeschrieben
@@ -345,7 +347,9 @@ Sprache der Instanz. Quelle kann
 auch ein Upload-Feld sein (`file`, ohne Thumbnails): sein Beitrag ist
 `data_fil.filename`; `Record::renameFile()` baut den Volltext nach.
 
-**Standard-Volltext `fulltext`.** Jeder Datensatzbereich (`Area::CONTENT_TYPES`) hat
+### Standard-Volltext `fulltext`
+
+Jeder Datensatzbereich (`Area::CONTENT_TYPES`) hat
 ihn – ohne Zeile in `field`. Der Name ist reserviert (`Field::FULLTEXT`) und steht fest
 in `fieldname` (Typ `fulltext`, Stammdaten in `seed.sql`; `Field::cleanupFieldname()`
 lässt ihn stehen, `VirtualFieldsTrait::standardFulltextFieldnameId()` legt ihn notfalls
@@ -353,15 +357,16 @@ an). Seine `data_ftx`-Zeilen haben `field_id` NULL. Quellen sind immer alle Feld
 Typ `text`, `chars`, `json` und `file` (Upload, keine Thumbnails) des Bereichs und über
 seine `link`-Felder die der Zielbereiche, eine Ebene (`standardFulltextSources()`);
 geschrieben wird er von `refreshStandardFulltext()` nach jedem Speichern
-(`refreshAffectedFulltext()`). `select()`
-filtert über den Feldnamen und braucht keine Felddefinition: `filter[fulltext]` wirkt
+(`refreshAffectedFulltext()`). `select()` filtert über den Feldnamen und braucht keine Felddefinition: `filter[fulltext]` wirkt
 in jedem Bereich und bereichsübergreifend; die Suchmasken bieten ihn von selbst an
 (`RecordBackendSearch`). Ein `fulltext` aus älteren Export-Dateien übergeht der Import.
 Anzeige: Datensatz-Info, Reiter „Metadaten" → „Volltext anzeigen"
 (`RecordBackendInfo::fulltext()`, alle Volltexte je Sprache); im Reiter „Inhalte"
 erscheinen Volltextfelder nicht.
 
-**Veraltet statt sofort neu (`FulltextState`).** Strukturänderungen, nach denen der
+### Veraltet statt sofort neu (`FulltextState`)
+
+Strukturänderungen, nach denen der
 Volltext eines ganzen Bereichs nicht mehr zu den Quellen passt – Quellen eines
 Volltextfelds geändert oder neues Volltextfeld (`Field::hookOnSaved()`), Quellfeld
 gelöscht (`hookOnDeleted()`) oder umgewandelt (`convert()`, auch ein ↔ mehrsprachig),
@@ -371,10 +376,12 @@ sofort neu auf, sondern setzen `area.fulltext_stale_at` (UTC, der früheste Zeit
 bleibt). Betroffen sind auch die Bereiche, die über ein `link`-Feld auf den Bereich des
 Felds zeigen (`FulltextState::areasUsingField()`). Ausnahme: `convert()` nach
 `encrypted` baut sofort neu auf, sonst stünde Klartext im Index.
+
 Die Detailansicht und die Feldliste des Bereichs zeigen dann den Hinweis mit
 „Jetzt aktualisieren“ (`AreaBackend::fulltextNotice()` / `fulltext()`): Hintergrundprozess
 `camindo.php fulltext --area=ID --token=…` (`Cli\FulltextCommand`).
-Neuaufbau: `RecordService::rebuildFulltext()` – aufgerufen vom CLI-Befehl `fulltext`
+
+**Neuaufbau:** `RecordService::rebuildFulltext()` – aufgerufen vom CLI-Befehl `fulltext`
 (`--area=…`, `--stale`) und der Zeitplaner-Aufgabe `fulltext` (Option
 `details.only_stale`) – schreibt nur `data_ftx`, ohne Arbeitskopie, Sperre und
 Audit-Eintrag, für jeden Datensatz mit `tmp = 0` (auch im Papierkorb). Je Bereich läuft
@@ -382,6 +389,7 @@ er unter einer Sperre (`var/tmp/fulltext-{area_id}.lock`, exklusiv angelegt, all
 Datensätze aufgefrischt, nach 15 Minuten ohne Auffrischung verwaist); einen gesperrten
 Bereich überspringt ein zweiter Lauf. Nach einem vollständigen Lauf fällt die
 Markierung – nur, wenn sie nicht jünger ist als dessen Beginn.
+
 Volltextfelder stehen weder in `record_cache` noch im Audit-Schnappschuss.
 
 ## Arbeitskopien
@@ -417,8 +425,7 @@ unter der Id der Kopie; `VirtualFieldsTrait::_loadTmpData()`/`_saveTmpData()`
 * **Bearbeitungssperre:** Eine Arbeitskopie sperrt das Original für andere Benutzer,
   solange ihr `changed_at` jünger als `admin.edit_lock_sec` (Vorgabe 5400 s) ist. Beim Abmelden
   werden die Arbeitskopien der Session verworfen.
-* **Uploads sofort, Thumbnails später:** Eine Datei übersteht so eine gescheiterte
-  Prüfung, die teure Umwandlung läuft nur einmal.
+* **Uploads sofort, Thumbnails beim Check-in** ([07](07-media-processing.md#thumbnail-erzeugung)).
 * Eine vorhandene Arbeitskopie desselben Benutzers wird wiederverwendet
   (`findTemporaryByOrigin()`).
 * **Verknüpfungen beim Check-in:** Übertragen wird nur, was sich an der Arbeitskopie
@@ -468,11 +475,9 @@ purge()    → Zeile entfernen, Dateien endgültig löschen  (Zeitplaner-Aufgabe
 ```
 
 Soft-Delete kennen `record`, `area` und `admin`; Tabellen ohne `deleted`-Spalte löschen
-sofort endgültig. Jede Änderung läuft über **Einzelfunktionen**, die genau einen
-Datensatz samt Hooks behandeln – `softDelete()`, `restoreOne()`, `finalDelete()`.
-Orchestrierungen (`delete($id, $withChilds)`, `restore()`, `purge()`, die Kaskade von
-Bereich zu Datensätzen, der Papierkorb) sammeln nur Ids. Kein Datensatz verschwindet an
-seinen Hooks vorbei. Einzelheiten: [03](03-dataset-api.md#löschen-und-wiederherstellen).
+sofort endgültig. Die Methoden (Einzelfunktionen und Orchestrierungen, Kaskaden,
+`MassDeletion`) beschreibt [03](03-dataset-api.md#löschen-und-wiederherstellen); hier
+nur, was das Datenmodell betrifft:
 
 * **Reihenfolge ist Pflicht:** Löschen Blätter zuerst, Wiederherstellen Eltern zuerst
   (`record.parent_id` hat `ON DELETE CASCADE`).
@@ -480,8 +485,6 @@ seinen Hooks vorbei. Einzelheiten: [03](03-dataset-api.md#löschen-und-wiederher
   `changed_at`; `restore()` holt nur diese zurück.
 * **Dateien wandern mit:** `var/deleted/{field_id}_{record_id}_{version}.{ext}`; die
   `data_fil`-Zeilen bleiben bis zum endgültigen Löschen.
-* **Große Vorgänge** (mehr als `admin.mass_delete_threshold` Datensätze) laufen über
-  `MassDeletion` als Hintergrundprozess – derselbe Aufruf, kein zweiter Löschpfad.
 
 ## Zeitzonen
 
@@ -489,4 +492,4 @@ seinen Hooks vorbei. Einzelheiten: [03](03-dataset-api.md#löschen-und-wiederher
 (`admin.settings.timezone`) bzw. der Inhaltssprache (`language.timezone`) – für PHP und
 für die Datenbankverbindung. Umrechnung: `Cms::utcToUserTZ()`, Formatierung
 `Cms::_formatDate()` / `_formatTime()` (ICU, proleptisch gregorianisch) in der Locale des
-Benutzer.
+Benutzers.

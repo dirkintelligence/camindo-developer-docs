@@ -161,7 +161,8 @@ Rules:
 * No seed row with id 0 in tables that have an edit form (0 means "new" there).
 
 **SQL mode.** The schema assumes the non-strict mode: many `NOT NULL` columns have no
-`DEFAULT`, INSERTs omit them, and some columns have zero dates (`0000-00-00 00:00:00`).
+`DEFAULT`, INSERTs omit them, and some columns default to `0000-00-00 00:00:00` (the CMS writes `Cms::DATE_MIN`, see
+[03](03-dataset-api.md#schema)).
 `Database` therefore runs `SET SESSION sql_mode` with `db.sql_mode` (default
 `NO_ENGINE_SUBSTITUTION`) on every connection, before the `db.init_querys` – regardless
 of the server's default (MySQL 8: `STRICT_TRANS_TABLES` and others). `null` keeps the
@@ -308,7 +309,8 @@ php Core/cron/camindo.php <command> [arguments] [--options]
 | `refresh` | directories → `component`, runtime lists |
 | `admin password NAME [--pass-file=…] \| sign` | set a backend password; rewrite all signatures |
 | `key status \| rotate \| retire KID` | key ring of `.camindo.key` ([13](13-security-authentication.md#key-rotation)) |
-| `audit verify [TYPE ID] \| restore [--dry-run] \| migrate` | verify the audit log chain; after restoring a dump, cut the files back to the database state |
+| `audit verify [TYPE ID] \| restore [--dry-run] \| reseal TYPE ID \| delete TYPE ID \| strip-names \| migrate` | audit log: verify the chain, cut back after restoring a dump, re-chain a broken chain, delete a history, strip names ([13](13-security-authentication.md#audit-log)) |
+| `api login \| whoami \| methods \| describe \| call \| logout` | the API on the command line ([16](16-api.md#command-line)) |
 | `fulltext [--area=ID,…] [--stale]` | rebuild the full text – all record areas, the given ones or those marked as outdated ([02](02-data-model.md#full-text-search)) |
 | `scheduler list \| defaults \| run ID\|TYPE` | list scheduler tasks, add missing maintenance tasks, run one task now (e.g. `run trash`) ([07](07-media-processing.md#scheduler-module-scheduler)) |
 
@@ -318,5 +320,9 @@ core update exist on the command line only – a core update from the backend wo
 replace the code that is running it.
 
 Further scripts under `Core/cron/`: `cron.php` (the only cron job), `scheduler.php` (started by it),
-`rebuild_trees.php` (repair trees), `check_dateparse.php`, `check_nested_select.php`,
-`check_tree_positions.php`, `check_webauthn.php` (self-tests).
+`template_sync.php`, `trigger_ff.php`, `trigger_magick.php` (started by it),
+`record_export.php`, `record_import.php`, `record_batch.php`, `mass_delete.php`,
+`thumbnails.php` (background processes from the backend), `rebuild_trees.php` (repair
+trees) and the self-tests `check_dateparse.php`, `check_nested_select.php`,
+`check_tree_positions.php`, `check_template_params.php`, `check_include_cache.php`,
+`check_webauthn.php`.

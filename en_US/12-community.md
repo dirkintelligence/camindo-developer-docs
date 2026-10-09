@@ -95,7 +95,8 @@ submitted too quickly (`user.formguard_min_seconds`) or too late. Extension poin
 external service: `security.form_challenge` = class with
 `FormChallengeInterface::verify($_POST)`.
 
-Unconfirmed profiles are deleted for good by cron after `user.unconfirmed_days` (7).
+Unconfirmed profiles are deleted for good by the scheduler task `retention` after
+`user.unconfirmed_days` (7) (`RecordUser::purgeUnconfirmed()`).
 
 ## The commands
 

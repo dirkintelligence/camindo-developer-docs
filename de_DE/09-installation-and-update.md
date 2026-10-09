@@ -160,8 +160,8 @@ Regeln:
 * Keine Seed-Zeile mit der Id 0 in Tabellen mit Eingabemaske (0 heißt dort „neu").
 
 **SQL-Modus.** Das Schema setzt den nicht-strikten Modus voraus: Viele `NOT NULL`-Spalten
-haben kein `DEFAULT`, INSERTs lassen sie weg, und einige Spalten haben Null-Datumswerte
-(`0000-00-00 00:00:00`). `Database` setzt deshalb bei jeder Verbindung
+haben kein `DEFAULT`, INSERTs lassen sie weg, und einige Spalten haben die Vorgabe
+`0000-00-00 00:00:00` (geschrieben wird `Cms::DATE_MIN`, siehe [03](03-dataset-api.md#schema)). `Database` setzt deshalb bei jeder Verbindung
 `SET SESSION sql_mode` auf `db.sql_mode` (Vorgabe `NO_ENGINE_SUBSTITUTION`), vor den
 `db.init_querys` – unabhängig vom Standard des Servers (MySQL 8: `STRICT_TRANS_TABLES`
 u. a.). `null` lässt den Modus des Servers stehen.
@@ -306,7 +306,8 @@ php Core/cron/camindo.php <befehl> [argumente] [--optionen]
 | `refresh` | Verzeichnisse → `component`, Laufzeitlisten |
 | `admin password NAME [--pass-file=…] \| sign` | Backend-Passwort setzen; alle Signaturen neu schreiben |
 | `key status \| rotate \| retire KID` | Schlüsselbund von `.camindo.key` ([13](13-security-authentication.md#schlüsselrotation)) |
-| `audit verify [TYP ID] \| restore [--dry-run] \| migrate` | Kette des Audit-Logs prüfen; nach dem Zurückspielen eines Dumps die Dateien auf den Stand der Datenbank kürzen |
+| `audit verify [TYP ID] \| restore [--dry-run] \| reseal TYP ID \| delete TYP ID \| strip-names \| migrate` | Audit-Log: Kette prüfen, nach dem Zurückspielen eines Dumps kürzen, gebrochene Kette neu verketten, Verlauf löschen, Namen entfernen ([13](13-security-authentication.md#audit-log)) |
+| `api login \| whoami \| methods \| describe \| call \| logout` | API auf der Kommandozeile ([16](16-api.md#kommandozeile)) |
 | `fulltext [--area=ID,…] [--stale]` | Volltext neu aufbauen – alle Datensatzbereiche, die genannten oder die als veraltet markierten ([02](02-data-model.md#volltextsuche)) |
 | `scheduler list \| defaults \| run ID\|TYP` | Aufgaben des Zeitplaners auflisten, fehlende Wartungsaufgaben anlegen, eine Aufgabe sofort ausführen (etwa `run trash`) ([07](07-media-processing.md#zeitplaner-modul-scheduler)) |
 
@@ -316,5 +317,9 @@ gibt es bewusst nur auf der Kommandozeile – ein Core-Update aus dem Backend ta
 Code aus, der es gerade ausführt.
 
 Weitere Scripts unter `Core/cron/`: `cron.php` (der einzige Cronjob), `scheduler.php` (von ihm gestartet),
-`rebuild_trees.php` (Bäume reparieren), `check_dateparse.php`,
-`check_nested_select.php`, `check_tree_positions.php`, `check_webauthn.php` (Selbsttests).
+`template_sync.php`, `trigger_ff.php`, `trigger_magick.php` (von ihm gestartet),
+`record_export.php`, `record_import.php`, `record_batch.php`, `mass_delete.php`,
+`thumbnails.php` (Hintergrundprozesse aus dem Backend), `rebuild_trees.php` (Bäume
+reparieren) und die Selbsttests `check_dateparse.php`, `check_nested_select.php`,
+`check_tree_positions.php`, `check_template_params.php`, `check_include_cache.php`,
+`check_webauthn.php`.

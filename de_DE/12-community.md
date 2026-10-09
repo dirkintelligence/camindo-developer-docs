@@ -95,7 +95,8 @@ Formular zu schnell (`user.formguard_min_seconds`) bzw. zu spät abgeschickt wur
 Erweiterungspunkt für einen fremden Dienst: `security.form_challenge` = Klasse mit
 `FormChallengeInterface::verify($_POST)`.
 
-Unbestätigte Profile löscht der Cron nach `user.unconfirmed_days` (7) endgültig.
+Unbestätigte Profile löscht die Zeitplaner-Aufgabe `retention` nach `user.unconfirmed_days`
+(7) endgültig (`RecordUser::purgeUnconfirmed()`).
 
 ## Die Befehle
 

@@ -208,10 +208,10 @@ condition", which would return all records.
 
 MySQL boolean syntax: `miller`, `+miller -blocked`, `miller meyer`. No wildcards. A word
 that `indexText()` splits into several (`sofa-weiss`) becomes the phrase `"sofa weiss"`
-(with a trailing `*`: each word with the operator). If
-no word remains after `Cms::indexText()` (only tags, punctuation), the condition matches
-nothing (`1=0`) instead of being dropped. `filter[fulltext]` hits the [standard full text](02-data-model.md#full-text-search) of every
-area – even without `area`. Index and search term are folded by the rules of the
+(with a trailing `*`: each word with the operator). If no word remains after
+`Cms::indexText()` (only tags, punctuation), the condition matches nothing (`1=0`)
+instead of being dropped. `filter[fulltext]` hits the
+[standard full text](02-data-model.md#standard-full-text-fulltext) of every area – even without `area`. Index and search term are folded by the rules of the
 language, see [Collation per language](#collation-per-language).
 
 ### Tree filters

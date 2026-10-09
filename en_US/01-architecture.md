@@ -278,16 +278,9 @@ After saving, deleting or importing, the rule is:
 ### `Database` – the result stack
 
 `Cms::select()` is called in nested fashion from templates. `Database` therefore keeps
-an explicit stack of results:
-
-```php
-$this->db->pushResult();   // save the current result
-$this->db->query(…);       // sub-query
-$this->db->popResult();    // restore the previous result
-```
-
-The template compiler does this automatically for `CMS:SELECT`. If your PHP code runs
-a second query while iterating over a result, wrap it yourself.
+an explicit stack of results (`pushResult()`/`popResult()`); the template compiler uses
+it automatically for `CMS:SELECT`, PHP code wraps a sub-query itself
+([04](04-select-and-filter.md#sub-queries)).
 
 Helpers: `fetch()`, `fetchAll()` (single-column results become a flat list),
 `fetchNum()`, `fetchColumn()`, `fetchPairs()`, `fetchAndIndex()`,
@@ -307,6 +300,7 @@ callbacks after the outermost commit.
 | `Instance`, `Language` | websites and languages |
 | `Logfiles` | logs under `var/log` (superusers only) |
 | `Messaging` | internal messages between users |
+| `Privacy` | data protection: deletion policies, data access requests and export, anonymising deleted users ([13](13-security-authentication.md#audit-log)) |
 | `Record` | records: form, list, search, import/export, batch processing; `RecordUser` = runtime of the `CMS:USER_*` commands |
 | `Scheduler` | scheduled tasks |
 | `Snippets` | custom text modules per instance |
@@ -318,5 +312,5 @@ callbacks after the outermost commit.
 | `User` | backend view of the frontend community (review) |
 
 Core processors: `ImageGd`, `Magick`, `FFmpegVideo`, `FFmpegAudio`, `FFmpegImage`.
-Core extensions: `Calendar`, `Datepicker`, `IconPicker`, `Markdown`, `Password`,
-`Snippets`.
+Core extensions: `Calendar`, `Datepicker`, `HTMLVisual`, `IconPicker`, `MarkdownVisual`,
+`Password`, `Snippets`.

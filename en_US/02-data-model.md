@@ -325,14 +325,16 @@ target area), `Field::hookOnSave()` rejects others. In the pseudo field `source_
 selectable: fields behind `pointer`/`pointer1` – a pointer is a loose, one-way reference
 (often to several areas) whose texts do not describe the record.
 Changes to the **target record** reach the full text only for `link` (the content belongs
-to the record, see below); for `relation` only on the record's next save or by a rebuild
+to the record, see [above](#dependent-linked-content-link)); for `relation` only on the record's next save or by a rebuild
 (scheduler task `fulltext` without `only_stale`) – on purpose, a tag can be attached to
 thousands of records.
+
 On save, `refreshAffectedFulltext()` processes **after** the check-in the full-text fields
 of the own area that a changed field goes into, and all with sources via a link or
 relation field; if the record is content of a `link` field, those of its owner as well (edge in `data_rel`).
-`refreshFulltext($fieldId)` rebuilds everything. The text
-is normalised with `Cms::indexText()` first (HTML tags removed, entities decoded, only
+`refreshFulltext($fieldId)` rebuilds everything.
+
+The text is normalised with `Cms::indexText()` first (HTML tags removed, entities decoded, only
 letters and digits; `&shy;` joins, the dot separates; words joined by hyphen or
 underscore are stored separated AND concatenated: `sofa-weiss` → `sofa weiss sofaweiss`;
 search terms use `indexText($t, forSearch: true)` without the concatenated variant;
@@ -342,21 +344,25 @@ One row per language of the instance. A source can also be an upload field (`fil
 without thumbnails): it contributes `data_fil.filename`; `Record::renameFile()` rebuilds
 the full text.
 
-**Standard full text `fulltext`.** Every record area (`Area::CONTENT_TYPES`) has it –
+### Standard full text `fulltext`
+
+Every record area (`Area::CONTENT_TYPES`) has it –
 without a row in `field`. The name is reserved (`Field::FULLTEXT`) and fixed in
 `fieldname` (type `fulltext`, master data in `seed.sql`; `Field::cleanupFieldname()`
 keeps it, `VirtualFieldsTrait::standardFulltextFieldnameId()` creates it if missing).
 Its `data_ftx` rows have `field_id` NULL. Its sources are always all fields of type
 `text`, `chars`, `json` and `file` (uploads, no thumbnails) in the area and, via its
 `link` fields, those of the target areas, one level (`standardFulltextSources()`); it is
-written by `refreshStandardFulltext()` after every save (`refreshAffectedFulltext()`). `select()` filters by field name and
-needs no field definition: `filter[fulltext]` works in every area and across areas; the
+written by `refreshStandardFulltext()` after every save (`refreshAffectedFulltext()`).
+`select()` filters by field name and needs no field definition: `filter[fulltext]` works in every area and across areas; the
 search forms offer it by themselves (`RecordBackendSearch`). The import skips a
 `fulltext` from older export files. Display: record info, tab "Meta data" → "Show full
 text" (`RecordBackendInfo::fulltext()`, all full texts per language); full-text fields do
 not appear in the "Contents" tab.
 
-**Outdated instead of rebuilt at once (`FulltextState`).** Structural changes after which
+### Outdated instead of rebuilt at once (`FulltextState`)
+
+Structural changes after which
 the full text of a whole area no longer matches its sources – sources of a full-text
 field changed or a new full-text field (`Field::hookOnSaved()`), source field deleted
 (`hookOnDeleted()`) or converted (`convert()`, also mono- ↔ multilingual), target areas
@@ -366,16 +372,19 @@ away but set `area.fulltext_stale_at` (UTC, the earliest time is kept). The area
 `link` fields point to the field's area are affected as well
 (`FulltextState::areasUsingField()`). Exception: `convert()` to `encrypted` rebuilds at
 once, otherwise plain text would remain in the index.
+
 The area's detail view and field list then show the notice with "Update now"
 (`AreaBackend::fulltextNotice()` / `fulltext()`): background process
 `camindo.php fulltext --area=ID --token=…` (`Cli\FulltextCommand`).
-Rebuild: `RecordService::rebuildFulltext()` – called by the CLI command `fulltext`
+
+**Rebuild:** `RecordService::rebuildFulltext()` – called by the CLI command `fulltext`
 (`--area=…`, `--stale`) and the scheduler task `fulltext` (option `details.only_stale`) –
 writes only `data_ftx`, without working copy, lock or audit entry, for every record with
 `tmp = 0` (including the trash). Per area it runs under a lock
 (`var/tmp/fulltext-{area_id}.lock`, created exclusively, refreshed every 50 records,
 orphaned after 15 minutes without refresh); a second run skips a locked area. After a
 complete run the mark is cleared – only if it is not newer than the run's start.
+
 Full-text fields are neither in `record_cache` nor in the audit snapshot.
 
 ## Working copies
@@ -410,8 +419,7 @@ translate it into the working form (`field => [type, value]`, multilingual
 * **Edit lock:** a working copy locks the original for other users as long as its
   `changed_at` is younger than `admin.edit_lock_sec` (default 5400 s). On logout, the session's
   working copies are discarded.
-* **Uploads immediately, thumbnails later:** a file survives a failed validation, the
-  expensive conversion runs only once.
+* **Uploads immediately, thumbnails at check-in** ([07](07-media-processing.md#thumbnail-generation)).
 * An existing working copy of the same user is reused (`findTemporaryByOrigin()`).
 * **Links on check-in:** only what changed on the working copy since check-out is
   transferred – compared with the state in `data_rel_checkout`
@@ -459,11 +467,9 @@ purge()    → remove the row, delete the files for good   (scheduler task trash
 ```
 
 Soft delete exists for `record`, `area` and `admin`; tables without a `deleted` column
-delete permanently at once. Every change goes through **single-record functions** that
-handle exactly one record including its hooks – `softDelete()`, `restoreOne()`,
-`finalDelete()`. Orchestrations (`delete($id, $withChilds)`, `restore()`, `purge()`,
-the cascade from area to records, the trash) only collect ids. No record disappears
-past its hooks. Details: [03](03-dataset-api.md#deleting-and-restoring).
+delete permanently at once. The methods (single-record functions and orchestrations,
+cascades, `MassDeletion`) are described in [03](03-dataset-api.md#deleting-and-restoring);
+here only what concerns the data model:
 
 * **Order is mandatory:** delete leaves first, restore parents first
   (`record.parent_id` has `ON DELETE CASCADE`).
@@ -471,8 +477,6 @@ past its hooks. Details: [03](03-dataset-api.md#deleting-and-restoring).
   `restore()` brings back only those.
 * **Files move along:** `var/deleted/{field_id}_{record_id}_{version}.{ext}`; the
   `data_fil` rows stay until the final deletion.
-* **Large operations** (more than `admin.mass_delete_threshold` records) run as a
-  background process via `MassDeletion` – the same call, not a second deletion path.
 
 ## Time zones
 

@@ -87,6 +87,8 @@ and reads it in `hookOnLoaded()`. `select()` can neither filter nor sort by it.
 are rejected, not silently raised. SQL functions (`NOW()`, `UTC_TIMESTAMP()` – only from
 `Cms::$funcWhitelist`) are exempt from `min`/`max`. `created_at`/`created_by` are
 neither written nor validated on updates.
+The column default `0000-00-00 00:00:00` in `schema.sql` (e.g. on `data_dat`) is only a
+placeholder for INSERTs without a value; the CMS itself always writes `DATE_MIN`.
 
 **Defaults (`default`).** Scalar types: the value. Array types (`file`, `json`,
 relations, `reltable`): **each line** is a selectable option. Date types: `now`,
@@ -141,6 +143,7 @@ All hooks are `protected` with empty defaults; only `hookDefinition()` is abstra
 | `hookOnSoftDelete($data)` | when marking `deleted = 1` |
 | `hookOnRestore($data)` | when restoring |
 | `hookOnDelete($data)` | on **final** deletion, before the `DELETE` |
+| `hookOnDeleted($data)` | on **final** deletion, after the `DELETE`, before the commit |
 
 **Errors in hooks: throw an exception.** Only then does the surrounding transaction
 roll back. If the message starts with `#`, it is considered already registered in
@@ -223,7 +226,7 @@ only collect ids:
 |---|---|
 | `softDelete(int $id): bool` | `deleted = 1`, `hookOnSoftDelete()` |
 | `restoreOne(int $id): bool` | `deleted = 0`, `hookOnRestore()` |
-| `finalDelete(int $id): bool` | remove the row, `hookOnDelete()` |
+| `finalDelete(int $id): bool` | remove the row, `hookOnDelete()`, `hookOnDeleted()` |
 
 | Orchestration | calls |
 |---|---|

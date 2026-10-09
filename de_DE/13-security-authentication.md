@@ -262,7 +262,7 @@ Passkeys für Frontend-Profile.
   anderen Sessions des Kontos.
 * Zusatzrechte `admin_create` (anlegen mit Startpasswort) und `admin_change` (ändern,
   sperren) gelten nur für die eigene Benutzergruppe; das Passwort eines bestehenden anderen
-  Benutzer setzt nur ein Superuser – und nur mit seinem **eigenen** Passwort im Feld
+  Benutzers setzt nur ein Superuser – und nur mit seinem **eigenen** Passwort im Feld
   `password_current` (`AdminBackend::_editPasswordCurrentOk()`, Fehlversuche zählen im
   `LoginGuard`). Eine offen stehende Sitzung reicht so weder für das eigene noch für ein
   fremdes Konto. Ein Konto ohne Passwort (nur per CLI angelegt) braucht keins.
@@ -318,7 +318,7 @@ verraten Arbeitszeiten, aber keine Änderungen).
   `AuditStore` nach `var/audit/{typ}/{id/1000}/{id}[.{seite}].jsonl` – nach dem Commit
   (`Database::afterCommit()`).
 * **HMAC-Kette:** jede Zeile trägt den HMAC über ihren Inhalt und den der Vorzeile.
-  `camindo.php audit verify` (täglich per Cron, Ergebnis in den Betriebshinweisen) prüft
+  `camindo.php audit verify` (täglich als Zeitplaner-Aufgabe `auditverify`, Ergebnis in den Betriebshinweisen) prüft
   die Kette und gleicht mit der Datenbank ab – eine geänderte oder entfernte Zeile fällt
   auf, ebenso eine Metazeile, die fehlt, hinzukommt oder deren Spalten (Zeit, Aktion,
   Handelnder, Herkunft, Objekt-Bezug, Bezeichnung, Feldnamen, IP auf zwei Oktette

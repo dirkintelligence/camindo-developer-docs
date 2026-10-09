@@ -277,16 +277,9 @@ Nach Speichern, Löschen oder Import gilt einheitlich:
 ### `Database` – der Result-Stack
 
 `Cms::select()` wird in Templates verschachtelt aufgerufen. `Database` hält deshalb
-einen expliziten Stapel von Ergebnissen:
-
-```php
-$this->db->pushResult();   // aktuelles Ergebnis sichern
-$this->db->query(…);       // Unterabfrage
-$this->db->popResult();    // vorheriges Ergebnis wiederherstellen
-```
-
-Der Template-Compiler setzt das bei `CMS:SELECT` automatisch. Wer im PHP-Code während
-einer Iteration eine zweite Abfrage stellt, klammert sie selbst.
+einen expliziten Stapel von Ergebnissen (`pushResult()`/`popResult()`); der
+Template-Compiler setzt ihn bei `CMS:SELECT` automatisch ein, PHP-Code klammert eine
+Unterabfrage selbst ([04](04-select-and-filter.md#unterabfragen)).
 
 Helfer: `fetch()`, `fetchAll()` (einspaltige Ergebnisse werden zu einer flachen Liste),
 `fetchNum()`, `fetchColumn()`, `fetchPairs()`, `fetchAndIndex()`,
@@ -306,6 +299,7 @@ Rückrufe nach dem äußersten Commit.
 | `Instance`, `Language` | Websites und Sprachen |
 | `Logfiles` | Protokolle unter `var/log` (nur Superuser) |
 | `Messaging` | interne Nachrichten zwischen Benutzern |
+| `Privacy` | Datenschutz: Lösch-Policies, Datenauskunft und -export, gelöschte Benutzer anonymisieren ([13](13-security-authentication.md#audit-log)) |
 | `Record` | Datensätze: Maske, Liste, Suche, Import/Export, Stapelverarbeitung; `RecordUser` = Laufzeit der `CMS:USER_*`-Befehle |
 | `Scheduler` | Zeitgesteuerte Aufgaben |
 | `Snippets` | eigene Textbausteine je Instanz |
@@ -317,5 +311,5 @@ Rückrufe nach dem äußersten Commit.
 | `User` | Backend-Sicht auf die Frontend-Community (Gegenlesen) |
 
 Core-Prozessoren: `ImageGd`, `Magick`, `FFmpegVideo`, `FFmpegAudio`, `FFmpegImage`.
-Core-Extensions: `Calendar`, `Datepicker`, `IconPicker`, `Markdown`, `Password`,
-`Snippets`.
+Core-Extensions: `Calendar`, `Datepicker`, `HTMLVisual`, `IconPicker`, `MarkdownVisual`,
+`Password`, `Snippets`.

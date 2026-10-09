@@ -29,12 +29,12 @@ Processors only run when a record is saved with a new file (or via Tools → Dat
 Processors/MyProc/                 (core: Core/Processors/…)
 ├── MyProc.php                     extends Camindo\Core\MediaProcessor
 ├── install/settings.php           version, type (image|audio|video|document|other), label, description, requires
-├── lang/{locale}.php              prefix proc.myproc
+├── lang/{code}.ini                prefix proc.myproc
 └── backend/
     ├── form.php                   insert for the converter form
     ├── info.php                   insert for the converter detail view
     ├── html/*.html                prefix proc.myproc
-    └── lang/{locale}.php
+    └── lang/{code}.ini
 ```
 
 Namespace: `Camindo\Processors\{Name}` (add-on) or `Camindo\Core\Processors\{Name}`.
@@ -273,10 +273,9 @@ Scheduled tasks in the `scheduler` table:
 | `retention` | `IpAnonymizer::run()`, `AuditLog::purge()`, `Message::purgeExpired()`, `RecordUser::purgeUnconfirmed()` – each step on its own |
 | `auditverify` | `AuditLog::verifyAll()` + `storeVerifyResult()` (for `SystemHealth`); findings = error |
 | `updatecheck` | `UpdateCheck::run()`; nothing to do without `paths.composer` |
-| `messagedigest` | `MessageDigest::run()`: summary of new messages by email to admins with `settings.message_digest = 1`; new = since the previous run (`last_run` before the start) |
+| `messagedigest` | `MessageDigest::run()`: summary of new messages by email to users with `settings.message_digest = 1`; new = since the previous run (`last_run` before the start) |
 
-The six types from `trash` to `updatecheck` (`Scheduler::MAINTENANCE_TYPES`) have no `details`; they used to be
-hard-wired in `TriggerCron` or a separate cron job. The installer creates
+The six types from `trash` to `updatecheck` (`Scheduler::MAINTENANCE_TYPES`) have no `details`. The installer creates
 `Scheduler::DEFAULT_TASKS` (`Scheduler::createDefaults()`, step `tasks` after `runtime`,
 because `adminError()` needs the group files): spread between 2 and 4 a.m., `tmpcleanup`
 hourly, `messagedigest` at 7 a.m., label as the snippet `#scheduler.label_type_{type}`. `camindo.php scheduler

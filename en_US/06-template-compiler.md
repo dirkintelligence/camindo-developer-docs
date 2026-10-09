@@ -410,10 +410,13 @@ function onSave(array &$affectedFields, array &$data, array &$previousData): voi
   references, so each one sees the changes of the previous ones. An exception ends the
   chain. The ids are kept per area in the `InstanceCache` (`trigger_template_ids`).
 * During the call `$GLOBALS['cms']` holds only `['record_id' => …]` (restored
-  afterwards): `CMS:SELECT relation=…` needs no `src_id`, but reads the stored state –
-  in `onSave` the old relations of an existing record (they stay on the working copy
-  until check-in). The publication condition and the group rights of the caller apply
-  as usual.
+  afterwards). In `onSave`, and in `onSaved` when a working copy is saved temporarily,
+  this is the working copy (`Dataset::savingWorkingCopyId()`), which holds the
+  relations until check-in (outgoing and incoming, `TemporaryTrait::_copyRelations()`):
+  `CMS:SELECT relation=…` / `CMS:RELATION` without a source therefore see the new
+  state, and so does the reverse direction with `dest_id` set to the working copy;
+  `$data['record_id']` stays the id of the original (stored state). The publication condition and the group rights of
+  the caller apply as usual.
 * When moving, the trigger templates of the **target area** apply.
 * An event does not run nested for the same record per template (protection against
   endless loops).

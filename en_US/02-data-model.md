@@ -221,6 +221,7 @@ tmp, origin_id, locked, deleted                            ← working copies, t
 | `template` | templates: `code` (copy of the source, for searching only), `styled_code`, `error_text`, `standalone`, `type` (`scheduler` = scheduled) |
 | `rel_area_template` | which templates an area may use or force via URL |
 | `rel_area_trigger` | trigger templates of an area, `position` = execution order |
+| `data_rel_checkout` | links of a working copy at check-out – the reference state for check-in |
 | `status` | record status (icon, label, colour) |
 | `converter`, `rel_field_converter` | configured processors and their assignment to thumbnail fields |
 | `rel_fulltext_text` | source fields of a full-text field (optionally via a `link`/`relation` field: `rel_field_id`) |
@@ -384,7 +385,8 @@ Full-text fields are neither in `record_cache` nor in the audit snapshot.
 ```
 checkOut()        create a copy: tmp = 1, origin_id = original
                   record_cache rows of the original → working state of the copy
-                  copy the links, set the edit lock
+                  copy the links (outgoing and incoming),
+                  record their state in data_rel_checkout, set the edit lock
 
 save(…, stayTemporary: true)
                   intermediate save (tab change): only the working state in the copy's
@@ -394,7 +396,7 @@ save(…)  = checkIn()
                   merge working state and input, validate as a whole
                   write the original's data_* rows and record_cache
                   rename files (tmp id → record_id), write data_fil
-                  create thumbnails ONCE, copy links back
+                  create thumbnails ONCE, reconcile the links (see below)
                   delete the working copy
 
 cancel($tmpId)    discard the working copy and its files
@@ -411,6 +413,15 @@ translate it into the working form (`field => [type, value]`, multilingual
 * **Uploads immediately, thumbnails later:** a file survives a failed validation, the
   expensive conversion runs only once.
 * An existing working copy of the same user is reused (`findTemporaryByOrigin()`).
+* **Links on check-in:** only what changed on the working copy since check-out is
+  transferred – compared with the state in `data_rel_checkout`
+  (`TemporaryTrait::_copyRelationsBack()`, three set-based queries: delete removed
+  edges, insert/update new or changed ones, renumber the record's own lists). Changes
+  other records made to the original in the meantime are kept – a pointer B → A set
+  while A was checked out, as well as the mirror edge of a bidirectional field. Edges
+  to other working copies are always transferred: dependent content travels along
+  them (`LinkTrait`). `data_rel_checkout` goes away with the working copy (FK
+  `ON DELETE CASCADE`).
 
 ## Moving records
 

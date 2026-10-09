@@ -164,6 +164,7 @@ component is active:
 | Order | start page, then its links in lists and tables, remaining pages by file name – number the chapters (`02-…`, `03-…`) |
 | Links | relative within the manual (`./02-commands.md#section`); links into the core manuals or those of other components stay plain text – name manual and chapter in the text |
 | Style | like the core manuals |
+| Code examples | blocks with CMS commands as ```` ```cms ```` – the Docs module colours them like the template editor; syntax descriptions that are not a valid command (`(CMS:TEXT field [parameter=value …])`) as ```` ```cmscode ```` – entirely purple, not parsed |
 
 Internally the manual is called `{kind}-{name}` (e.g. `module-blog`); its pages appear
 under this name in the API as well (`docs.search`, `docs.read`, parameter `book`). The

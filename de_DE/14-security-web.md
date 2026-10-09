@@ -82,7 +82,15 @@ kein HTML-Filter:
 
 **Frontend:** `CMS:TEXT` gibt Werte absichtlich roh aus (HTML ist Inhalt); dort greift
 der Lesefilter. In Attributen maskiert das Template mit `(CMS:TEXT feld
-specialchars=true)`.
+specialchars=true)`. Selbst mit `htmlspecialchars()` maskieren nur Befehle, die ein
+Attribut selbst schreiben: `CMS:MEDIA` (alle Attribute des `<img>`-Tags samt `attr[…]`,
+nicht die Einzelwerte über `subfield`), `CMS:USER_TOKEN`, `CMS:USER_PASSWORD_RULES`,
+`CMS:XML` sowie `{href}` in den Vorlagen von `CMS:JUMP_*`. `Pagination::baseLink()`
+nimmt dafür die `REQUEST_URI`, die ungeprüft vom Client kommt, kodiert `'` und `\` als
+`%27`/`%5C` (das Backend setzt `{href}` zusätzlich in einen JS-String,
+`cApp.layers.replace('{href}')`) und maskiert dann für das Attribut. `prefix`,
+`suffix`, `ifempty` und `instead` bleiben bei allen Befehlen roh – sie stammen aus dem
+Template.
 
 ## Sicherheits-Header
 

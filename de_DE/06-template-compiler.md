@@ -122,7 +122,7 @@ Jeder Befehl ist ein Array-Eintrag:
 'select' => [
     'method'     => 'cms.cmsSelect',            // {objekt}.{methode}; ohne Punkt: cms
     'php_prefix' => 'push_result',              // Schnipsel vor dem Aufruf
-    'php_suffix' => ['include', 'pop_result'],  // … und danach
+    'php_suffix' => ['include', 'pop_result', 'select_count'],  // … und danach
     'buffer_set' => true,                       // set=… fängt die ganze Ausgabe ab
     'note'       => 'Durchsucht die Datenbank …',
     'do'         => 'resulttemplate',           // Parameter für einen Wert ohne Schlüssel
@@ -175,6 +175,7 @@ Die Schnipsel liegen in `Core/Modules/Template/php/`:
 |---|---|
 | `push_result.php` / `pop_result.php` | Datenbankergebnis, Zeilenzähler und `$cms` sichern bzw. zurückholen |
 | `include.php` | Ergebnis-Template einbinden, `includeDepth` zählen |
+| `select_count.php` | nur `CMS:SELECT`: mit `hits=false` die Gesamtzahl hinter `pop_result` übernehmen (`Cms::selectCountEnd()`) |
 | `include_cached.php` | wie `include.php`, danach `Cms::includeEnd()` – nur `CMS:INCLUDE` ([Ausgabe-Cache](#ausgabe-cache-von-cmsinclude)) |
 | `include_and_stop.php` | dito, danach `exit()` (Erfolgstemplates) |
 | `loop_start.php` / `loop_end.php` | Ergebnisschleife |
@@ -241,6 +242,10 @@ das Modul `Pdf`.
 5. `Cms::select()` ausführen ([04](04-select-and-filter.md)).
 6. Treffer → Name des `resulttemplate` zurückgeben; keine Treffer → `noresult` ausgeben
    bzw. `noresulttemplate` zurückgeben; der `include`-Schnipsel bindet ein.
+7. `hits=false` (schließt `count=true` ein) lädt keine Zeilen. Die Gesamtzahl legt
+   `cmsSelect()` auf einen Stapel; `select_count` setzt sie nach `pop_result` als
+   `num_rows_unlimited` des aufrufenden Templates (sonst stünde sie nirgends, da kein
+   `resulttemplate` eingebunden wird). `noresult`/`noresulttemplate` gelten nur bei 0.
 
 Die Parameter `lang` und `collate` sind definiert, haben aber keine Wirkung.
 
@@ -453,6 +458,12 @@ und **Hinweise** (`TemplateParserTrait::inlineHandlerWarnings()`, gelb dargestel
 `<script>` ohne `(CMS:NONCE)` sowie `on…`-Attribute und `javascript:`-Adressen im
 HTML-Teil – beides blockiert eine aktive Script-Policy. Das Widget
 „Template-Meldungen" listet alle Templates mit Meldungen.
+
+`TemplateParserTrait::styleCode()` liefert dasselbe Markup ohne zu kompilieren und ohne
+Template-Links. Das Modul Docs färbt damit die ```` ```cms ````-Blöcke der Handbücher
+ein (`Docs::render()`); ```` ```cmscode ```` färbt den ganzen Block lila, ohne zu parsen
+(Syntaxbeschreibungen wie `(CMS:TEXT field [parameter=wert …])`); andere Codeblöcke
+bleiben unverändert.
 
 ## Frontend-Editing
 

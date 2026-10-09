@@ -53,7 +53,7 @@ dem Repo-Namen.
     "type": "camindo-module",
     "license": "MIT",
     "require": {
-        "php": ">=8.1",
+        "php": ">=8.3",
         "camindo/cms": "^9.0"
     },
     "autoload": { "psr-4": { "Camindo\\Modules\\Blog\\": "" } },

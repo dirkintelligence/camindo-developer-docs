@@ -51,7 +51,7 @@ Eintrag verweigert das Plugin die Installation. Ein eigenes Plugin statt
 {
     "name": "camindo/project",
     "type": "project",
-    "require": { "php": ">=8.1", "camindo/composer-plugin": "^1.0", "camindo/cms": "^9.0" },
+    "require": { "php": ">=8.3", "camindo/composer-plugin": "^1.0", "camindo/cms": "^9.0" },
     "autoload": { "psr-4": { "Camindo\\": "" } },
     "config": { "allow-plugins": { "camindo/composer-plugin": true } },
     "scripts": {

@@ -11,7 +11,7 @@ their terminology and describes what lies behind it.
 
 ## Requirements
 
-* PHP ≥ 8.1 with the extensions `mysqli`, `intl`, `gd`, `json`, `mbstring`
+* PHP ≥ 8.3 with the extensions `mysqli`, `intl`, `gd`, `json`, `mbstring`
 * MySQL ≥ 8.0.17 (JSON columns, multi-valued indexes)
 * Composer 2
 * optional: ImageMagick (`magick`/`convert`), `ffmpeg`/`ffprobe`, `mysqldump`

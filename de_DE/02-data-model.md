@@ -148,7 +148,7 @@ area_id, instance_id, type ENUM('record','template','folder','profile','ugc'), n
 icon, details JSON, dependent,
 position, depth, parent_id, parent_ids JSON, lft, rgt,       ← Baum
 default_field_id, sort_field_id, sort_order, default_template_id, list_template_id,
-trigger_template_id, overview_template_id, login_name_field_id, login_password_field_id, deleted …
+overview_template_id, login_name_field_id, login_password_field_id, deleted …
 ```
 
 * `name` (`^[a-z][a-z0-9_]+$`, eindeutig im Instanz-Verbund) ist der Bezeichner für
@@ -162,8 +162,9 @@ trigger_template_id, overview_template_id, login_name_field_id, login_password_f
   Quelldatensatz, der sie über ein Feld vom Typ `link` hält (s. u.).
 * `list_template_id`: Template nur für die Backend-Darstellung (letzte Spalte der
   Datensatzliste, ausführliche Lookup-Vorschau).
-* `trigger_template_id`: Template mit Ereignis-Methoden, die bei jedem Speichern und
-  Löschen laufen ([06](06-template-compiler.md#trigger-templates)).
+* Trigger-Templates (Ereignis-Methoden, die bei jedem Speichern und Löschen laufen,
+  [06](06-template-compiler.md#trigger-templates)) stehen nicht in `area`, sondern in
+  `rel_area_trigger` (s. u.).
 * `overview_template_id`: Template für die Adresse, die nur aus dem Slug-Präfix
   besteht (`/de_DE/termine`) – eine Übersicht ohne Datensatz ([06](06-template-compiler.md#url-und-slug)).
 * `details` (JSON): u. a. `tabs` (mehrsprachige Maske mit Reitern), `slug_prefix` je
@@ -220,6 +221,7 @@ tmp, origin_id, locked, deleted                            ← Arbeitskopien, Pa
 | `language` | Sprachen: `code` (URL-Segment, z. B. `de_DE`), `backend_code` (Snippet-Sprache), `timezone` |
 | `template` | Templates: `code` (Kopie des Quelltexts, nur zur Suche), `styled_code`, `error_text`, `standalone`, `type` (`scheduler` = zeitgesteuert) |
 | `rel_area_template` | welche Templates ein Bereich verwenden bzw. per URL erzwingen darf |
+| `rel_area_trigger` | Trigger-Templates eines Bereichs, `position` = Ausführungsreihenfolge |
 | `status` | Datensatz-Status (Symbol, Beschriftung, Farbe) |
 | `converter`, `rel_field_converter` | konfigurierte Prozessoren und ihre Zuordnung zu Thumbnail-Feldern |
 | `rel_fulltext_text` | Quellfelder eines Volltextfelds (optional über ein `link`-/`relation`-Feld: `rel_field_id`) |

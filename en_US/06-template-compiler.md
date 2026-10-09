@@ -376,9 +376,9 @@ the frontend. An error appears in red in the cell; the list continues.
 
 ## Trigger templates
 
-A content area can have a ***trigger template*** (`area.trigger_template_id`): a
-template that contains **event methods** instead of output. `Record` calls them from
-its hooks (`TriggerTemplates::run()`):
+A content area can have ***trigger templates*** (`rel_area_trigger`, any number, with
+`position`): templates that contain **event methods** instead of output. `Record`
+calls them from its hooks (`TriggerTemplates::run()`):
 
 ```php
 // template "person_trigger" in the template area – methods only, no output
@@ -406,8 +406,12 @@ function onSave(array &$affectedFields, array &$data, array &$previousData): voi
 * Except for `onCreate`/`onLoaded`, everything runs in the operation's transaction; an
   exception (`throw new \Exception('message')`) aborts it, and the message appears in
   the form.
-* When moving, the trigger template of the **target area** applies.
-* An event does not run nested for the same record (protection against endless loops).
+* Several templates run one after the other by `position`; all receive the same
+  references, so each one sees the changes of the previous ones. An exception ends the
+  chain. The ids are kept per area in the `InstanceCache` (`trigger_template_ids`).
+* When moving, the trigger templates of the **target area** apply.
+* An event does not run nested for the same record per template (protection against
+  endless loops).
   A template that cannot be loaded throws an exception.
 * The API is available via `$this->cms->api('record.search', [...])`
   ([16](16-api.md#from-templates-and-custom-tools)) – in the backend as the user who

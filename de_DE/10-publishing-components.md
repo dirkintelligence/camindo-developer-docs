@@ -54,7 +54,7 @@ dem Repo-Namen.
     "license": "MIT",
     "require": {
         "php": ">=8.1",
-        "camindo/core": "^9.0"
+        "camindo/cms": "^9.0"
     },
     "autoload": { "psr-4": { "Camindo\\Modules\\Blog\\": "" } },
     "extra": { "installer-name": "Blog" }
@@ -65,7 +65,7 @@ dem Repo-Namen.
 |---|---|
 | `name` | `{vendor}/camindo-{module\|processor\|extension}-{name}`, kleingeschrieben |
 | `type` | `camindo-module`, `camindo-processor` oder `camindo-extension` – sonst landet das Paket in `vendor/` |
-| `require.camindo/core` | derselbe Wert wie `settings.php['requires']['core']` |
+| `require.camindo/cms` | derselbe Wert wie `settings.php['requires']['core']` |
 | `autoload` | optional – das Projekt bildet `Camindo\` auf `./` ab; mit Eintrag ist das Paket vollständig beschrieben |
 | `extra.installer-name` | Pflicht, StudlyCase |
 | `version` | nicht setzen |
@@ -113,7 +113,7 @@ Eine Komponente hat zwei Versionsangaben, die im selben Commit erhöht werden:
 Den benötigten Core nennt die Komponente zweimal, mit gleichem Wert:
 
 ```json
-"require": { "camindo/core": "^9.0" }            composer.json – Composer prüft beim require/update
+"require": { "camindo/cms": "^9.0" }             composer.json – Composer prüft beim require/update
 ```
 ```php
 'requires' => ['core' => '^9.0']                 settings.php – ComponentManager prüft beim install/activate/upgrade

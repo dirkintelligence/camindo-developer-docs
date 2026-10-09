@@ -31,8 +31,8 @@ vendor/                   Tabellen component, system    var/config/core.php, Cac
 
 | Paket | Composer-Typ | Landet in | Inhalt |
 |---|---|---|---|
-| `camindo/cms` | `project` | Projektwurzel | das Skelett: `composer.json`, `load_camindo.php`, `public/` mit Stubs, leere Verzeichnisse (Quelle: `Core/install/draft/`) |
-| `camindo/core` | `camindo-core` | `Core/` | das CMS |
+| `camindo/project` | `project` | Projektwurzel | das Skelett: `composer.json`, `load_camindo.php`, `public/` mit Stubs, leere Verzeichnisse (Quelle: `Core/install/draft/`) |
+| `camindo/cms` | `camindo-core` | `Core/` | das CMS |
 | `camindo/composer-plugin` | `composer-plugin` | `vendor/` | bringt die camindo-Pakettypen an ihren Ort |
 | `{vendor}/camindo-module-{name}` | `camindo-module` | `Modules/{Name}/` | Zusatzmodul |
 | `{vendor}/camindo-processor-{name}` | `camindo-processor` | `Processors/{Name}/` | Zusatzprozessor |
@@ -49,9 +49,9 @@ Eintrag verweigert das Plugin die Installation. Ein eigenes Plugin statt
 
 ```json
 {
-    "name": "camindo/cms",
+    "name": "camindo/project",
     "type": "project",
-    "require": { "php": ">=8.1", "camindo/composer-plugin": "^1.0", "camindo/core": "^9.0" },
+    "require": { "php": ">=8.1", "camindo/composer-plugin": "^1.0", "camindo/cms": "^9.0" },
     "autoload": { "psr-4": { "Camindo\\": "" } },
     "config": { "allow-plugins": { "camindo/composer-plugin": true } },
     "scripts": {
@@ -79,18 +79,18 @@ deshalb darf der Docroot nie in `Core/` liegen.
 
 Wer den Core selbst entwickelt, hält `Core/` als Git-Checkout und lässt Composer ihn
 nicht anfassen. Die `composer.json` des Entwicklungsprojekts erklärt per `replace`, dass
-sie `camindo/core` selbst bereitstellt (Vorlage `Core/install/draft/composer-dev.json`):
+sie `camindo/cms` selbst bereitstellt (Vorlage `Core/install/draft/composer-dev.json`):
 
 ```json
 {
-    "name": "camindo/cms-dev",
-    "replace": { "camindo/core": "9.x-dev" },
+    "name": "camindo/project-dev",
+    "replace": { "camindo/cms": "9.x-dev" },
     "require": { "camindo/composer-plugin": "^1.0", "phpmailer/phpmailer": "^7.0", "…": "…" },
     "autoload": { "psr-4": { "Camindo\\": "", "Camindo\\Core\\": "Core/src/" } }
 }
 ```
 
-Zusatzkomponenten mit `camindo/core: ^9.0` sind damit zufrieden. Eine Komponente in
+Zusatzkomponenten mit `camindo/cms: ^9.0` sind damit zufrieden. Eine Komponente in
 Entwicklung liegt als eigener Checkout direkt in `Modules/{Name}/`; `component install`
 arbeitet mit den Dateien, gleich woher sie kommen.
 
@@ -169,7 +169,7 @@ u. a.). `null` lässt den Modus des Servers stehen.
 ## Der Installer
 
 ```
-composer create-project camindo/cms mysite     Skelett + Core + vendor
+composer create-project camindo/project mysite     Skelett + Core + vendor
     └─ post-create-project-cmd: camindo install
 ```
 
@@ -212,7 +212,7 @@ Stammdaten einen Entwicklungsbestand (`dev.sql`, falls vorhanden).
 
 ```
 php Core/cron/camindo.php maintenance on        empfohlen
-composer update camindo/core                    Dateien; der Hook meldet „core update pending"
+composer update camindo/cms                     Dateien; der Hook meldet „core update pending"
 php Core/cron/camindo.php upgrade               Datenbank und Laufzeit
 ```
 

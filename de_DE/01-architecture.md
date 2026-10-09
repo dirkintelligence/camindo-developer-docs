@@ -3,7 +3,7 @@
 ## Verzeichnisse
 
 ```
-projekt/                     Projektwurzel (Skelett camindo/cms)
+projekt/                     Projektwurzel (Skelett camindo/project)
 ├── composer.json            PSR-4: Camindo\ => ./ ; der Core bringt Camindo\Core\ mit
 ├── load_camindo.php         lädt Konfiguration und Bootstrap
 ├── .camindo.php             Konfiguration der Installation   – vom Installer, nie im Git
@@ -19,7 +19,7 @@ projekt/                     Projektwurzel (Skelett camindo/cms)
 │       ├── assets → ../../Core/public_master/backend/assets   (Symlink oder Kopie)
 │       └── ext/{name}/      veröffentlichte Assets der Extensions
 │
-├── Core/                    Paket camindo/core – wird bei Updates als Ganzes ersetzt
+├── Core/                    Paket camindo/cms – wird bei Updates als Ganzes ersetzt
 │   ├── Core.php             Bootstrap
 │   ├── src/                 Kernklassen (Namespace Camindo\Core)
 │   ├── Modules/ Processors/ Extensions/      Core-Komponenten

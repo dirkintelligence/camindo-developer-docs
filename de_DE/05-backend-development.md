@@ -214,7 +214,7 @@ Snippet-Sprache über `language.backend_code`.
 | `{Prozessor}/backend/html/*.html` | `proc.{name}` |
 | `{Extension}/backend/html/*.html` | `ext.{name}` |
 
-```html
+```
 <!-- Modules/Blog/backend/html/blog_table_row.html -->
 <tr class="c9-ctx-row" data-id="{data_id}" role="button" tabindex="0"
     aria-label="{#blog.speak_info_blog}">

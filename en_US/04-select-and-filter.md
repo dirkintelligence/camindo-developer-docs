@@ -137,6 +137,11 @@ Her*`, `>2 AND <4`, `!2 AND !3`. A value starting with an HTML tag (`<section>`,
 `</p>`, `<!--`) is not an operator (`Cms::extractOperator()`) – to search for
 containment: `*<section>*`.
 
+In a template the operator may also stand between key and value
+(`filter[price] >= 100`); the compiler prepends it to the value in its two-character
+form, and the value itself is then free of operators (see
+[06](06-template-compiler.md#syntax)).
+
 ### Collation per language
 
 Text and character fields (`text`, `chars`, `_default`, file name and OCR text) are

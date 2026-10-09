@@ -75,6 +75,17 @@ with a `RuntimeException` for an ambiguous or unknown name.
 * Values in `"…"` or `'…'` are taken as they are, including PHP interpolation (`$var`,
   `{$expression}`); everything else is put in double quotes.
 * Sub-keys in square brackets; the same key path used several times becomes an array.
+* Between key and value there is either `=` or a comparison operator (`==`, `!=`, `!`,
+  `!!`, `<`, `>`, `<=`, `>=`, `<<`, `>>`; the longest match wins, so `key=>5` is still
+  `=` with the value `>5`). The compiler prepends the operator to the value in its
+  two-character form (`<` → `<<`, `>` → `>>`, `!` → `!=`):
+  `filter[a] < "{$x}"` becomes `$_a["filter"]["a"] = '<<' . "{$x}";`.
+  `Cms::extractOperator()` strips exactly this prefix, the rest is the plain value –
+  `filter[a] < ">2"` compares with the text `>2`. This is only allowed for
+  parameters with `'operator' => true` in the command definition (`filter` of
+  `CMS:SELECT`, `CMS:ZIP`, `CMS:USER_AUTH`, `CMS:USER_PROTECT`); for all others the
+  compiler reports an error and leaves the parameter out. Keys with a PHP part cannot
+  be checked and always get the prefix.
 * `<?php … ?>` blocks remain unchanged. Commands are recognised inside PHP comments as
   well – `(CMS:…)` does not belong there.
 
@@ -123,6 +134,7 @@ Every command is an array entry:
             'description' => 'List template …',
             'ref'         => 'template',        // reference: template | area | record
             'php_value'   => false,             // true: pass an unquoted $var with its type
+            'operator'    => false,             // true: key < value allowed (filter)
         ],
     ],
 ],

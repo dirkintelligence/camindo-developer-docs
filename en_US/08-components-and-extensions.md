@@ -243,7 +243,7 @@ extension via `'extension' => 'Name'` in the column definition.
 `Backend::formField()` adds attributes to the input element in the edit form (not in
 the search form) – no inline script per field:
 
-```html
+```
 <textarea … class="… c9-ext" data-c9-ext="tinymce" data-c9-ext-type="text"
           data-c9-ext-options='{"toolbar":"basic","height":"400"}'></textarea>
 ```

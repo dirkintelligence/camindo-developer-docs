@@ -77,6 +77,17 @@ mehrdeutigen oder unbekannten Namen mit einer `RuntimeException` ab.
 * Werte in `"…"` oder `'…'` werden übernommen, inklusive PHP-Interpolation (`$var`,
   `{$ausdruck}`); alles andere wird in doppelte Anführungszeichen gesetzt.
 * Unterschlüssel in eckigen Klammern; derselbe Schlüsselpfad mehrfach wird zum Array.
+* Zwischen Schlüssel und Wert steht `=` oder ein Vergleichsoperator (`==`, `!=`, `!`,
+  `!!`, `<`, `>`, `<=`, `>=`, `<<`, `>>`; der längste passende gilt, `key=>5` ist also
+  weiterhin `=` mit dem Wert `>5`). Der Compiler stellt den Operator dem Wert in
+  Zweizeichen-Form voran (`<` → `<<`, `>` → `>>`, `!` → `!=`):
+  `filter[a] < "{$x}"` wird zu `$_a["filter"]["a"] = '<<' . "{$x}";`.
+  `Cms::extractOperator()` nimmt genau dieses Präfix ab, der Rest ist der reine Wert –
+  `filter[a] < ">2"` vergleicht mit dem Text `>2`. Erlaubt ist das nur bei
+  Parametern mit `'operator' => true` in der Befehlsdefinition (`filter` von
+  `CMS:SELECT`, `CMS:ZIP`, `CMS:USER_AUTH`, `CMS:USER_PROTECT`); bei allen anderen
+  meldet der Compiler einen Fehler und lässt den Parameter weg. Schlüssel mit
+  PHP-Anteil sind nicht prüfbar und bekommen das Präfix immer.
 * `<?php … ?>`-Blöcke bleiben unverändert. Befehle werden auch in PHP-Kommentaren
   erkannt – `(CMS:…)` gehört dort nicht hinein.
 
@@ -125,6 +136,7 @@ Jeder Befehl ist ein Array-Eintrag:
             'description' => 'Listentemplate …',
             'ref'         => 'template',        // Verweis: template | area | record
             'php_value'   => false,             // true: $var ungequotet typtreu übergeben
+            'operator'    => false,             // true: key < wert erlaubt (filter)
         ],
     ],
 ],

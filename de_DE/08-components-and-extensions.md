@@ -246,7 +246,7 @@ weist eine unpassende oder inaktive Extension ab. Metafelder bekommen eine Exten
 `Backend::formField()` versieht das Eingabeelement in der Eingabemaske (nicht in der
 Suchmaske) mit Attributen – kein Inline-Script je Feld:
 
-```html
+```
 <textarea … class="… c9-ext" data-c9-ext="tinymce" data-c9-ext-type="text"
           data-c9-ext-options='{"toolbar":"basic","height":"400"}'></textarea>
 ```

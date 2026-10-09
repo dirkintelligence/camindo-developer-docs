@@ -139,6 +139,11 @@ Templates.
 `</p>`, `<!--`), ist kein Operator (`Cms::extractOperator()`) – enthalten:
 `*<section>*`.
 
+Im Template darf der Operator auch zwischen Schlüssel und Wert stehen
+(`filter[preis] >= 100`); der Compiler stellt ihn dem Wert in Zweizeichen-Form voran,
+der Wert selbst bleibt dann frei von Operatoren (siehe
+[06](06-template-compiler.md#syntax)).
+
 ### Kollation je Sprache
 
 Text- und Zeichenfelder (`text`, `chars`, `_default`, Dateiname und OCR-Text) werden

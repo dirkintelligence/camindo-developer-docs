@@ -32,8 +32,8 @@ vendor/                   tables component, system      var/config/core.php, cac
 
 | Package | Composer type | Installed to | Content |
 |---|---|---|---|
-| `camindo/cms` | `project` | project root | the skeleton: `composer.json`, `load_camindo.php`, `public/` with stubs, empty directories (source: `Core/install/draft/`) |
-| `camindo/core` | `camindo-core` | `Core/` | the CMS |
+| `camindo/project` | `project` | project root | the skeleton: `composer.json`, `load_camindo.php`, `public/` with stubs, empty directories (source: `Core/install/draft/`) |
+| `camindo/cms` | `camindo-core` | `Core/` | the CMS |
 | `camindo/composer-plugin` | `composer-plugin` | `vendor/` | puts the camindo package types in their place |
 | `{vendor}/camindo-module-{name}` | `camindo-module` | `Modules/{Name}/` | add-on module |
 | `{vendor}/camindo-processor-{name}` | `camindo-processor` | `Processors/{Name}/` | add-on processor |
@@ -50,9 +50,9 @@ The skeleton's `composer.json` (abridged):
 
 ```json
 {
-    "name": "camindo/cms",
+    "name": "camindo/project",
     "type": "project",
-    "require": { "php": ">=8.1", "camindo/composer-plugin": "^1.0", "camindo/core": "^9.0" },
+    "require": { "php": ">=8.1", "camindo/composer-plugin": "^1.0", "camindo/cms": "^9.0" },
     "autoload": { "psr-4": { "Camindo\\": "" } },
     "config": { "allow-plugins": { "camindo/composer-plugin": true } },
     "scripts": {
@@ -80,18 +80,18 @@ which is why the document root must never be inside `Core/`.
 
 If you develop the core itself, keep `Core/` as a Git checkout and do not let Composer
 touch it. The development project's `composer.json` declares via `replace` that it
-provides `camindo/core` itself (template `Core/install/draft/composer-dev.json`):
+provides `camindo/cms` itself (template `Core/install/draft/composer-dev.json`):
 
 ```json
 {
-    "name": "camindo/cms-dev",
-    "replace": { "camindo/core": "9.x-dev" },
+    "name": "camindo/project-dev",
+    "replace": { "camindo/cms": "9.x-dev" },
     "require": { "camindo/composer-plugin": "^1.0", "phpmailer/phpmailer": "^7.0", "…": "…" },
     "autoload": { "psr-4": { "Camindo\\": "", "Camindo\\Core\\": "Core/src/" } }
 }
 ```
 
-Add-on components requiring `camindo/core: ^9.0` are satisfied by this. A component
+Add-on components requiring `camindo/cms: ^9.0` are satisfied by this. A component
 under development lives as its own checkout directly in `Modules/{Name}/`;
 `component install` works with the files regardless of where they come from.
 
@@ -171,7 +171,7 @@ server's mode.
 ## The installer
 
 ```
-composer create-project camindo/cms mysite     skeleton + core + vendor
+composer create-project camindo/project mysite     skeleton + core + vendor
     └─ post-create-project-cmd: camindo install
 ```
 
@@ -214,7 +214,7 @@ set (`dev.sql`, if present) instead of the base data.
 
 ```
 php Core/cron/camindo.php maintenance on        recommended
-composer update camindo/core                    files; the hook reports "core update pending"
+composer update camindo/cms                     files; the hook reports "core update pending"
 php Core/cron/camindo.php upgrade               database and runtime
 ```
 

@@ -65,7 +65,10 @@ With prefix: `admin.field_admin_name`, `proc.imagegd.field_width`,
 * Type consistently, including return values; constructor property promotion for
   dependencies.
 * Braces: classes and functions on the next line, control structures on the same line.
-* Identifiers (classes, methods, variables, columns, snippet keys) in English.
+* Identifiers (classes, methods, variables, columns, snippet keys) and comments in
+  English (US spelling). References to this documentation as
+  `developer docs, chapter NN (Title)`. Texts for users belong in snippets, not in the
+  code.
 * Always take over input typed (`(int)$_REQUEST['id']`); `bit` via
   `filter_var(…, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE)`.
 * Protect includes: `if (!defined('CAMINDO_STARTED')) die('access denied.');`

@@ -83,7 +83,15 @@ HTML filter sees it:
 
 **Frontend:** `CMS:TEXT` outputs values raw on purpose (HTML is content); the read filter
 applies there. In attributes, the template escapes with `(CMS:TEXT field
-specialchars=true)`.
+specialchars=true)`. Only commands that write an attribute themselves escape with
+`htmlspecialchars()`: `CMS:MEDIA` (all attributes of the `<img>` tag including
+`attr[…]`, not the single values via `subfield`), `CMS:USER_TOKEN`,
+`CMS:USER_PASSWORD_RULES`, `CMS:XML` and `{href}` in the templates of `CMS:JUMP_*`.
+For the latter, `Pagination::baseLink()` takes the `REQUEST_URI`, which comes from the
+client unchecked, encodes `'` and `\` as `%27`/`%5C` (the backend also puts `{href}`
+into a JS string, `cApp.layers.replace('{href}')`) and then escapes it for the
+attribute. `prefix`, `suffix`, `ifempty` and `instead` stay raw for all commands –
+they come from the template.
 
 ## Security headers
 

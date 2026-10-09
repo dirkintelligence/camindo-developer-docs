@@ -286,6 +286,9 @@ Seite immer), `separator`, `tpl_link`, `tpl_active`, `ellipsis`, `prefix`, `suff
 fertige Hüllen: `Backend::paginationTop()`, `paginationTopShort()`,
 `paginationBottom()`.
 
+`{href}` in den Vorlagen ist HTML-maskiert (`&amp;` statt `&`), `'` und `\` sind
+prozentkodiert – siehe [14](14-security-web.md).
+
 ## `fetch()` – Werte aufbereiten
 
 `$cms->fetch($tableName, $schema)` holt die nächste Zeile und bereitet sie anhand des

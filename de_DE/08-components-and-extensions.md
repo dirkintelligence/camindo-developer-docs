@@ -167,6 +167,7 @@ Zurück/Weiter), sobald die Komponente aktiv ist:
 | Reihenfolge | Startseite, dann ihre Links in Listen und Tabellen, übrige Seiten nach Dateinamen – nummerieren Sie die Kapitel (`02-…`, `03-…`) |
 | Links | relativ innerhalb des Handbuchs (`./02-befehle.md#abschnitt`); Links in die Handbücher des Core oder anderer Komponenten bleiben Text – nennen Sie Handbuch und Kapitel im Text |
 | Format | wie die Handbücher des Core: Sie-Form, Stichwörter als `***fett+kursiv***` |
+| Codebeispiele | Blöcke mit CMS-Befehlen als ```` ```cms ```` – das Modul Docs färbt sie wie den Template-Editor ein; Syntaxbeschreibungen, die kein gültiger Befehl sind (`(CMS:TEXT field [parameter=wert …])`), als ```` ```cmscode ```` – ganz lila, ungeparst |
 
 Intern heißt das Handbuch `{art}-{name}` (z. B. `module-blog`); unter diesem Namen
 erscheinen seine Seiten auch in der API (`docs.search`, `docs.read`, Parameter `book`).

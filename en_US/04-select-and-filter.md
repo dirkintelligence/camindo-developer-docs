@@ -282,6 +282,9 @@ first/last page), `separator`, `tpl_link`, `tpl_active`, `ellipsis`, `prefix`,
 backend has ready-made wrappers: `Backend::paginationTop()`, `paginationTopShort()`,
 `paginationBottom()`.
 
+`{href}` in the templates is HTML-escaped (`&amp;` instead of `&`), `'` and `\` are
+percent-encoded – see [14](14-security-web.md).
+
 ## `fetch()` – preparing values
 
 `$cms->fetch($tableName, $schema)` fetches the next row and prepares it according to

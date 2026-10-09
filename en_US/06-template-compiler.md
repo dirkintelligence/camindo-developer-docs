@@ -120,7 +120,7 @@ Every command is an array entry:
 'select' => [
     'method'     => 'cms.cmsSelect',            // {object}.{method}; without a dot: cms
     'php_prefix' => 'push_result',              // snippet before the call
-    'php_suffix' => ['include', 'pop_result'],  // … and after it
+    'php_suffix' => ['include', 'pop_result', 'select_count'],  // … and after it
     'buffer_set' => true,                       // set=… captures the whole output
     'note'       => 'Searches the database …',
     'do'         => 'resulttemplate',           // parameter for a value without a key
@@ -173,6 +173,7 @@ The snippets live in `Core/Modules/Template/php/`:
 |---|---|
 | `push_result.php` / `pop_result.php` | save or restore database result, row counter and `$cms` |
 | `include.php` | include the result template, count `includeDepth` |
+| `select_count.php` | `CMS:SELECT` only: with `hits=false`, apply the total count after `pop_result` (`Cms::selectCountEnd()`) |
 | `include_cached.php` | like `include.php`, then `Cms::includeEnd()` – `CMS:INCLUDE` only ([output cache](#output-cache-of-cmsinclude)) |
 | `include_and_stop.php` | the same, then `exit()` (success templates) |
 | `loop_start.php` / `loop_end.php` | result loop |
@@ -239,6 +240,10 @@ module.
 5. Run `Cms::select()` ([04](04-select-and-filter.md)).
 6. Hits → return the name of `resulttemplate`; no hits → output `noresult` or return
    `noresulttemplate`; the `include` snippet includes it.
+7. `hits=false` (implies `count=true`) loads no rows. `cmsSelect()` pushes the total
+   count onto a stack; `select_count` sets it as `num_rows_unlimited` of the calling
+   template after `pop_result` (otherwise it would be nowhere, since no `resulttemplate`
+   is included). `noresult`/`noresulttemplate` apply only when it is 0.
 
 The parameters `lang` and `collate` are defined but have no effect.
 
@@ -446,6 +451,12 @@ errors with line numbers (unknown command, unknown parameter, missing parenthesi
 without `(CMS:NONCE)` as well as `on…` attributes and `javascript:` addresses in the
 HTML part – both are blocked by an active script policy. The "Template messages" widget
 lists all templates with messages.
+
+`TemplateParserTrait::styleCode()` returns the same markup without compiling and without
+template links. The Docs module uses it to colour the ```` ```cms ```` blocks of the manuals
+(`Docs::render()`); ```` ```cmscode ```` colours the whole block purple without parsing it
+(syntax descriptions such as `(CMS:TEXT field [parameter=value …])`); other code blocks
+stay unchanged.
 
 ## Frontend editing
 

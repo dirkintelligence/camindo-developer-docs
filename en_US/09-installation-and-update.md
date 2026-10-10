@@ -186,7 +186,7 @@ second, unprotected path into the database.
 | `config` | `.camindo.php` from `Core/install/templates/camindo.php.dist` |
 | `sqlpwd` | `.sqlpwd` for `mysqldump` |
 | `dirs` | `var/…`, `public/media/default`, `public/backend/assets` as a copy of `Core/public_master/backend/assets` (`--symlink-assets`: relative symlink for work on the core; if it fails, the files are copied). `upgrade` refreshes a copy, a symlink stays |
-| `database` | `schema.sql` + `seed.sql` |
+| `database` | `schema.sql` + `seed.sql`; then the default instance (id 1, catch-all for every domain) with the main language `en_US` – without domain and protocol, both come from the request. An existing instance 1 (`--fixtures`) stays untouched |
 | `admin` | first user (superuser); the password must meet the policy |
 | `core` | `system.core_version` |
 | `components` | **discover** add-on components, do not install them |

@@ -221,7 +221,7 @@ php Core/cron/camindo.php <command>     installation, update, caches, components
 php Core/cron/cron.php                  every minute via cron (the only cron job): TriggerCron
 ```
 
-Maintenance (trash, `var/tmp`, delete policies, retention periods, audit verification,
+Maintenance (trash, `var/tmp`, deletion policies, retention periods, audit verification,
 update check) are scheduler tasks ([07](07-media-processing.md#scheduler-module-scheduler)).
 
 All scripts under `Core/cron/` refuse to run if `PHP_SAPI !== 'cli'` and define

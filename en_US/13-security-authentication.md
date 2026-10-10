@@ -341,7 +341,7 @@ hours but no changes).
   (`audit.retention_days_logins`, default 90 days); they sit in the middle of an
   account's history and are removed via `AuditStore::rewriteObject()` – if the callback
   returns `null`, the entry is dropped (checkpoint `retention`).
-* **Delete policies** (`Modules\Privacy\DeletePolicy`, `PrivacyJobs`): sources `record`
+* **Deletion policies** (`Modules\Privacy\DeletePolicy`, `PrivacyJobs`): sources `record`
   (every way of deleting, including child records – tree children with `$withChilds`
   and dependent link content get the blocks of their own area without
   `soft_delete`/`purge`), `profile` (always for all records with the `record.user_id` of

@@ -184,7 +184,7 @@ zweiter, ungeschützter Weg in die Datenbank.
 | `config` | `.camindo.php` aus `Core/install/templates/camindo.php.dist` |
 | `sqlpwd` | `.sqlpwd` für `mysqldump` |
 | `dirs` | `var/…`, `public/media/default`, `public/backend/assets` als Kopie von `Core/public_master/backend/assets` (`--symlink-assets`: relativer Symlink für die Arbeit am Core, scheitert er, wird kopiert). `upgrade` frischt eine Kopie auf, ein Symlink bleibt |
-| `database` | `schema.sql` + `seed.sql` |
+| `database` | `schema.sql` + `seed.sql`; danach die Standard-Instanz (Id 1, Auffang für alle Domains) mit der Hauptsprache `en_US` – ohne Domain und Protokoll, beides kommt aus dem Aufruf. Eine vorhandene Instanz 1 (`--fixtures`) bleibt unberührt |
 | `admin` | erster Benutzer (Superuser); das Passwort muss der Richtlinie genügen |
 | `core` | `system.core_version` |
 | `components` | Zusatzkomponenten **entdecken**, nicht installieren |

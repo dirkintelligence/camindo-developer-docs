@@ -339,4 +339,5 @@ Further scripts under `Core/cron/`: `cron.php` (the only cron job), `scheduler.p
 `thumbnails.php` (background processes from the backend), `rebuild_trees.php` (repair
 trees) and the self-tests `check_dateparse.php`, `check_nested_select.php`,
 `check_tree_positions.php`, `check_template_params.php`, `check_include_cache.php`,
-`check_webauthn.php`.
+`check_webauthn.php`, `check_record_files.php` (working copy and file fields). The CI runs
+them after a fresh installation against MySQL 8.0 as well as MariaDB 10.6 and 11.4.

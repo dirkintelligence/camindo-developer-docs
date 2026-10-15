@@ -273,7 +273,7 @@ Zeitgesteuerte Aufgaben in der Tabelle `scheduler`:
 | `trash` | Papierkorb leeren (`ToolDatabase::purgeTrash()`, `admin.trash_retention_days`), Sperre `trash`, Audit-Herkunft `trash` |
 | `tmpcleanup` | `var/tmp` (`admin.tmp_retention_hours`; `*.lock`, `*.stamp` bleiben) und `RecordExport::cleanup()` |
 | `privacy` | `PrivacyJobs::runDue()` in Runden zu `RUN_LIMIT`, solange eine Runde voll und fehlerfrei war |
-| `retention` | `IpAnonymizer::run()`, `AuditLog::purge()`, `Message::purgeExpired()`, `RecordUser::purgeUnconfirmed()` – jeder Schritt für sich |
+| `retention` | `IpAnonymizer::run()`, `AuditLog::purge()`, `Message::purgeExpired()`, `RecordUser::purgeUnconfirmed()`, dann `retention` der aktiven Module ([08](08-components-and-extensions.md)) – jeder Schritt für sich |
 | `auditverify` | `AuditLog::verifyAll()` + `storeVerifyResult()` (für `SystemHealth`); Befunde = Fehler |
 | `updatecheck` | `UpdateCheck::run()`; ohne `paths.composer` nichts zu tun |
 | `messagedigest` | `MessageDigest::run()`: Zusammenfassung neuer Nachrichten per E-Mail an Benutzer mit `settings.message_digest = 1`; neu = seit dem vorigen Lauf (`last_run` vor dem Start) |

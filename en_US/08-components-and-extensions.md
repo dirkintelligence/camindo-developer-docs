@@ -73,6 +73,7 @@ Only keys from a fixed list are taken over (`ComponentManager::SETTINGS_KEYS`):
 | `superuser` | module | `true`: superusers only, regardless of user group rights |
 | `widget` | module | start page widget ([05](05-backend-development.md#start-page-widgets)) |
 | `api` | module | API classes relative to the module namespace, e.g. `['BlogApi']` ([16](16-api.md#custom-api-methods)) |
+| `retention` | module | own retention periods: `['Class::method']` relative to the module namespace. The scheduler task `retention` calls the method without parameters and without a user session; it returns a summary for the log. An error does not stop the other steps but makes the run an error |
 | `commands`, `services` | module | own `(CMS:…)` commands ([06](06-template-compiler.md#custom-commands-from-add-on-modules)) |
 | `assets` | module, extension | JS and CSS files ([assets](#assets-and-endpoints)); for modules on every backend page |
 | `display_types`, `field_types`, `options_provider` | extension | see below |

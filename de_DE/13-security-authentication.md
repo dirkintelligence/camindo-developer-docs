@@ -344,6 +344,8 @@ verraten Arbeitszeiten, aber keine Änderungen).
   Metazeilen und Dateien, ohne Kontrollpunkt. Bei Datensätzen dazu die Aufträge
   (`PrivacyJobs::forget()`): erledigte immer, offene nur, wenn es den Datensatz nicht
   mehr gibt. Eintrag im Protokoll `security` (nur Anzahlen).
+* **Objekttypen von Zusatzmodulen** heißen `{modul}_…` (z. B. `ai_chat`); das Modul
+  Audit beschriftet sie mit dem Snippet `{modul}.audit_type_{typ}` des Moduls.
 * **Werte:** Passwörter nur als `***`; verschlüsselte Werte als Geheimtext, entschlüsselt
   erst in der Anzeige (`AuditDiff`).
 * **Kindklassen** steuern mit `$audit = false`, `$auditIgnore` und `auditSecret()`

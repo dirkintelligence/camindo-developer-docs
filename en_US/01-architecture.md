@@ -9,6 +9,7 @@ project/                     project root (skeleton camindo/project)
 ├── .camindo.php             configuration of the installation – written by the installer, never in Git
 ├── .camindo.key             key for encryption, signatures, pepper
 ├── .sqlpwd                  credentials for mysqldump
+├── .htaccess                block (403) in case the web server serves the project root
 │
 ├── public/                  DOCUMENT_ROOT
 │   ├── index.php file.php csp_report.php     stubs → Core/public_master/…
@@ -39,6 +40,14 @@ server, nobody should point the document root at a directory inside the core.
 Composer only writes to `Core/`, `Modules/`, `Processors/`, `Extensions/` and
 `vendor/`; everything that makes an installation individual (`public/`, `var/`, the
 dot files) lives outside.
+
+The `.htaccess` in the project root blocks with `RewriteRule ^ - [F]`, not with
+`Require all denied`: Apache reads it even with a correct document root as soon as
+`AllowOverride` applies to the project root. `public/` does not inherit rewrite rules,
+because `public/.htaccess` has its own `RewriteEngine On` (`HtaccessWriter` creates it if
+needed). An inherited `Require all denied`, by contrast, would have to be lifted in
+`public/` and would require `AllowOverride AuthConfig` there; an inherited
+`Deny from all` (`mod_access_compat`) is not lifted even by `Require all granted`.
 
 ## Bootstrap
 

@@ -9,6 +9,7 @@ projekt/                     Projektwurzel (Skelett camindo/project)
 ├── .camindo.php             Konfiguration der Installation   – vom Installer, nie im Git
 ├── .camindo.key             Schlüssel für Verschlüsselung, Signaturen, Pfeffer
 ├── .sqlpwd                  Zugangsdaten für mysqldump
+├── .htaccess                Sperre (403), falls der Webserver die Projektwurzel ausliefert
 │
 ├── public/                  DOCUMENT_ROOT
 │   ├── index.php file.php csp_report.php     Stubs → Core/public_master/…
@@ -38,6 +39,14 @@ projekt/                     Projektwurzel (Skelett camindo/project)
 niemand den Docroot auf ein Verzeichnis im Core legen. Composer schreibt nur in
 `Core/`, `Modules/`, `Processors/`, `Extensions/` und `vendor/`; alles, was eine
 Installation individuell macht (`public/`, `var/`, die Punkt-Dateien), liegt außerhalb.
+
+Die `.htaccess` der Projektwurzel sperrt per `RewriteRule ^ - [F]`, nicht per
+`Require all denied`: Apache liest sie auch bei korrektem Docroot, sobald `AllowOverride`
+für die Projektwurzel gilt. Rewrite-Regeln erbt `public/` nicht, weil `public/.htaccess`
+ein eigenes `RewriteEngine On` hat (`HtaccessWriter` legt es bei Bedarf an). Ein geerbtes
+`Require all denied` müsste dagegen in `public/` aufgehoben werden und verlangte dort
+`AllowOverride AuthConfig`; ein geerbtes `Deny from all` (`mod_access_compat`) hebt auch
+`Require all granted` nicht auf.
 
 ## Bootstrap
 

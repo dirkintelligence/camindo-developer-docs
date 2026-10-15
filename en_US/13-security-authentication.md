@@ -337,6 +337,8 @@ hours but no changes).
   metadata rows and files, without a checkpoint. For records also their jobs
   (`PrivacyJobs::forget()`): completed ones always, pending ones only if the record no
   longer exists. Entry in the `security` log (counts only).
+* **Object types of add-on modules** are named `{module}_…` (e.g. `ai_chat`); the
+  module Audit labels them with the module's snippet `{module}.audit_type_{type}`.
 * **Values:** passwords only as `***`; encrypted values as ciphertext, decrypted only for
   display (`AuditDiff`).
 * **Subclasses** control it with `$audit = false`, `$auditIgnore` and `auditSecret()`

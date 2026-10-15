@@ -61,6 +61,18 @@ With `attach()` the API sees exactly what the user sees and leaves the user's tr
 Only then are there preview links – they depend on a backend session
 ([14](14-security-web.md#fixed-backend-domain)).
 
+**Hiding encrypted fields:** `ApiContext::maskEncrypted(true)` – e.g. for a language
+model that should not carry the content to a provider – outputs the content of fields of
+type `encrypted` only as `ApiContext::ENCRYPTED_PLACEHOLDER` (`[encrypted]`): in
+`ApiValues` (`record.info`, results of `DatasetApi`), in list columns and labels of
+`record.search`, in record labels (head of `record.info`, `recordRef()`), in before/after of `record.info` (tab `history`) and
+`audit.history` (`AuditDiff::plainChanges()`). Only the output is masked – reading and
+saving work internally with the real values, working copies stay untouched. If the
+placeholder comes back as a value, `record.update`/`create`/`copy` leave the field
+unchanged (warning) and `DatasetWriter` skips it as unchanged. Searching by the value
+(comparison via the HMAC) remains possible. `end()` switches the mask off; the assistant
+of the module Ai sets it from `ai.decrypt` on every `attach()`.
+
 ## Calling
 
 ```php

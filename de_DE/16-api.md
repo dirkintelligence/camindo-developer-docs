@@ -62,6 +62,20 @@ Mit `attach()` sieht die API genau, was der Benutzer sieht, und hinterlässt sei
 Nur dann gibt es Vorschau-Links – sie hängen an einer Backend-Session
 ([14](14-security-web.md#feste-backend-domain)).
 
+**Verschlüsselte Felder verbergen:** `ApiContext::maskEncrypted(true)` – etwa für ein
+Sprachmodell, das die Inhalte nicht zu einem Anbieter tragen soll – gibt den Inhalt von
+Feldern des Typs `encrypted` nur als `ApiContext::ENCRYPTED_PLACEHOLDER` (`[encrypted]`)
+aus: in `ApiValues` (`record.info`, Ergebnisse von `DatasetApi`), in Listenspalten und
+Bezeichnungen von `record.search`, in Datensatz-Bezeichnungen (Kopf von `record.info`,
+`recordRef()`), im Vorher/Nachher von
+`record.info` (Reiter `history`) und `audit.history` (`AuditDiff::plainChanges()`).
+Maskiert wird nur die Ausgabe – Lesen und Speichern arbeiten intern mit den echten Werten,
+Arbeitskopien bleiben unberührt. Kommt der Platzhalter als Wert zurück, lassen
+`record.update`/`create`/`copy` das Feld unverändert (Warnung) und `DatasetWriter`
+überspringt es als unverändert. Suchen nach dem Wert (Vergleich über den HMAC) bleibt
+möglich. `end()` schaltet die Maske ab; der Assistent des Moduls Ai setzt sie nach
+`ai.decrypt` bei jedem `attach()`.
+
 ## Aufrufen
 
 ```php

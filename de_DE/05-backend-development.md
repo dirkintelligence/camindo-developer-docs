@@ -425,7 +425,7 @@ $backend->isSuperuser();
 | `cApp.ui` | Lookups, Reiter, QR-Codes, Kopieren |
 | `cApp.layers` | Layer-Stapel und Hash-Routing ([01](01-architecture.md#layer-und-hash-routing-im-backend)) |
 | `cApp.aside` | Seitenleiste (`open`, `openPost`, `close`) |
-| `cApp.ctxMenu` | Kontextmenüs (`.c9-ctx-row`; Einträge mit `data-method="post"` per POST) |
+| `cApp.ctxMenu` | Kontextmenüs (`.c9-ctx-row`; Einträge mit `data-method="post"` per POST). Klick auf eine Zeile öffnet `data-path` der Tabelle als Layer; `data-event="c9:…"` an der Tabelle bzw. an einem Eintrag löst stattdessen ein jQuery-Ereignis auf `document` mit der Id aus – für Aktionen im Script eines Moduls, etwa `$(document).on('c9:ai-open', (e, id) => …)` |
 | `cApp.polling` | Hintergrundprozesse |
 | `cApp.extensions` | Extensions der Eingabefelder ([08](08-components-and-extensions.md#extensions)) |
 | `cApp.handlers` | Binden markierter Event-Handler |

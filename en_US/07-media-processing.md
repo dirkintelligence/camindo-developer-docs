@@ -270,7 +270,7 @@ Scheduled tasks in the `scheduler` table:
 | `trash` | empty the trash (`ToolDatabase::purgeTrash()`, `admin.trash_retention_days`), lock `trash`, audit origin `trash` |
 | `tmpcleanup` | `var/tmp` (`admin.tmp_retention_hours`; `*.lock`, `*.stamp` stay) and `RecordExport::cleanup()` |
 | `privacy` | `PrivacyJobs::runDue()` in rounds of `RUN_LIMIT` as long as a round was full and without errors |
-| `retention` | `IpAnonymizer::run()`, `AuditLog::purge()`, `Message::purgeExpired()`, `RecordUser::purgeUnconfirmed()` – each step on its own |
+| `retention` | `IpAnonymizer::run()`, `AuditLog::purge()`, `Message::purgeExpired()`, `RecordUser::purgeUnconfirmed()`, then `retention` of the active modules ([08](08-components-and-extensions.md)) – each step on its own |
 | `auditverify` | `AuditLog::verifyAll()` + `storeVerifyResult()` (for `SystemHealth`); findings = error |
 | `updatecheck` | `UpdateCheck::run()`; nothing to do without `paths.composer` |
 | `messagedigest` | `MessageDigest::run()`: summary of new messages by email to users with `settings.message_digest = 1`; new = since the previous run (`last_run` before the start) |

@@ -74,6 +74,7 @@ Nur Schlüssel aus einer festen Liste werden übernommen
 | `superuser` | Modul | `true`: nur für Superuser, unabhängig von den Gruppenrechten |
 | `widget` | Modul | Startseiten-Widget ([05](05-backend-development.md#startseiten-widgets)) |
 | `api` | Modul | API-Klassen relativ zum Modul-Namespace, z. B. `['BlogApi']` ([16](16-api.md#eigene-api-methoden)) |
+| `retention` | Modul | eigene Aufbewahrungsfristen: `['Klasse::methode']` relativ zum Modul-Namespace. Die Zeitplaner-Aufgabe `retention` ruft die Methode ohne Parameter und ohne Benutzer-Session auf; sie gibt eine Zusammenfassung für das Protokoll zurück. Ein Fehler stoppt die übrigen Schritte nicht, macht den Lauf aber zum Fehler |
 | `commands`, `services` | Modul | eigene `(CMS:…)`-Befehle ([06](06-template-compiler.md#eigene-befehle-aus-zusatzmodulen)) |
 | `assets` | Modul, Extension | JS- und CSS-Dateien ([Assets](#assets-und-endpunkte)); bei Modulen auf jeder Backend-Seite |
 | `display_types`, `field_types`, `options_provider` | Extension | siehe unten |

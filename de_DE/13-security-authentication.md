@@ -48,7 +48,11 @@ und danach aus Prozessumgebung, `$_ENV` und `$_SERVER` entfernt – Kindprozesse
 ebenfalls über `Config::env()` und lässt sie vor dem Wert aus `.camindo.php` gelten.
 
 Beim Schlüssel ist der Vorrang umgekehrt: `Crypt` nimmt `paths.key_file`, wenn die
-Datei lesbar ist, sonst `CAMINDO_KEY` (`keySource()`: `file`|`env`). So gilt nach
+Datei existiert, sonst `CAMINDO_KEY` (`keySource()`: `file`|`env`). Existiert die Datei
+(oder `.camindo.key.retired`), ist aber nicht lesbar – meist Eigentümer root nach einer
+Installation als root –, wirft `Crypt`, statt auf die Variable auszuweichen: Die könnte
+einen beliebigen anderen Schlüssel enthalten, unter dem dann neu verschlüsselt würde
+(Eigentümer der Dateien: [09](09-installation-and-update.md)). So gilt nach
 `key rotate` – das den neuen Schlüssel immer in die Datei schreibt – sofort der neue,
 auch wenn die Variable noch den alten enthält. `envKeyState()` vergleicht die Variable
 mit dem Schlüsselbund (`current`, `retired`, `other`); `key status`, `status` und
@@ -298,7 +302,9 @@ abhängt.
 Dateirechte (`KeyRotation::keyFileMode()`): Neuer Schlüssel und `.camindo.key.retired`
 übernehmen die Rechte der bisherigen `.camindo.key` (nicht jedes System erlaubt `0600`);
 ohne Datei (Schlüssel aus `CAMINDO_KEY`) gilt `permissions.key_file` (Vorgabe `0600`).
-`key status` warnt bei Abweichung von `permissions.key_file`.
+`key status` warnt bei Abweichung von `permissions.key_file`. Als root übernehmen beide
+Dateien auch den Eigentümer der bisherigen (`SecretFile::copyOwner()`), ohne Datei den des
+Projektverzeichnisses, falls nicht root.
 
 **Werte, die ein Zusatzmodul selbst verschlüsselt, erfasst die Rotation nicht** – es
 gibt dafür noch keinen Einhängepunkt. Verschlüsseln Sie nach Möglichkeit in Feldern vom

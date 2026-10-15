@@ -138,6 +138,10 @@ rendered without joining all `data_*` tables per row. If the row is missing,
 `Cms::createRecordCache()` rebuilds all languages. Passwords never appear there;
 encrypted content is stored as Base64 ciphertext.
 
+`Camindo\Core\RecordCache::clear($instanceId, $areaIds)` discards the rows of all
+instances, of one instance or of single areas (`camindo.php cache records`, Tools → Server);
+working copies (`tmp` = 1) stay, their `record_cache` is the working state.
+
 ## Core tables
 
 ### `area` – content areas

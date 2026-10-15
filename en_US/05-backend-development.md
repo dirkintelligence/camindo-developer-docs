@@ -234,8 +234,8 @@ snippet language via `language.backend_code`.
 
 ```
 <!-- Modules/Blog/backend/html/blog_table_row.html -->
-<tr class="c9-ctx-row" data-id="{data_id}" role="button" tabindex="0"
-    aria-label="{#blog.speak_info_blog}">
+<tr class="c9-ctx-row" data-id="{data_id}" tabindex="0"
+    aria-keyshortcuts="Enter Shift+F10" aria-description="{#blog.speak_info_blog}">
   <td class="text-primary fw-bold">{data_title}</td>
   <td>{data_date}</td>
 </tr>
@@ -256,6 +256,33 @@ echo $backend->template('blog.blog_table_row', [
 * `onclick="…"`, other `on…` attributes, `href="javascript:…"` and `<script>` in a
   template are marked for the script policy and work as usual
   ([14](14-security-web.md#script-policy-in-the-backend)).
+
+### Accessibility (WCAG 2.1 AA / BITV 2.0)
+
+The backend frame provides skip links (“Skip to content”), named landmarks (`header`,
+`main`, path navigation, sidebar), live regions for messages and the focus handling of the
+layers (`cApp.a11y`, `backend-a11y.js`). Templates follow these rules:
+
+* **Icons** (ligature font `.icon`) carry `aria-hidden="true"`. If an icon alone carries
+  meaning, a `<span class="visually-hidden">…</span>` with the text follows.
+* **Icon-only buttons and links** have an `aria-label` (and a `title` for the tooltip).
+  Clickable elements are `<button>` or `<a href>` – for code, `href="javascript:…"` in the
+  template, `$backend->on('js', …)` in PHP code. An `<a>` with only `onclick` cannot be
+  reached with the keyboard.
+* **List rows** `.c9-ctx-row` stay table rows: `tabindex="0"`, no `role="button"`, no
+  `aria-label` (it would hide the content of the row), `aria-description` instead.
+  `cApp.a11y` handles Enter and Shift+F10.
+* **Tables:** column headers are `<th scope="col">`, row headers `<th scope="row">`.
+* **Form fields** have a `<label for>` or an `aria-label`; fields in table cells (import
+  mapping, permission matrix) get an `aria-label` with column and row.
+  `Backend::formField()` links the note (`{id}-note`) and the error message (`form_error`
+  with `{id}`) via `aria-describedby` and sets `aria-invalid="true"`.
+* **Messages** that appear after an action have `role="alert"` (errors) or
+  `role="status"` (results); static notes in confirmation forms do not.
+* **Tooltips** on elements that cannot take the focus get `tabindex="0"`.
+* **New window:** `target="_blank"` with `rel="noopener"` and
+  `<span class="visually-hidden"> {#note_new_window}</span>`.
+* **Expandable entries** (folders in the area tree) carry `aria-expanded`.
 
 ## Caches – rebuild after every change
 
@@ -398,6 +425,7 @@ $backend->isSuperuser();
 | `cApp.polling` | background processes |
 | `cApp.extensions` | extensions of input fields ([08](08-components-and-extensions.md#extensions)) |
 | `cApp.handlers` | binding of marked event handlers |
+| `cApp.a11y` | skip links, focus when opening/closing layers (`focusLayer()`, `restoreFocus()`), keyboard for list rows and context menus, focus on the first invalid field (`afterSubmit()`) |
 
 All Ajax calls go through `$(el).cLoadContent(options)`:
 

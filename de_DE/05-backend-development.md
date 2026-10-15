@@ -235,8 +235,8 @@ Snippet-Sprache über `language.backend_code`.
 
 ```
 <!-- Modules/Blog/backend/html/blog_table_row.html -->
-<tr class="c9-ctx-row" data-id="{data_id}" role="button" tabindex="0"
-    aria-label="{#blog.speak_info_blog}">
+<tr class="c9-ctx-row" data-id="{data_id}" tabindex="0"
+    aria-keyshortcuts="Enter Shift+F10" aria-description="{#blog.speak_info_blog}">
   <td class="text-primary fw-bold">{data_title}</td>
   <td>{data_date}</td>
 </tr>
@@ -257,6 +257,34 @@ echo $backend->template('blog.blog_table_row', [
 * `onclick="…"`, andere `on…`-Attribute, `href="javascript:…"` und `<script>` in einer
   Vorlage werden für die Script-Policy markiert und funktionieren wie gewohnt
   ([14](14-security-web.md#script-policy-im-backend)).
+
+### Barrierefreiheit (WCAG 2.1 AA / BITV 2.0)
+
+Das Backend-Gerüst bringt Sprunglinks („Zum Inhalt springen“), benannte Landmarks
+(`header`, `main`, Pfadnavigation, Seitenleiste), Live-Regionen für Meldungen und die
+Fokussteuerung der Ebenen mit (`cApp.a11y`, `backend-a11y.js`). Vorlagen halten sich an
+diese Regeln:
+
+* **Icons** (Ligatur-Schrift `.icon`) tragen `aria-hidden="true"`. Trägt ein Icon allein
+  Bedeutung, folgt ein `<span class="visually-hidden">…</span>` mit dem Text.
+* **Schaltflächen und Links nur mit Icon** haben ein `aria-label` (und `title` für den
+  Tooltip). Klickbare Elemente sind `<button>` oder `<a href>` – für Code
+  `href="javascript:…"` in der Vorlage, `$backend->on('js', …)` im PHP-Code. Ein `<a>`
+  nur mit `onclick` erreicht die Tastatur nicht.
+* **Listenzeilen** `.c9-ctx-row` bleiben Tabellenzeilen: `tabindex="0"`, kein
+  `role="button"`, kein `aria-label` (es würde den Zeileninhalt verdecken), stattdessen
+  `aria-description`. Eingabetaste und Umschalt+F10 verarbeitet `cApp.a11y`.
+* **Tabellen:** Spaltenköpfe sind `<th scope="col">`, Zeilenköpfe `<th scope="row">`.
+* **Formularfelder** haben ein `<label for>` oder ein `aria-label`; Felder in
+  Tabellenzellen (Import-Zuordnung, Rechte-Matrix) bekommen ein `aria-label` mit Spalte
+  und Zeile. `Backend::formField()` verknüpft Hinweis (`{id}-note`) und Fehlermeldung
+  (`form_error` mit `{id}`) per `aria-describedby` und setzt `aria-invalid="true"`.
+* **Meldungen**, die nach einer Aktion erscheinen, haben `role="alert"` (Fehler) bzw.
+  `role="status"` (Ergebnis); statische Hinweise in Bestätigungsmasken nicht.
+* **Tooltips** auf nicht fokussierbaren Elementen bekommen `tabindex="0"`.
+* **Neues Fenster:** `target="_blank"` mit `rel="noopener"` und
+  `<span class="visually-hidden"> {#note_new_window}</span>`.
+* **Auf-/zuklappbare Einträge** (Ordner im Bereichsbaum) tragen `aria-expanded`.
 
 ## Caches – nach jeder Änderung neu bauen
 
@@ -401,6 +429,7 @@ $backend->isSuperuser();
 | `cApp.polling` | Hintergrundprozesse |
 | `cApp.extensions` | Extensions der Eingabefelder ([08](08-components-and-extensions.md#extensions)) |
 | `cApp.handlers` | Binden markierter Event-Handler |
+| `cApp.a11y` | Sprunglinks, Fokus beim Öffnen/Schließen von Ebenen (`focusLayer()`, `restoreFocus()`), Tastatur für Listenzeilen und Kontextmenüs, Fokus auf das erste fehlerhafte Feld (`afterSubmit()`) |
 
 Alle Ajax-Aufrufe laufen über `$(el).cLoadContent(options)`:
 

@@ -139,6 +139,10 @@ eine Liste lässt sich so rendern, ohne je Zeile alle `data_*`-Tabellen zu joine
 die Zeile, baut `Cms::createRecordCache()` alle Sprachen neu auf. Passwörter stehen dort
 nie, verschlüsselte Inhalte als Base64-Geheimtext.
 
+`Camindo\Core\RecordCache::clear($instanceId, $areaIds)` verwirft die Zeilen aller,
+einer Instanz oder einzelner Bereiche (`camindo.php cache records`, Werkzeuge → Server);
+Arbeitskopien (`tmp` = 1) bleiben, ihr `record_cache` ist der Arbeitsstand.
+
 ## Kerntabellen
 
 ### `area` – Inhaltsbereiche

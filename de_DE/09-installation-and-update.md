@@ -302,8 +302,10 @@ php Core/cron/camindo.php <befehl> [argumente] [--optionen]
 | `backup [--reason=…] \| list \| prune --keep=N` | Sicherungen nach `var/dbbackup/` |
 | `schema export` | `schema.sql`, `seed.sql`, `dev.sql` aus der Entwicklungsdatenbank |
 | `cache snippets\|html\|docs\|templates\|include\|all [--prefix=… \| --remove=… \| --template=…] \| list` | Caches |
+| `cache records [--instance=ID] [--area=ID,…]` | `record_cache` leeren (`RecordCache::clear()`, nicht Teil von `all`; [02](02-data-model.md#record_cache--inhalts-cache-je-sprache)) |
 | `component list \| install \| activate \| deactivate \| update \| uninstall NAME` | Lebenszyklus einer Komponente; `install --all`, `update --all` |
-| `refresh` | Verzeichnisse → `component`, Laufzeitlisten |
+| `refresh` | Verzeichnisse → `component`, Laufzeitlisten; `refresh snippets\|html\|records` wie `cache …` |
+| `htaccess [status] \| renew` | verwalteten Block von `public/.htaccess` prüfen (Exit-Code 1: veraltet) bzw. schreiben (`HtaccessWriter`) |
 | `admin password NAME [--pass-file=…] \| sign` | Backend-Passwort setzen; alle Signaturen neu schreiben |
 | `key status \| rotate \| retire KID` | Schlüsselbund von `.camindo.key` ([13](13-security-authentication.md#schlüsselrotation)) |
 | `audit verify [TYP ID] \| restore [--dry-run] \| reseal TYP ID \| delete TYP ID \| strip-names \| migrate` | Audit-Log: Kette prüfen, nach dem Zurückspielen eines Dumps kürzen, gebrochene Kette neu verketten, Verlauf löschen, Namen entfernen ([13](13-security-authentication.md#audit-log)) |

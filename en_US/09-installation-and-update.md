@@ -305,8 +305,10 @@ php Core/cron/camindo.php <command> [arguments] [--options]
 | `backup [--reason=…] \| list \| prune --keep=N` | backups to `var/dbbackup/` |
 | `schema export` | `schema.sql`, `seed.sql`, `dev.sql` from the development database |
 | `cache snippets\|html\|docs\|templates\|include\|all [--prefix=… \| --remove=… \| --template=…] \| list` | caches |
+| `cache records [--instance=ID] [--area=ID,…]` | clear `record_cache` (`RecordCache::clear()`, not part of `all`; [02](02-data-model.md#record_cache--content-cache-per-language)) |
 | `component list \| install \| activate \| deactivate \| update \| uninstall NAME` | life cycle of a component; `install --all`, `update --all` |
-| `refresh` | directories → `component`, runtime lists |
+| `refresh` | directories → `component`, runtime lists; `refresh snippets\|html\|records` like `cache …` |
+| `htaccess [status] \| renew` | check (exit code 1: outdated) or write the managed block of `public/.htaccess` (`HtaccessWriter`) |
 | `admin password NAME [--pass-file=…] \| sign` | set a backend password; rewrite all signatures |
 | `key status \| rotate \| retire KID` | key ring of `.camindo.key` ([13](13-security-authentication.md#key-rotation)) |
 | `audit verify [TYPE ID] \| restore [--dry-run] \| reseal TYPE ID \| delete TYPE ID \| strip-names \| migrate` | audit log: verify the chain, cut back after restoring a dump, re-chain a broken chain, delete a history, strip names ([13](13-security-authentication.md#audit-log)) |

@@ -182,7 +182,7 @@ second, unprotected path into the database.
 | Step (`--step=`) | Does |
 |---|---|
 | `requirements` | PHP version and extensions, write permissions, look for programs (`magick`, `ffmpeg`, `mysqldump`) |
-| `key` | create `.camindo.key` (32 random bytes, `0600`) – **losing it = encrypted content unreadable** |
+| `key` | create `.camindo.key` (32 random bytes, `0600`) – **losing it = encrypted content unreadable**. An existing file is kept |
 | `config` | `.camindo.php` from `Core/install/templates/camindo.php.dist` |
 | `sqlpwd` | `.sqlpwd` for `mysqldump` |
 | `dirs` | `var/…`, `public/media/default`, `public/backend/assets` as a copy of `Core/public_master/backend/assets` (`--symlink-assets`: relative symlink for work on the core; if it fails, the files are copied). `upgrade` refreshes a copy, a symlink stays |
@@ -201,7 +201,7 @@ repeated with `--step=NAME` to repair a damaged installation.
 **Non-interactive** (Docker, CI): every question has a parameter and an environment
 variable – `--db-host` / `CAMINDO_DB_HOST`, `--db-name`, `--db-user`, `--db-pass-file`,
 `--admin-name`, `--admin-email`, `--admin-pass-file`, `--admin-lang`, `--timezone`,
-`--locale`, `--https=y|n`, `--backend-domain` (each `CAMINDO_…`). Passwords only from
+`--locale`, `--https=y|n`, `--backend-domain`, `--web-user` (each `CAMINDO_…`). Passwords only from
 files or environment variables, never as an argument (process list).
 `CAMINDO_DB_PASS` also applies at runtime ([13](13-security-authentication.md#secrets-from-the-environment)):
 if the password comes from there, the installer does not write it to `.camindo.php` and
@@ -209,6 +209,18 @@ creates no `.sqlpwd`; with `CAMINDO_KEY`, no `.camindo.key` is created. With
 `--no-interaction`, a missing mandatory value aborts with exit code 2 before anything
 is written. `--create-db` creates the database, `--fixtures` loads a development data
 set (`dev.sql`, if present) instead of the base data.
+
+**Owner of the secret files** (`SecretFile`): `.camindo.key`, `.camindo.key.retired`,
+`.camindo.php` and `.sqlpwd` are created with `0600`. That fits when the CLI and the web
+server run as the same user (PHP-FPM pool per customer, suEXEC, mpm-itk). If the
+installer runs as root (Docker entrypoint, `sudo`), it hands the files to the web server
+user with `chown`: `--web-user` / `CAMINDO_WEB_USER`, otherwise the owner of the project
+directory or of `public/`, if not root. There is no guessing – with mod_php on a server
+with several customers, a key readable by the shared Apache user would be readable by
+every customer. Without root the installer changes nothing; without a known user,
+`install` and `status` warn. With `--web-user`, `install` also takes over existing files,
+so `install --step=key --web-user=NAME` repairs the owner. A failing `chown` never aborts,
+it only warns. As root, `key rotate` keeps the owner of the previous `.camindo.key`.
 
 ## Core update
 

@@ -48,8 +48,12 @@ under "Apache Environment"). A component with a secret of its own reads its vari
 through `Config::env()` as well and lets it take precedence over the value from
 `.camindo.php`.
 
-For the key, precedence is reversed: `Crypt` uses `paths.key_file` if the file is
-readable, otherwise `CAMINDO_KEY` (`keySource()`: `file`|`env`). That way, after
+For the key, precedence is reversed: `Crypt` uses `paths.key_file` if the file exists,
+otherwise `CAMINDO_KEY` (`keySource()`: `file`|`env`). If the file (or
+`.camindo.key.retired`) exists but is not readable – usually owned by root after an
+installation as root – `Crypt` throws instead of falling back to the variable: it could
+hold any other key, under which new data would then be encrypted (owner of the files:
+[09](09-installation-and-update.md)). That way, after
 `key rotate` – which always writes the new key to the file – the new key applies
 immediately, even while the variable still holds the old one. `envKeyState()` compares
 the variable with the key ring (`current`, `retired`, `other`); `key status`, `status`
@@ -292,7 +296,9 @@ repeated. `retire` only removes an old key once nothing depends on it any more.
 File permissions (`KeyRotation::keyFileMode()`): the new key and `.camindo.key.retired`
 take over the permissions of the previous `.camindo.key` (not every system allows
 `0600`); without a file (key from `CAMINDO_KEY`) `permissions.key_file` applies (default
-`0600`). `key status` warns if the file differs from `permissions.key_file`.
+`0600`). `key status` warns if the file differs from `permissions.key_file`. As root, both files
+also keep the owner of the previous one (`SecretFile::copyOwner()`); without a file, that
+of the project directory, if not root.
 
 **Values an add-on module encrypts itself are not covered by the rotation** – there is
 no hook for that yet. Where possible, encrypt in fields of type `encrypted`.

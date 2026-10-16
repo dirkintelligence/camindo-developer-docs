@@ -397,6 +397,9 @@ records in readable areas, IP addresses for superusers only.
 
 `SystemHealth` checks for superusers (start page): cron heartbeat, backups, writable
 directories, audit log chain, backend domain, available updates. `UpdateCheck` runs
-`composer outdated` and `composer audit` daily (result in
+`composer outdated --minor-only` and `composer audit` daily (result in
 `var/cache/update-check.json`); security advisories for installed packages appear as a
-warning.
+warning. Only SemVer-compatible versions are reported (`latest-status`
+`update-possible` is dropped), on the start page only camindo/cms and vulnerabilities.
+`paths.composer` may be a whole command line (`UpdateCheck::command()`: words, a word
+with spaces in `"…"`) – Composer runs without a shell, aliases do not apply.

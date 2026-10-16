@@ -100,12 +100,22 @@ they come from the template.
 | Context | Headers |
 |---|---|
 | backend | `X-Frame-Options: DENY`, `Content-Security-Policy: frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; script-src …`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: same-origin` |
-| frontend, preview | `X-Frame-Options: SAMEORIGIN`, `Content-Security-Policy: frame-ancestors 'self'`, `nosniff`, `Referrer-Policy: strict-origin-when-cross-origin` |
+| frontend, preview | `X-Frame-Options: SAMEORIGIN`, `Content-Security-Policy: frame-ancestors 'self'`, `nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Cache-Control: private, no-cache` |
 | both, on request | `Strict-Transport-Security` via HTTPS, `security.hsts_max_age` (default 0 = off) |
 
 In the frontend these are defaults: `(CMS:HEADER "Name: value")` at the top of a
 template replaces a header, `(CMS:HEADER "Name:")` without a value removes it. Because of
 `nosniff`, a template delivering CSS, JavaScript or JSON must set its `Content-Type`.
+
+**Caching.** Frontend pages are dynamic: `private, no-cache` keeps them out of shared
+caches (proxy, CDN) and makes the browser ask again before every display; the
+back/forward cache stays usable. If the page belongs to one visitor,
+`SecurityHeaders::sendNoStore()` switches to `private, no-store` – called by
+`UserSession::load()` (session found, also an anonymous basket), when the session cookie
+is set or deleted (not `ucsrf`) and by `Page::resolve()` with frontend editing active. If
+that comes after a `CMS:HEADER "Cache-Control: …"`, `no-store` wins. The preview sends
+`no-store` anyway, `MediaDelivery` sets its own value; public media are served by the web
+server directly.
 
 ## Script policy in the backend
 

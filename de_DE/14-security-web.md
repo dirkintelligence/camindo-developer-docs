@@ -99,12 +99,22 @@ Template.
 | Kontext | Header |
 |---|---|
 | Backend | `X-Frame-Options: DENY`, `Content-Security-Policy: frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; script-src …`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: same-origin` |
-| Frontend, Vorschau | `X-Frame-Options: SAMEORIGIN`, `Content-Security-Policy: frame-ancestors 'self'`, `nosniff`, `Referrer-Policy: strict-origin-when-cross-origin` |
+| Frontend, Vorschau | `X-Frame-Options: SAMEORIGIN`, `Content-Security-Policy: frame-ancestors 'self'`, `nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Cache-Control: private, no-cache` |
 | beide, auf Wunsch | `Strict-Transport-Security` über HTTPS, `security.hsts_max_age` (Vorgabe 0 = aus) |
 
 Im Frontend sind das Voreinstellungen: `(CMS:HEADER "Name: Wert")` am Template-Anfang
 ersetzt einen Header, `(CMS:HEADER "Name:")` ohne Wert entfernt ihn. Wegen `nosniff` muss
 ein Template, das CSS, JavaScript oder JSON ausliefert, seinen `Content-Type` setzen.
+
+**Cache.** Frontend-Seiten sind dynamisch: `private, no-cache` hält sie aus geteilten
+Caches (Proxy, CDN) heraus und lässt den Browser vor jeder Anzeige neu fragen; der
+Back/Forward-Cache bleibt nutzbar. Gehört die Seite einem Besucher, schaltet
+`SecurityHeaders::sendNoStore()` auf `private, no-store` um – aufgerufen von
+`UserSession::load()` (gefundene Sitzung, auch anonymer Warenkorb), beim Setzen oder
+Löschen des Sitzungs-Cookies (nicht `ucsrf`) und von `Page::resolve()` bei aktivem
+Frontend-Editing. Kommt das nach einem `CMS:HEADER "Cache-Control: …"`, gewinnt `no-store`.
+Die Vorschau sendet ohnehin `no-store`, `MediaDelivery` setzt einen eigenen Wert; öffentliche
+Medien liefert der Webserver direkt aus.
 
 ## Script-Policy im Backend
 

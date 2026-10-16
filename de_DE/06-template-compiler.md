@@ -124,7 +124,7 @@ Jeder Befehl ist ein Array-Eintrag:
     'php_prefix' => 'push_result',              // Schnipsel vor dem Aufruf
     'php_suffix' => ['include', 'pop_result', 'select_count'],  // … und danach
     'buffer_set' => true,                       // set=… fängt die ganze Ausgabe ab
-    'note'       => 'Durchsucht die Datenbank …',
+    'note'       => '#template.cmd_select',     // Snippet: Hinweis zum Befehl
     'do'         => 'resulttemplate',           // Parameter für einen Wert ohne Schlüssel
     'oneof'      => 'filter,relation',          // mindestens einer davon
     'params'     => [
@@ -132,8 +132,8 @@ Jeder Befehl ist ein Array-Eintrag:
             'mandatory'   => true,
             'subparam'    => 0,                 // 0 = kein Unterschlüssel, 1, 2
             'default'     => '',
-            'value'       => 'Templatename',
-            'description' => 'Listentemplate …',
+            'value'       => '#template.cmdval_template_name',  // erwarteter Wert
+            'description' => '#template.cmd_select__resulttemplate',
             'ref'         => 'template',        // Verweis: template | area | record
             'php_value'   => false,             // true: $var ungequotet typtreu übergeben
             'operator'    => false,             // true: key < wert erlaubt (filter)
@@ -147,6 +147,25 @@ Aus `method` wird `$_r = $this->{objekt}->{methode}($_a);`; `$this` ist die
 `CMS:RESULT_START`/`RESULT_END` allein über ihre Schnipsel. `'ref'` dient dem
 Export/Import (Verweise umschreiben, [05](05-backend-development.md#import-und-export))
 und dem Editor (Links auf das verwiesene Template).
+
+`note`, `description`, `value` und `default` wertet der Parser nicht aus; sie erscheinen in
+der Befehlsauswahl der Template-Eingabemaske (Tooltip, Platzhalter, Einleitung) und in der
+VS-Code-Erweiterung. `Template::commandText()` liest sie: Ein Wert der Form `#präfix.schlüssel`
+ist ein Snippet, alles andere wird unverändert gezeigt. Die Core-Texte stehen als
+Snippets in `Modules/Template/backend/lang/{lang}.ini` (Abschnitt „Command reference“), als
+reiner Text ohne HTML-Entities:
+
+| Schlüssel | Snippet |
+|---|---|
+| `note` | `#template.cmd_{befehl}` |
+| `description` | `#template.cmd_{befehl}__{parameter}` |
+| `value` | `#template.cmdval_{hinweis}` – gemeinsamer Wortschatz („Text“, „Datensatz-Id oder Slug“ …) |
+| `default` | `#template.cmddef_{hinweis}` – nur für beschreibende Vorgaben („(aktueller Datensatz)“) |
+
+Reine Syntax bleibt wörtlich: Wertehinweise wie `true / false`, `asc / desc` oder die
+Operatorliste (die VS-Code-Erweiterung bietet durch ` / ` getrennte Werte zur Auswahl an)
+und echte Vorgabewerte (`false`, `data`). Zusatzmodule dürfen Klartext oder eigene Snippets
+eintragen.
 
 Parameterwerte werden sonst immer zu Strings (`cacheparams=$p` → `"$p"`). Mit
 `'php_value' => true` übernimmt der Parser einen ungequoteten Wert, der nur aus einer

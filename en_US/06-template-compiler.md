@@ -122,7 +122,7 @@ Every command is an array entry:
     'php_prefix' => 'push_result',              // snippet before the call
     'php_suffix' => ['include', 'pop_result', 'select_count'],  // … and after it
     'buffer_set' => true,                       // set=… captures the whole output
-    'note'       => 'Searches the database …',
+    'note'       => '#template.cmd_select',     // language snippet: note on the command
     'do'         => 'resulttemplate',           // parameter for a value without a key
     'oneof'      => 'filter,relation',          // at least one of them
     'params'     => [
@@ -130,8 +130,8 @@ Every command is an array entry:
             'mandatory'   => true,
             'subparam'    => 0,                 // 0 = no sub-key, 1, 2
             'default'     => '',
-            'value'       => 'template name',
-            'description' => 'List template …',
+            'value'       => '#template.cmdval_template_name',  // expected value
+            'description' => '#template.cmd_select__resulttemplate',
             'ref'         => 'template',        // reference: template | area | record
             'php_value'   => false,             // true: pass an unquoted $var with its type
             'operator'    => false,             // true: key < value allowed (filter)
@@ -145,6 +145,24 @@ instance. `'no_action' => true` generates no call – `CMS:RESULT_START`/`RESULT
 work purely through their snippets. `'ref'` is used by export/import (rewriting
 references, [05](05-backend-development.md#import-and-export)) and by the editor (links
 to the referenced template).
+
+The parser does not evaluate `note`, `description`, `value` and `default`; they appear in
+the command picker of the template input mask (tooltip, placeholder, lead text) and in the
+VS Code extension. `Template::commandText()` reads them: a value of the form `#prefix.key`
+is a language snippet, anything else is shown unchanged. The core texts are snippets in
+`Modules/Template/backend/lang/{lang}.ini` (section “Command reference”), as plain text
+without HTML entities:
+
+| Key | Snippet |
+|---|---|
+| `note` | `#template.cmd_{command}` |
+| `description` | `#template.cmd_{command}__{parameter}` |
+| `value` | `#template.cmdval_{hint}` – shared vocabulary (“Text”, “Record ID or slug” …) |
+| `default` | `#template.cmddef_{hint}` – only for descriptive defaults (“(current record)”) |
+
+Pure syntax stays literal: value hints such as `true / false`, `asc / desc` or the list of
+operators (the VS Code extension offers values separated by ` / ` as choices) and real
+default values (`false`, `data`). Add-on modules may enter plain text or their own snippets.
 
 Parameter values otherwise always become strings (`cacheparams=$p` → `"$p"`). With
 `'php_value' => true` the parser takes an unquoted value that consists of a single

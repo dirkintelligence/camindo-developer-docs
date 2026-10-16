@@ -191,7 +191,7 @@ second, unprotected path into the database.
 | `core` | `system.core_version` |
 | `components` | **discover** add-on components, do not install them |
 | `runtime` | runtime lists, caches, `.htaccess` block, version stamp |
-| `tasks` | maintenance tasks of the scheduler (`Scheduler::createDefaults()`, missing types only) |
+| `tasks` | maintenance tasks of the scheduler (`Scheduler::createDefaults()`, missing types only); if there is no converter yet, the media converter “Internal Image Preview (GD)” (all GD image formats → `.jpg`, at most 200 × 300 px) |
 | `finish` | `var/install.lock`, summary with the cron line |
 
 If `var/install.lock` exists, `install` ends immediately with exit code 0;

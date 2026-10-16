@@ -189,7 +189,7 @@ zweiter, ungeschützter Weg in die Datenbank.
 | `core` | `system.core_version` |
 | `components` | Zusatzkomponenten **entdecken**, nicht installieren |
 | `runtime` | Laufzeitlisten, Caches, `.htaccess`-Block, Versionsstempel |
-| `tasks` | Wartungsaufgaben des Zeitplaners (`Scheduler::createDefaults()`, nur fehlende Typen) |
+| `tasks` | Wartungsaufgaben des Zeitplaners (`Scheduler::createDefaults()`, nur fehlende Typen); ohne vorhandene Konverter der Medienkonverter „Interne Bildvorschau (GD)“ (alle GD-Bildformate → `.jpg`, höchstens 200 × 300 px) |
 | `finish` | `var/install.lock`, Zusammenfassung mit der Cron-Zeile |
 
 Existiert `var/install.lock`, endet `install` sofort mit Exit-Code 0; `--force --yes`

@@ -464,7 +464,9 @@ function onSave(array &$affectedFields, array &$data, array &$previousData): voi
 ## Editor support and messages
 
 `styled_code` contains the source with markup (`c9-command`, `c9-php`); parameters with
-`'ref' => 'template'` become links to the referenced template. The parser reports
+`'ref' => 'template'` become links to the referenced template – stored as
+`data-c9-template-link="{ref},{area_id}[,list]"` without a nonce; only
+`TemplateBackend::info()` inserts the handler. The parser reports
 errors with line numbers (unknown command, unknown parameter, missing parenthesis) and
 **notes** (`TemplateParserTrait::inlineHandlerWarnings()`, shown in yellow): `<script>`
 without `(CMS:NONCE)` as well as `on…` attributes and `javascript:` addresses in the

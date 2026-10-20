@@ -472,7 +472,9 @@ function onSave(array &$affectedFields, array &$data, array &$previousData): voi
 ## Editor-Unterstützung und Meldungen
 
 `styled_code` enthält den Quelltext mit Markup (`c9-command`, `c9-php`); Parameter mit
-`'ref' => 'template'` werden zu Links auf das verwiesene Template. Der Parser meldet
+`'ref' => 'template'` werden zu Links auf das verwiesene Template – gespeichert als
+`data-c9-template-link="{ref},{area_id}[,list]"` ohne Nonce, den Handler setzt erst
+`TemplateBackend::info()` ein. Der Parser meldet
 Fehler mit Zeilennummer (unbekannter Befehl, unbekannter Parameter, fehlende Klammer)
 und **Hinweise** (`TemplateParserTrait::inlineHandlerWarnings()`, gelb dargestellt):
 `<script>` ohne `(CMS:NONCE)` sowie `on…`-Attribute und `javascript:`-Adressen im

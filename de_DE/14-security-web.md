@@ -165,6 +165,10 @@ echo '<script' . $backend->nonceAttr() . '>…</script>';
 
 Nicht möglich: `onclick` oder `javascript:` roh im `echo` bzw. als ganzer Platzhalterwert,
 `eval`/`new Function`/`setTimeout('string')`, HTML mit Handlern per `innerHTML`.
+Die Nonce gilt nur für einen Seitenaufruf: Markierte Handler gehören nie in die
+Datenbank oder einen Cache, der den Aufruf überdauert. Gespeichertes HTML trägt eine
+neutrale Markierung, die erst die Ausgabe per `on()` umsetzt (Beispiel: Template-Links
+in `styled_code`, [06](06-template-compiler.md#editor-unterstützung-und-meldungen)).
 
 `security.backend_csp`: `enforce` (Vorgabe) | `report` (alles läuft, Verstöße werden nur
 gemeldet – für Komponenten im Umbau) | `off`. Verstöße meldet `backend-handlers.js` an

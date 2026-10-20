@@ -162,7 +162,7 @@ Zurück/Weiter), sobald die Komponente aktiv ist:
 | Regel | |
 |---|---|
 | `{art}` | `module`, `extension` oder `processor` |
-| `{name}` | Komponentenname in Kleinbuchstaben (`TinyMce` → `tinymce`) |
+| `{name}` | Komponentenname in Kleinbuchstaben (`MarkdownVisual` → `markdownvisual`) |
 | Sprachen | dieselben Codes wie `Core/docs/` (`de_DE`, `en_US` …); fehlt die Startseite in einer Sprache, gibt es das Handbuch dort nicht |
 | Titel | die erste Überschrift der Startseite – in Auswahl und Übersicht |
 | Reihenfolge | Startseite, dann ihre Links in Listen und Tabellen, übrige Seiten nach Dateinamen – nummerieren Sie die Kapitel (`02-…`, `03-…`) |
@@ -179,8 +179,8 @@ Link auf die Startseite in `docs/` (siehe [10](10-publishing-components.md#ein-r
 
 Eine Extension erweitert ein Eingabefeld eines bestimmten Display-Typs im Backend um
 JavaScript-Verhalten. Sie wird **einem Feld** zugewiesen (in dessen Definition), nicht
-global einem Display-Typ – ein Bereich kann eine `textarea` mit TinyMCE und eine andere
-mit Markdown haben. Ein Feld hat höchstens eine Extension.
+global einem Display-Typ – ein Bereich kann eine `textarea` mit HTML (visuell) und eine
+andere mit Markdown (visuell) haben. Ein Feld hat höchstens eine Extension.
 
 | Core-Extension | Display-/Feldtyp | Zweck |
 |---|---|---|
@@ -192,38 +192,41 @@ mit Markdown haben. Ein Feld hat höchstens eine Extension.
 | `Snippets` | `text` | Snippet-Suche für Beschriftungsfelder |
 | `Password` | `password` | Stärkeanzeige und Passwort-Richtlinie |
 
-Zusatz-Extension: `TinyMce` (WYSIWYG-Editor, eigenes Paket, GPL wie TinyMCE).
+Zusatz-Extensions sind eigene Composer-Pakete (Typ `camindo-extension`) unter `Extensions/`.
 
 ### Steckbrief
 
+Am Beispiel einer erdachten Zusatz-Extension `RichText`, die eine Editor-Bibliothek
+aus `vendor/` einbindet:
+
 ```
-Extensions/TinyMce/
-├── composer.json                 type camindo-extension, require tinymce/tinymce
+Extensions/RichText/
+├── composer.json                 type camindo-extension, require acme/richtext
 ├── install/settings.php
-├── lang/  backend/lang/          Präfix ext.tinymce
+├── lang/  backend/lang/          Präfix ext.richtext
 ├── backend/
 │   ├── form.php                  Optionen in der Feld-Maske
 │   ├── info.php                  Optionen in der Feld-Detailansicht
 │   └── *.php                     optionale Endpunkte
 └── public/
-    ├── js/tinymce.ext.js         Registrierung bei cApp.extensions
-    └── css/tinymce.ext.css
+    ├── js/richtext.ext.js         Registrierung bei cApp.extensions
+    └── css/richtext.ext.css
 ```
 
 ```php
 return [
     'version'       => '1.0.0',
     'type'          => 'editor',
-    'label'         => '#ext.tinymce.label',
-    'description'   => '#ext.tinymce.description',
+    'label'         => '#ext.richtext.label',
+    'description'   => '#ext.richtext.description',
     'display_types' => ['textarea'],             // wo die Extension wählbar ist
     'field_types'   => ['text', 'chars'],        // optional: zusätzlich nach Feldtyp
     'assets' => [
-        'js'   => ['vendor:tinymce/tinymce/tinymce.min.js', 'js/tinymce.ext.js'],
-        'css'  => ['css/tinymce.ext.css'],
-        'dirs' => ['vendor:tinymce/tinymce/skins'],   // ganze Verzeichnisse, rekursiv
+        'js'   => ['vendor:acme/richtext/richtext.min.js', 'js/richtext.ext.js'],
+        'css'  => ['css/richtext.ext.css'],
+        'dirs' => ['vendor:acme/richtext/skins'],   // ganze Verzeichnisse, rekursiv
     ],
-    'options_provider' => 'TinyMceOptions',      // optional, siehe unten
+    'options_provider' => 'RichTextOptions',      // optional, siehe unten
     'requires' => ['core' => '^9.0'],
 ];
 ```
@@ -235,7 +238,7 @@ return [
 `field.details` bekommt `extension` und `extension_options`:
 
 ```json
-{ "extension": "TinyMce", "extension_options": { "toolbar": "basic", "height": "400" } }
+{ "extension": "RichText", "extension_options": { "toolbar": "basic", "height": "400" } }
 ```
 
 Die Feld-Maske bietet nur aktive Extensions an, die zu Display- und Feldtyp passen, und
@@ -250,7 +253,7 @@ weist eine unpassende oder inaktive Extension ab. Metafelder bekommen eine Exten
 Suchmaske) mit Attributen – kein Inline-Script je Feld:
 
 ```
-<textarea … class="… c9-ext" data-c9-ext="tinymce" data-c9-ext-type="text"
+<textarea … class="… c9-ext" data-c9-ext="richtext" data-c9-ext-type="text"
           data-c9-ext-options='{"toolbar":"basic","height":"400"}'></textarea>
 ```
 
@@ -263,7 +266,7 @@ Manifest `cConfig.extensions` aus; geladen werden sie erst, wenn ein Feld sie br
 Die Extension registriert sich mit drei Hooks:
 
 ```js
-cApp.extensions.register('tinymce', {
+cApp.extensions.register('richtext', {
     init(el, options)  { /* Editor auf el erzeugen; bei Änderung cApp.forms.markChanged(el) */ },
     beforeSubmit(el)   { /* Inhalt in el.value zurückschreiben */ },
     destroy(el)        { /* Instanz entfernen – Layer wird ersetzt oder geschlossen */ }

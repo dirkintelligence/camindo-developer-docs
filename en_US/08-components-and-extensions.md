@@ -159,7 +159,7 @@ component is active:
 | Rule | |
 |---|---|
 | `{kind}` | `module`, `extension` or `processor` |
-| `{name}` | component name in lower case (`TinyMce` → `tinymce`) |
+| `{name}` | component name in lower case (`MarkdownVisual` → `markdownvisual`) |
 | Languages | the same codes as `Core/docs/` (`de_DE`, `en_US` …); without a start page in a language, the manual does not exist there |
 | Title | the first heading of the start page – in the selection and the overview |
 | Order | start page, then its links in lists and tables, remaining pages by file name – number the chapters (`02-…`, `03-…`) |
@@ -176,7 +176,7 @@ to the start page in `docs/` (see [10](10-publishing-components.md#one-repositor
 
 An extension adds JavaScript behaviour to an input field of a given display type in the
 backend. It is assigned **to a field** (in its definition), not globally to a display
-type – one area can have a `textarea` with TinyMCE and another one with Markdown. A
+type – one area can have a `textarea` with HTML (visual) and another one with Markdown (visual). A
 field has at most one extension.
 
 | Core extension | Display / field type | Purpose |
@@ -189,38 +189,41 @@ field has at most one extension.
 | `Snippets` | `text` | snippet search for label fields |
 | `Password` | `password` | strength meter and password policy |
 
-Add-on extension: `TinyMce` (WYSIWYG editor, separate package, GPL like TinyMCE).
+Add-on extensions are separate Composer packages (type `camindo-extension`) under `Extensions/`.
 
 ### Profile
 
+Using the example of a made-up add-on extension `RichText` that includes an editor library
+from `vendor/`:
+
 ```
-Extensions/TinyMce/
-├── composer.json                 type camindo-extension, require tinymce/tinymce
+Extensions/RichText/
+├── composer.json                 type camindo-extension, require acme/richtext
 ├── install/settings.php
-├── lang/  backend/lang/          prefix ext.tinymce
+├── lang/  backend/lang/          prefix ext.richtext
 ├── backend/
 │   ├── form.php                  options in the field form
 │   ├── info.php                  options in the field detail view
 │   └── *.php                     optional endpoints
 └── public/
-    ├── js/tinymce.ext.js         registration with cApp.extensions
-    └── css/tinymce.ext.css
+    ├── js/richtext.ext.js         registration with cApp.extensions
+    └── css/richtext.ext.css
 ```
 
 ```php
 return [
     'version'       => '1.0.0',
     'type'          => 'editor',
-    'label'         => '#ext.tinymce.label',
-    'description'   => '#ext.tinymce.description',
+    'label'         => '#ext.richtext.label',
+    'description'   => '#ext.richtext.description',
     'display_types' => ['textarea'],             // where the extension can be selected
     'field_types'   => ['text', 'chars'],        // optional: additionally by field type
     'assets' => [
-        'js'   => ['vendor:tinymce/tinymce/tinymce.min.js', 'js/tinymce.ext.js'],
-        'css'  => ['css/tinymce.ext.css'],
-        'dirs' => ['vendor:tinymce/tinymce/skins'],   // whole directories, recursive
+        'js'   => ['vendor:acme/richtext/richtext.min.js', 'js/richtext.ext.js'],
+        'css'  => ['css/richtext.ext.css'],
+        'dirs' => ['vendor:acme/richtext/skins'],   // whole directories, recursive
     ],
-    'options_provider' => 'TinyMceOptions',      // optional, see below
+    'options_provider' => 'RichTextOptions',      // optional, see below
     'requires' => ['core' => '^9.0'],
 ];
 ```
@@ -232,7 +235,7 @@ return [
 `field.details` gets `extension` and `extension_options`:
 
 ```json
-{ "extension": "TinyMce", "extension_options": { "toolbar": "basic", "height": "400" } }
+{ "extension": "RichText", "extension_options": { "toolbar": "basic", "height": "400" } }
 ```
 
 The field form only offers active extensions matching display and field type and
@@ -247,7 +250,7 @@ extension via `'extension' => 'Name'` in the column definition.
 the search form) – no inline script per field:
 
 ```
-<textarea … class="… c9-ext" data-c9-ext="tinymce" data-c9-ext-type="text"
+<textarea … class="… c9-ext" data-c9-ext="richtext" data-c9-ext-type="text"
           data-c9-ext-options='{"toolbar":"basic","height":"400"}'></textarea>
 ```
 
@@ -260,7 +263,7 @@ manifest `cConfig.extensions`; they are only loaded once a field needs them. The
 extension registers itself with three hooks:
 
 ```js
-cApp.extensions.register('tinymce', {
+cApp.extensions.register('richtext', {
     init(el, options)  { /* create the editor on el; on change cApp.forms.markChanged(el) */ },
     beforeSubmit(el)   { /* write the content back into el.value */ },
     destroy(el)        { /* remove the instance – the layer is replaced or closed */ }

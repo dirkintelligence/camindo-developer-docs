@@ -109,8 +109,8 @@ if (!empty($_r)) {
 $this->db->popResult(); $cms = $this->cms->popRow(); ?>
 ```
 
-The generator keeps **lines aligned**: line numbers in the compiled PHP match those in
-the source.
+(The generator keeps **lines aligned**: line numbers in the compiled PHP match those in
+the source.)
 
 ## Command definitions (`Core/Modules/Template/commands.php`)
 

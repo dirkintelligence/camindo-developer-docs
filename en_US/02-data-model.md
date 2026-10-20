@@ -34,7 +34,9 @@ record (metadata)         field (field definition)    fieldname (global name reg
 
 The primary key of the `data_*` tables therefore contains `fieldname_id`, not
 `field_id`; `field_id` is an extra column for the foreign key used when a field
-definition is deleted. Unused `fieldname` entries are removed automatically.
+definition is deleted. Unused `fieldname` entries are removed automatically; a field in
+the trash counts as a user – its name stays reserved with its type, so a restore never
+meets a type conflict.
 
 Field names match `^[a-z][a-z0-9_]+$` (flag `name` in `Dataset`: start with a letter,
 at least two characters – `_…` is reserved for pseudo field names such as `_default`),
@@ -139,8 +141,9 @@ rendered without joining all `data_*` tables per row. If the row is missing,
 encrypted content is stored as Base64 ciphertext.
 
 `Camindo\Core\RecordCache::clear($instanceId, $areaIds)` discards the rows of all
-instances, of one instance or of single areas (`camindo.php cache records`, Tools → Server);
-working copies (`tmp` = 1) stay, their `record_cache` is the working state.
+instances, of one instance or of single areas (`camindo.php cache records`, Tools → Server,
+deleting and restoring a field); working copies (`tmp` = 1) stay, their `record_cache` is
+the working state.
 
 ## Core tables
 
@@ -185,7 +188,8 @@ overview_template_id, login_name_field_id, login_password_field_id, deleted …
 | `custom_order` | links can be sorted manually |
 | `visibility_input`, `visibility_search`, `visibility_list` | where the field appears |
 | `default_field`, `meta`, `multilingual` | default field; meta field; content per language |
-| `details` (JSON) | among others `extension`/`extension_options`, `user_auth`, `profile_area_ids`, `lookup_detailed` |
+| `details` (JSON) | among others `extension`/`extension_options`, `user_auth`, `profile_area_ids`, `lookup_detailed`; in the trash `trash_area_refs` |
+| `deleted`, `changed_at`, `changed_by` | trash: deleted, time and user of the delete operation |
 
 The converters of a thumbnail field are stored, sorted, in `rel_field_converter`.
 Only `Field::convert()` (button "Change type") changes the type or the multilingual
@@ -199,6 +203,21 @@ type (`Record::retypeWorkingCopies()`, for file fields including newly uploaded 
 discarded, and `data_dft` follows. If a field drops out of the full-text sources (e.g.
 after `encrypted`), the full texts of all non-temporary records of the area are rebuilt –
 deleted ones included.
+
+**Fields in the trash.** `delete()` only marks a field (`deleted = 1`); its `data_*` rows
+and `rel_*` entries stay until the final deletion. Every query on `field` reads live fields
+only (`deleted = 0`): `virtualSchema()`, masks, lists, export, full-text sources,
+`record_cache` (discarded for the area and rebuilt without the field). `Cms::select()`
+hides the `data_*` rows of deleted fields with `field_id NOT IN (…)` – the ids come from the
+file cache (`InstanceCache::deletedFieldIds()`); without deleted fields the SQL stays
+unchanged. A field takes its counter field (`rel_field_id`) and its thumbnail fields
+(`parent_field_id`) along into the trash; references of the area (`default_field_id`,
+`sort_field_id`, `login_*_field_id`) are cleared and noted in `details.trash_area_refs` for
+the restore, and the media directory is locked. As long as the field is in the trash, its
+name is taken in the area: the primary key `(language_id, record_id, fieldname_id)` would
+not allow a second field of the same name. Exception to “live fields only”: a `parent_id`
+field in the trash keeps the tree of its area (`isTreeArea()`); only the final deletion
+flattens it.
 
 ### `record` – records
 
@@ -260,7 +279,8 @@ place. `area` has a single tree over the whole table.
 The order is not entered as a number but as the **preceding record** (`previous_id`);
 `TreeManagerTrait::calculatePosition()` computes `position` from it. Reordering only
 happens when the request brings `previous_id` or a different `parent_id` – a `load()` +
-`save()` leaves the record where it is.
+`save()` leaves the record where it is. A new `parent_id` inside the record's own subtree (or the
+record itself) is refused (`updateInTree()`, error `error_parent_in_subtree`).
 
 | Method (`TreeManagerTrait`) | Purpose |
 |---|---|
@@ -269,6 +289,8 @@ happens when the request brings `previous_id` or a different `parent_id` – a `
 | `liftChildren()` | move children up one level |
 | `copySubtree()` | copy a subtree |
 | `subtreeIds($data, $mode)` | ids of a subtree in processing order |
+| `isInSubtree($nodeId, $rootId, $areaId)` | is `$nodeId` the record `$rootId` itself or one of its descendants? |
+| `lastChildId($parentId, $areaId, $excludeId)` | last child of a level – predecessor for "append at the end" |
 | `resetTreeFields($areaId)` / `initTreeArea($areaId)` | flatten an area / build its tree |
 | `externalRebuildTree($areaId)` | recompute `lft`/`rgt`/`depth` |
 
@@ -470,7 +492,7 @@ purge()    → remove the row, delete the files for good   (scheduler task trash
                                                           admin.trash_retention_days)
 ```
 
-Soft delete exists for `record`, `area` and `admin`; tables without a `deleted` column
+Soft delete exists for `record`, `area`, `field` and `admin`; tables without a `deleted` column
 delete permanently at once. The methods (single-record functions and orchestrations,
 cascades, `MassDeletion`) are described in [03](03-dataset-api.md#deleting-and-restoring);
 here only what concerns the data model:
@@ -481,6 +503,14 @@ here only what concerns the data model:
   `restore()` brings back only those.
 * **Files move along:** `var/deleted/{field_id}_{record_id}_{version}.{ext}`; the
   `data_fil` rows stay until the final deletion.
+* **Area → fields:** a deleted area takes its fields along, and the relation fields of other
+  areas whose `rel_area_id` points to it (`Area::hookOnSoftDelete()`), with the same
+  timestamp. They are deleted permanently with the area by `fk_field_area` and
+  `fk_field_rel_area`.
+* **Area → records:** likewise the area marks its records. `Area::hookOnDelete()` deletes
+  them permanently one by one (hooks, files) before the area row disappears;
+  `fk_record_area_id` (`ON DELETE CASCADE`) is only the safety net for an area deleted
+  directly in the database – files then stay behind.
 
 ## Time zones
 

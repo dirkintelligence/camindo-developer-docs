@@ -111,8 +111,8 @@ if (!empty($_r)) {
 $this->db->popResult(); $cms = $this->cms->popRow(); ?>
 ```
 
-Der Generator hält die **Zeilen treu**: Zeilennummern im kompilierten PHP entsprechen
-denen im Quelltext.
+(Der Generator hält die **Zeilen treu**: Zeilennummern im kompilierten PHP entsprechen
+denen im Quelltext.)
 
 ## Befehlsdefinitionen (`Core/Modules/Template/commands.php`)
 

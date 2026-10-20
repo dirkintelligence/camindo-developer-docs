@@ -45,7 +45,7 @@ Hit counts are in `$db->num_rows` and – with `count => 'true'` –
 | `result` | `'false'`: count only |
 | `filtertext` | `'true'`: create a readable filter and sort text |
 | `debug` | `'true'`: print SQL and bind values |
-| `request` | which of the keys `filter`, `filterop`, `filtermode`, `skip`, `limit`, `sort`, `order` may additionally be taken from `$_REQUEST` (`'all'` or a list) |
+| `request` | which of the keys `filter`, `filterop`, `filtermode`, `skip`, `limit`, `sort`, `order` may additionally be taken from `$_REQUEST` (`'all'` or a list; `filter[field]` only this field, `filter_op`/`filter_mode` as spelled in the template command) |
 
 **Only from `$param`, never from the request:**
 
@@ -57,8 +57,24 @@ Hit counts are in `$db->num_rows` and – with `count => 'true'` –
 | | `relation`: one field name, several comma-separated (OR) or `any` (any row in `data_rel`) |
 | `nextof` | with `src_id`/`relation` (exactly one field): only the neighbours of record `nextof` in the link list |
 
-Values from `$param` override request values. Wrongly typed request values are
-discarded and registered as `error_param_invalid`.
+The request can only **narrow** a query (`Cms::requestParams()`):
+
+* `skip`, `limit`, `sort`, `order` from `$param` replace the request value completely;
+  `limit` from the request only counts as a number ≥ 1.
+* For every main field filtered in `$param['filter']`, the request brings neither `filter`
+  nor `filterop`/`filtermode` – otherwise `filter[area_id]=5` could be widened by a second
+  value (OR) or inverted with `filterop[area_id]=!=`. Main field means: `author.name` belongs
+  to `author`; `area` and `area_id` are the same field (the area name is appended to
+  `area_id`).
+* Fields in `Cms::$unsearchableTypes` (`password`) can never be filtered or sorted, not even
+  from `$param`: a prefix filter or the sort order would reveal the hash character by
+  character. The filter yields `0 = 1` and registers `error_field_not_searchable`.
+
+Wrongly typed request values are discarded and registered as `error_param_invalid`.
+`CMS:SELECT` only allows single keys in its `request` (`Cms::templateRequestKeys()`): no
+`all`, `filter`/`filterop`/`filtermode` only with a field name – otherwise visitors could
+search by any field of the records found. The backend lists keep using `'all'`; `CMS:ZIP`, `RecordUser` and the
+API build their parameters themselves and set no `request`.
 
 ```php
 $cms->select(['request' => 'skip,limit,sort,order', 'filter' => ['area_id' => 8]], $record);
@@ -83,6 +99,12 @@ The search field `_url` (id, slug with/without slug prefix, or URL) is resolved 
 
 * `tmp = 0` and `deleted = 0` if the table has these columns – working copies and
   deleted records never show up by accident.
+* **Fields in the trash** are ignored: every access to a `data_*` table (filter, sort,
+  relations, `relation`/`src_id`, slugs) gets `field_id NOT IN (…)` as soon as a field of
+  this name is in the trash (`Cms::liveFieldSql()`, ids from
+  `InstanceCache::deletedFieldIds()`). A deleted field behaves like one the area does not
+  have – even a negation finds nothing. With no field in the trash, the query stays
+  unchanged.
 * **Instance restriction** for `area`, `record`, `template` as soon as
   `Cms::setInstanceAccess()` is set: in the frontend, the domain's instance plus its
   readable instances; in the backend, the instances of the user group.

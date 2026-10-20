@@ -257,7 +257,11 @@ foreach ($record->cascadeIds('area_id', $areaId, 'delete') as $recordId) {
 ```
 
 Damit eine Tabelle daran teilnehmen kann, müssen `changed_at` und `changed_by` in ihrem
-Schema stehen. Große Vorgänge verlagert `MassDeletion` in einen Hintergrundprozess
+Schema stehen. `Area` reicht so den Zeitstempel an `Record` und `Field` weiter;
+`Field::hookOnSoftDelete()`/`hookOnRestore()` kaskadieren innerhalb derselben Tabelle
+(Gegenfeld, Thumbnail-Felder) über `softDeleteOne()`/`restoreOneCore()` der eigenen
+Instanz. Seiteneffekte außerhalb der Datenbank (Medien-Sperre, Datei-Cache) gehören in
+`Database::afterCommit()` – eine Rücknahme verwirft sie. Große Vorgänge verlagert `MassDeletion` in einen Hintergrundprozess
 (Schwelle `admin.mass_delete_threshold`); dort läuft derselbe Aufruf.
 
 ## Validierung

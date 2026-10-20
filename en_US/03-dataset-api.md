@@ -252,7 +252,12 @@ foreach ($record->cascadeIds('area_id', $areaId, 'delete') as $recordId) {
 }
 ```
 
-To take part, a table needs `changed_at` and `changed_by` in its schema. Large
+To take part, a table needs `changed_at` and `changed_by` in its schema. `Area` thus
+passes its timestamp on to `Record` and `Field`; `Field::hookOnSoftDelete()`/
+`hookOnRestore()` cascade within the same table (counter field, thumbnail fields) via
+`softDeleteOne()`/`restoreOneCore()` of the same instance. Side effects outside the
+database (media lock, file cache) belong in `Database::afterCommit()` – a rollback
+discards them. Large
 operations are moved to a background process by `MassDeletion` (threshold
 `admin.mass_delete_threshold`); the same call runs there.
 

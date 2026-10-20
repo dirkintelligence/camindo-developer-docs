@@ -45,7 +45,7 @@ Trefferzahlen stehen in `$db->num_rows` und – mit `count => 'true'` –
 | `result` | `'false'`: nur zählen |
 | `filtertext` | `'true'`: lesbaren Filter- und Sortiertext erzeugen |
 | `debug` | `'true'`: SQL und Bind-Werte ausgeben |
-| `request` | welche der Schlüssel `filter`, `filterop`, `filtermode`, `skip`, `limit`, `sort`, `order` zusätzlich aus `$_REQUEST` übernommen werden (`'all'` oder Liste) |
+| `request` | welche der Schlüssel `filter`, `filterop`, `filtermode`, `skip`, `limit`, `sort`, `order` zusätzlich aus `$_REQUEST` übernommen werden (`'all'` oder Liste; `filter[feld]` nur dieses Feld, `filter_op`/`filter_mode` als Schreibweise des Template-Befehls) |
 
 **Nur aus `$param`, nie aus dem Request:**
 
@@ -57,8 +57,24 @@ Trefferzahlen stehen in `$db->num_rows` und – mit `count => 'true'` –
 | | `relation`: ein Feldname, mehrere kommagetrennt (ODER) oder `any` (jede Zeile in `data_rel`) |
 | `nextof` | mit `src_id`/`relation` (genau ein Feld): nur die Nachbarn des Datensatzes `nextof` in der Verweisliste |
 
-Werte aus `$param` überschreiben Request-Werte. Falsch typisierte Request-Werte werden
-verworfen und als `error_param_invalid` registriert.
+Der Request kann eine Abfrage nur **einschränken** (`Cms::requestParams()`):
+
+* `skip`, `limit`, `sort`, `order` aus `$param` ersetzen den Request-Wert vollständig;
+  `limit` aus dem Request gilt nur als Zahl ≥ 1.
+* Für jedes Hauptfeld, das `$param['filter']` filtert, übernimmt der Request weder
+  `filter` noch `filterop`/`filtermode` – sonst ließe sich `filter[area_id]=5` durch einen
+  zweiten Wert (ODER) erweitern oder per `filterop[area_id]=!=` umkehren. Hauptfeld heißt:
+  `autor.name` gehört zu `autor`, `area` und `area_id` sind dasselbe Feld (der Bereichsname
+  wird an `area_id` angehängt).
+* Felder in `Cms::$unsearchableTypes` (`password`) sind nie filter- oder sortierbar, auch
+  nicht aus `$param`: Ein Präfixfilter oder die Sortierung gäbe den Hash Zeichen für Zeichen
+  preis. Der Filter liefert `0 = 1` und registriert `error_field_not_searchable`.
+
+Falsch typisierte Request-Werte werden verworfen und als `error_param_invalid` registriert.
+`CMS:SELECT` lässt in seinem `request` nur einzelne Schlüssel zu (`Cms::templateRequestKeys()`):
+kein `all`, `filter`/`filterop`/`filtermode` nur mit Feldname – sonst dürften Besucher nach
+jedem Feld der gefundenen Datensätze suchen. Die Backend-Listen nutzen weiter `'all'`; `CMS:ZIP`,
+`RecordUser` und die API bauen ihre Parameter selbst und setzen kein `request`.
 
 ```php
 $cms->select(['request' => 'skip,limit,sort,order', 'filter' => ['area_id' => 8]], $record);
@@ -83,6 +99,12 @@ Suchfeld `_url` (Id, Slug mit/ohne Slug-Präfix oder URL) löst
 
 * `tmp = 0` und `deleted = 0`, wenn die Tabelle diese Spalten hat – Arbeitskopien und
   gelöschte Datensätze erscheinen nie versehentlich.
+* **Felder im Papierkorb** werden ignoriert: Jeder Zugriff auf eine `data_*`-Tabelle
+  (Filter, Sortierung, Relationen, `relation`/`src_id`, Slugs) bekommt
+  `field_id NOT IN (…)`, sobald ein Feld dieses Namens im Papierkorb liegt
+  (`Cms::liveFieldSql()`, Ids aus `InstanceCache::deletedFieldIds()`). Ein gelöschtes
+  Feld verhält sich wie eines, das der Bereich nicht hat – auch eine Negation findet
+  nichts. Liegt kein Feld im Papierkorb, bleibt die Abfrage unverändert.
 * **Instanzbeschränkung** für `area`, `record`, `template`, sobald
   `Cms::setInstanceAccess()` gesetzt ist: im Frontend die Instanz der Domain plus ihre
   lesbaren Instanzen, im Backend die Instanzen der Benutzergruppe.

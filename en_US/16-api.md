@@ -139,7 +139,7 @@ the overview.
 | `record.restore` | `record_id` | back from the recycle bin, as in the recycle bin module |
 | `record.message` | `record_id`, `to` (id or name), `subject`, `body` | internal message, the record is linked |
 | `record.preview_url` | `record_id`, `language` | preview address – only after `attach()` |
-| `record.batch` | `area_id`, `mode` (`edit`, `move`, `delete`), scope: `ids` \| `filter`/`filterop`/`filtermode` \| `all`; `data`, `relations`, `files` (edit), `target_area_id`, `mapping`, `auto_map` (move), `simulate`, `background` (`auto`, `yes`, `no`) | `total`, `done`, `failed`, `errors` per record – or `background.token`; extra right "batch processing" |
+| `record.batch` | `area_id`, `mode` (`edit`, `move`, `delete`), scope: `ids` \| `filter`/`filterop`/`filtermode` \| `all`; `data`, `relations`, `files`, `parent_id`, `previous_id` (edit – tree fields: the records are appended to the parent record or placed after the predecessor in their current order), `target_area_id`, `mapping`, `auto_map` (move), `simulate`, `background` (`auto`, `yes`, `no`) | `total`, `done`, `failed`, `errors` per record – or `background.token`; extra right "batch processing" |
 | `record.export_fields` | `area_id`, `type` (`csv`, `docx`) | selectable field keys with preselection and subfields |
 | `record.export` | `area_id`, `type` (`csv`, `docx`, `xml`), scope `ids` or `filter` (otherwise all), `fields`, `languages` (CSV: codes; DOCX: [from, to]), `options` (`header`, `bom`, `separator`, `enclosure`, `eol`; XML: `files`; DOCX: `split` = one record per file), `background` | `zip`, `path`, `size`, `records`, `valid_until` – or `background.token`; rights as in the form |
 | `record.exports` | – | existing export files |
@@ -154,7 +154,7 @@ the overview.
 | `template.*` | `area_id`, `id`, `data`, `simulate` | template areas; read templates (with code), create, change – trial run with `compile_errors` |
 | `audit.search` | `action`, `object_type`, `object_id`, `area_id`, `admin_id`, `origin`, `from`, `to` (Y-m-d or Y-m-d H:i, time zone of the user; `to` inclusive), `search`, `field`, `oldest_first`, `skip`, `limit` | entries without values (`fields` = changed fields), `total`, `next_skip`; for records and areas the current `state` (`active`, `trash`, `purged`) |
 | `audit.history` | `object_id`, `object_type` (default `record`), `oldest_first` (default true), `skip`, `limit`, `truncate`, `verify` | complete history with before/after (`AuditDiff::plainChanges()`), also of deleted and purged records; `object.state` with `deleted_at`, `expires_at`, `restorable`, `area_in_trash`; `verify` checks the hash chain (superusers) |
-| `trash.list` | `all` (superusers), `search`, `area_id`, `limit` | recycle bin like the module (roots of each delete operation): label, area, `deleted_at`, `deleted_by`, `children`, `expires_at`; superusers also get deleted areas – restore with `record.restore` |
+| `trash.list` | `all` (superusers), `search`, `area_id`, `limit` | recycle bin like the module (roots of each delete operation): label, area, `deleted_at`, `deleted_by`, `children`, `expires_at`; superusers also get deleted areas and input fields (`fields`: `field_id`, `name`, `type`, `area`, `counter_field`, `thumbnails`) – records back with `record.restore`, fields only via the module |
 
 **Audit log and recycle bin:** for superusers `audit.*` (module Audit, `AuditApi`)
 checks the same script as the interface (`Access::script('Audit', 'index.php')`) and shows
@@ -332,7 +332,8 @@ Rules:
 
 For tables such as language, status, instance, converter, scheduler or template there is
 a base class: `Camindo\Core\Api\DatasetApi` provides list, detail, create and change
-via `DatasetWriter`; the subclass defines dataset, scripts and fields and declares the
+via `DatasetWriter` (a row in the trash, `deleted` = 1, counts as not found there); the
+subclass defines dataset, scripts and fields and declares the
 methods (the attribute carries the name):
 
 ```php

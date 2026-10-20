@@ -142,7 +142,7 @@ Backend-Sprache (der Assistent nimmt `en_US`).
 | `record.restore` | `record_id` | aus dem Papierkorb zurück, wie im Modul Papierkorb |
 | `record.message` | `record_id`, `to` (Id oder Name), `subject`, `body` | interne Nachricht, der Datensatz ist verlinkt |
 | `record.preview_url` | `record_id`, `language` | Vorschau-Adresse – nur nach `attach()` |
-| `record.batch` | `area_id`, `mode` (`edit`, `move`, `delete`), Umfang: `ids` \| `filter`/`filterop`/`filtermode` \| `all`; `data`, `relations`, `files` (edit), `target_area_id`, `mapping`, `auto_map` (move), `simulate`, `background` (`auto`, `yes`, `no`) | `total`, `done`, `failed`, `errors` je Datensatz – bzw. `background.token`; Zusatzrecht „Stapelverarbeitung" |
+| `record.batch` | `area_id`, `mode` (`edit`, `move`, `delete`), Umfang: `ids` \| `filter`/`filterop`/`filtermode` \| `all`; `data`, `relations`, `files`, `parent_id`, `previous_id` (edit – Baumfelder: die Datensätze werden in ihrer bisherigen Reihenfolge ans Ende des Eltern-Datensatzes bzw. hinter den Vorgänger gestellt), `target_area_id`, `mapping`, `auto_map` (move), `simulate`, `background` (`auto`, `yes`, `no`) | `total`, `done`, `failed`, `errors` je Datensatz – bzw. `background.token`; Zusatzrecht „Stapelverarbeitung" |
 | `record.export_fields` | `area_id`, `type` (`csv`, `docx`) | wählbare Feldschlüssel mit Vorauswahl und Unterfeldern |
 | `record.export` | `area_id`, `type` (`csv`, `docx`, `xml`), Umfang `ids` bzw. `filter` (sonst alle), `fields`, `languages` (CSV: Codes; DOCX: [von, nach]), `options` (`header`, `bom`, `separator`, `enclosure`, `eol`; XML: `files`; DOCX: `split` = ein Datensatz je Datei), `background` | `zip`, `path`, `size`, `records`, `valid_until` – bzw. `background.token`; Rechte wie in der Maske |
 | `record.exports` | – | vorhandene Exportdateien |
@@ -157,7 +157,7 @@ Backend-Sprache (der Assistent nimmt `en_US`).
 | `template.*` | `area_id`, `id`, `data`, `simulate` | Template-Bereiche; Templates lesen (mit Quelltext), anlegen, ändern – Probelauf mit `compile_errors` |
 | `audit.search` | `action`, `object_type`, `object_id`, `area_id`, `admin_id`, `origin`, `from`, `to` (Y-m-d bzw. Y-m-d H:i, Zeitzone des Benutzers; `to` einschließlich), `search`, `field`, `oldest_first`, `skip`, `limit` | Einträge ohne Werte (`fields` = geänderte Felder), `total`, `next_skip`; zu Datensätzen und Bereichen der heutige Zustand `state` (`active`, `trash`, `purged`) |
 | `audit.history` | `object_id`, `object_type` (Standard `record`), `oldest_first` (Standard true), `skip`, `limit`, `truncate`, `verify` | ganzer Verlauf mit Vorher/Nachher (`AuditDiff::plainChanges()`), auch gelöschter und endgültig gelöschter Datensätze; `object.state` samt `deleted_at`, `expires_at`, `restorable`, `area_in_trash`; `verify` prüft die Hash-Kette (Superuser) |
-| `trash.list` | `all` (Superuser), `search`, `area_id`, `limit` | Papierkorb wie das Modul (Wurzeln je Löschvorgang): Bezeichnung, Bereich, `deleted_at`, `deleted_by`, `children`, `expires_at`; Superuser dazu gelöschte Bereiche – zurück mit `record.restore` |
+| `trash.list` | `all` (Superuser), `search`, `area_id`, `limit` | Papierkorb wie das Modul (Wurzeln je Löschvorgang): Bezeichnung, Bereich, `deleted_at`, `deleted_by`, `children`, `expires_at`; Superuser dazu gelöschte Bereiche und Eingabefelder (`fields`: `field_id`, `name`, `type`, `area`, `counter_field`, `thumbnails`) – Datensätze zurück mit `record.restore`, Felder nur über das Modul |
 
 **Audit-Log und Papierkorb:** `audit.*` (Modul Audit, `AuditApi`) prüft für Superuser
 dasselbe Script wie die Oberfläche (`Access::script('Audit', 'index.php')`) und zeigt
@@ -338,7 +338,8 @@ Regeln:
 
 Für Tabellen wie Sprache, Status, Instanz, Konverter, Zeitplaner oder Template gibt es
 eine Basisklasse: `Camindo\Core\Api\DatasetApi` liefert Liste, Detail, Anlegen und
-Ändern über `DatasetWriter`; die Unterklasse legt Dataset, Scripte und Felder fest und
+Ändern über `DatasetWriter` (eine Zeile im Papierkorb, `deleted` = 1, gilt dort als nicht
+gefunden); die Unterklasse legt Dataset, Scripte und Felder fest und
 deklariert die Methoden (das Attribut trägt den Namen):
 
 ```php

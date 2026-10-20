@@ -34,7 +34,9 @@ record (Metadaten)        field (Felddefinition)      fieldname (globale Namensr
 
 Der Primärschlüssel der `data_*`-Tabellen enthält deshalb `fieldname_id`, nicht
 `field_id`; `field_id` ist eine Zusatzspalte für den Fremdschlüssel beim Löschen einer
-Felddefinition. Unbenutzte `fieldname`-Einträge werden automatisch entfernt.
+Felddefinition. Unbenutzte `fieldname`-Einträge werden automatisch entfernt; ein Feld im
+Papierkorb zählt als Benutzer – sein Name bleibt mit seinem Typ reserviert, eine
+Wiederherstellung trifft nie auf einen Typkonflikt.
 
 Feldnamen genügen `^[a-z][a-z0-9_]+$` (Flag `name` in `Dataset`: mit einem Buchstaben
 beginnen, mindestens zwei Zeichen – `_…` bleibt Pseudo-Feldnamen wie `_default`
@@ -140,8 +142,9 @@ die Zeile, baut `Cms::createRecordCache()` alle Sprachen neu auf. Passwörter st
 nie, verschlüsselte Inhalte als Base64-Geheimtext.
 
 `Camindo\Core\RecordCache::clear($instanceId, $areaIds)` verwirft die Zeilen aller,
-einer Instanz oder einzelner Bereiche (`camindo.php cache records`, Werkzeuge → Server);
-Arbeitskopien (`tmp` = 1) bleiben, ihr `record_cache` ist der Arbeitsstand.
+einer Instanz oder einzelner Bereiche (`camindo.php cache records`, Werkzeuge → Server,
+Löschen und Wiederherstellen eines Felds); Arbeitskopien (`tmp` = 1) bleiben, ihr
+`record_cache` ist der Arbeitsstand.
 
 ## Kerntabellen
 
@@ -186,7 +189,8 @@ overview_template_id, login_name_field_id, login_password_field_id, deleted …
 | `custom_order` | Verknüpfungen manuell sortierbar |
 | `visibility_input`, `visibility_search`, `visibility_list` | wo das Feld erscheint |
 | `default_field`, `meta`, `multilingual` | Default-Feld; Metafeld; Inhalt je Sprache |
-| `details` (JSON) | u. a. `extension`/`extension_options`, `user_auth`, `profile_area_ids`, `lookup_detailed` |
+| `details` (JSON) | u. a. `extension`/`extension_options`, `user_auth`, `profile_area_ids`, `lookup_detailed`; im Papierkorb `trash_area_refs` |
+| `deleted`, `changed_at`, `changed_by` | Papierkorb: gelöscht, Zeitpunkt und Benutzer des Löschvorgangs |
 
 Die Konverter eines Thumbnail-Felds stehen sortiert in `rel_field_converter`.
 Typ und Mehrsprachigkeit eines bestehenden Felds ändert nur `Field::convert()` (Button
@@ -200,6 +204,22 @@ hochgeladener Dateien `Record::migrateWorkingCopyFiles()`), nur der Cache der pr
 Datensätze wird verworfen; `data_dft` zieht nach. Fällt ein Feld aus den
 Volltext-Quellen (etwa nach `encrypted`), werden die Volltexte aller nicht temporären
 Datensätze des Bereichs neu aufgebaut – auch der gelöschten.
+
+**Felder im Papierkorb.** `delete()` markiert ein Feld nur (`deleted = 1`); seine
+`data_*`-Zeilen und Einträge in `rel_*` bleiben bis zum endgültigen Löschen. Jede Abfrage
+auf `field` liest nur lebende Felder (`deleted = 0`): `virtualSchema()`, Masken, Listen,
+Export, Volltext-Quellen, `record_cache` (wird für den Bereich verworfen und ohne das
+Feld neu aufgebaut). `Cms::select()` blendet die `data_*`-Zeilen gelöschter Felder über
+`field_id NOT IN (…)` aus – die Ids liefert der Datei-Cache
+(`InstanceCache::deletedFieldIds()`), ohne gelöschte Felder bleibt das SQL unverändert.
+Mit einem Feld gehen sein Gegenfeld (`rel_field_id`) und seine Thumbnail-Felder
+(`parent_field_id`) in den Papierkorb; Verweise des Bereichs (`default_field_id`,
+`sort_field_id`, `login_*_field_id`) werden geleert und in `details.trash_area_refs`
+für die Wiederherstellung notiert, das Medienverzeichnis wird gesperrt. Solange das Feld
+im Papierkorb liegt, ist sein Name im Bereich belegt: Der Primärschlüssel
+`(language_id, record_id, fieldname_id)` ließe kein zweites Feld gleichen Namens zu.
+Ausnahme vom „nur lebende Felder“: Ein `parent_id`-Feld im Papierkorb erhält den Baum
+seines Bereichs (`isTreeArea()`), erst das endgültige Löschen macht ihn flach.
 
 ### `record` – Datensätze
 
@@ -261,7 +281,9 @@ statt. `area` führt einen Baum über die ganze Tabelle.
 Die Reihenfolge wird nicht als Zahl eingegeben, sondern als **vorangehender Datensatz**
 (`previous_id`); `TreeManagerTrait::calculatePosition()` rechnet daraus `position`.
 Umsortiert wird nur, wenn der Request `previous_id` oder einen anderen `parent_id`
-mitbringt – ein `load()` + `save()` lässt den Datensatz an seinem Platz.
+mitbringt – ein `load()` + `save()` lässt den Datensatz an seinem Platz. Ein neuer
+`parent_id` im eigenen Teilbaum (oder der Datensatz selbst) wird abgewiesen
+(`updateInTree()`, Fehler `error_parent_in_subtree`).
 
 | Methode (`TreeManagerTrait`) | Zweck |
 |---|---|
@@ -270,6 +292,8 @@ mitbringt – ein `load()` + `save()` lässt den Datensatz an seinem Platz.
 | `liftChildren()` | Kinder eine Ebene hochziehen |
 | `copySubtree()` | Teilbaum kopieren |
 | `subtreeIds($data, $mode)` | Ids eines Teilbaums in Bearbeitungsreihenfolge |
+| `isInSubtree($nodeId, $rootId, $areaId)` | ist `$nodeId` der Datensatz `$rootId` selbst oder einer seiner Nachfahren? |
+| `lastChildId($parentId, $areaId, $excludeId)` | letztes Kind einer Ebene – Vorgänger für „ans Ende anhängen“ |
 | `resetTreeFields($areaId)` / `initTreeArea($areaId)` | Bereich flach machen / Baum aufbauen |
 | `externalRebuildTree($areaId)` | `lft`/`rgt`/`depth` neu berechnen |
 
@@ -478,7 +502,7 @@ purge()    → Zeile entfernen, Dateien endgültig löschen  (Zeitplaner-Aufgabe
                                                           nach admin.trash_retention_days)
 ```
 
-Soft-Delete kennen `record`, `area` und `admin`; Tabellen ohne `deleted`-Spalte löschen
+Soft-Delete kennen `record`, `area`, `field` und `admin`; Tabellen ohne `deleted`-Spalte löschen
 sofort endgültig. Die Methoden (Einzelfunktionen und Orchestrierungen, Kaskaden,
 `MassDeletion`) beschreibt [03](03-dataset-api.md#löschen-und-wiederherstellen); hier
 nur, was das Datenmodell betrifft:
@@ -489,6 +513,14 @@ nur, was das Datenmodell betrifft:
   `changed_at`; `restore()` holt nur diese zurück.
 * **Dateien wandern mit:** `var/deleted/{field_id}_{record_id}_{version}.{ext}`; die
   `data_fil`-Zeilen bleiben bis zum endgültigen Löschen.
+* **Bereich → Felder:** Ein gelöschter Bereich nimmt seine Felder und die
+  Relationsfelder anderer Bereiche mit, deren `rel_area_id` auf ihn zeigt
+  (`Area::hookOnSoftDelete()`), mit demselben Zeitstempel. Endgültig löscht sie
+  `fk_field_area` bzw. `fk_field_rel_area` mit dem Bereich.
+* **Bereich → Datensätze:** Ebenso markiert der Bereich seine Datensätze. Endgültig
+  löscht `Area::hookOnDelete()` sie einzeln (Hooks, Dateien), bevor die Bereichszeile
+  verschwindet; `fk_record_area_id` (`ON DELETE CASCADE`) ist nur das Sicherheitsnetz für
+  einen Bereich, der direkt in der Datenbank gelöscht wird – Dateien bleiben dann liegen.
 
 ## Zeitzonen
 

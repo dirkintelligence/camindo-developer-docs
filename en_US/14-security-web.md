@@ -167,6 +167,10 @@ echo '<script' . $backend->nonceAttr() . '>…</script>';
 Not possible: raw `onclick` or `javascript:` in an `echo` or as an entire placeholder
 value, `eval`/`new Function`/`setTimeout('string')`, HTML with handlers via
 `innerHTML`.
+The nonce is valid for one page load only: marked handlers never belong in the database
+or in a cache that outlives the request. Stored HTML carries a neutral marker that only
+the output turns into a handler via `on()` (example: template links in `styled_code`,
+[06](06-template-compiler.md#editor-support-and-messages)).
 
 `security.backend_csp`: `enforce` (default) | `report` (everything runs, violations are
 only reported – for components being refactored) | `off`. Violations are reported by

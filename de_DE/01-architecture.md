@@ -154,7 +154,13 @@ Der generierte Block in `public/.htaccess` (zwischen `## CAMINDO SYNTAX START` u
    [06](06-template-compiler.md#template-zuweisung)), `record.template_id`,
    `area.default_template_id`.
 5. **Kanonische URL**: bei `instance.canonical = 1` wird jede abweichende Adresse mit
-   301 auf die eine gültige umgeleitet (Startseite ausgenommen).
+   301 auf die eine gültige umgeleitet – Protokoll, Haupt-Domain und Pfad. Das gilt auch
+   für Startseite und Übersichten: Die Startseite liegt bei mehreren Sprachen unter
+   `/{lang}/` (`Cms::startPath()`; ohne Sprache in der URL mit 302 und
+   `Vary: Accept-Language`, weil das Ziel von der Browsersprache abhängt), bei einer
+   Sprache unter `/`; die Übersicht unter `/{lang}/{prefix}` (`Cms::areaUrl()`). So landet
+   schon der erste Aufruf einer Neben-Domain auf der Haupt-Domain – Skripte und Module der
+   Seite kämen sonst von einer anderen Origin (CORS).
 6. Der Datensatz muss **veröffentlicht** sein (`Cms::publishedSql()`: Status 0,
    `online_at` erreicht); ein abgelaufener bleibt unter seiner Adresse erreichbar.
 7. Die kompilierte Datei `var/php/{area_id}/{name}.php` wird innerhalb einer IIFE
@@ -281,7 +287,7 @@ Nach Speichern, Löschen oder Import gilt einheitlich:
 | `AuditLog`, `AuditStore`, `AuditDiff` | Audit-Log |
 | `MediaProcessor`, `ProcessorFactory`, `Execute`, `BackgroundProcess`, `MassDeletion` | Medien und Hintergrundprozesse – [07](07-media-processing.md) |
 | `ComponentManager`, `SnippetCache`, `HtmlCache`, `HtaccessWriter`, `SystemState`, `Backup`, `UpdateCheck`, `SystemHealth` | Komponenten, Caches, Betrieb – [08](08-components-and-extensions.md), [09](09-installation-and-update.md) |
-| `Pagination`, `Email`, `History`, `Widgets`, `TriggerTemplates` | Blätterleisten, E-Mail-Versand, „zuletzt bearbeitet", Startseiten-Widgets, Trigger-Templates |
+| `Pagination`, `Email`, `History`, `Widgets`, `TriggerTemplates` | Blätterleisten, E-Mail-Versand, „zuletzt bearbeitet“, Startseiten-Widgets, Trigger-Templates |
 
 ### `Database` – der Result-Stack
 

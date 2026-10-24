@@ -6,7 +6,7 @@ weiterentwickeln**: Module, Medienprozessoren und Extensions schreiben, eigene
 
 Wer Inhalte pflegt, eine Installation betreut oder Templates schreibt, findet alles
 Nötige in den drei Handbüchern (Anwender, Administratoren, Template-Programmierer),
-die im Backend unter „Handbücher" erreichbar sind. Diese Dokumentation setzt deren
+die im Backend unter „Handbücher“ erreichbar sind. Diese Dokumentation setzt deren
 Begriffe voraus und beschreibt, was dahinter liegt.
 
 ## Voraussetzungen
@@ -29,7 +29,7 @@ Eigenentwicklungen. Externe Abhängigkeiten beschränken sich auf wenige Bibliot
 2. ***Datensätze*** (`record`) halten nur Metadaten; die Feldinhalte liegen typgetrennt
    in `data_txt`, `data_int`, `data_fil`, `data_rel` … (EAV-Muster mit
    Typ-Partitionierung).
-3. `Cms::select()` setzt diese „virtuellen Felder" zur Laufzeit per JOIN zusammen –
+3. `Cms::select()` setzt diese „virtuellen Felder“ zur Laufzeit per JOIN zusammen –
    Filtern und Sortieren fühlt sich an wie auf einer echten Tabelle.
 4. ***Templates*** werden in einer eigenen Befehlssprache `(CMS:…)` geschrieben, als
    Datei unter `var/templates/` gepflegt und beim Speichern **zu PHP kompiliert**; zur

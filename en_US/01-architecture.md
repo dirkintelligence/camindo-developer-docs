@@ -156,7 +156,13 @@ with a checksum – do not edit by hand, written by `HtaccessWriter`) contains:
    [06](06-template-compiler.md#template-assignment)), `record.template_id`,
    `area.default_template_id`.
 5. **Canonical URL**: with `instance.canonical = 1`, every deviating address is
-   redirected with 301 to the single valid one (except the start page).
+   redirected with 301 to the single valid one – protocol, main domain and path. This
+   also applies to the start page and overviews: with several languages the start page
+   lives at `/{lang}/` (`Cms::startPath()`; without a language in the URL with 302 and
+   `Vary: Accept-Language`, since the target depends on the browser language), with one
+   language at `/`; the overview at `/{lang}/{prefix}` (`Cms::areaUrl()`). So the very
+   first request on a secondary domain already lands on the main domain – otherwise the
+   page's scripts and modules would come from a different origin (CORS).
 6. The record must be **published** (`Cms::publishedSql()`: status 0, `online_at`
    reached); an expired record remains reachable at its address.
 7. The compiled file `var/php/{area_id}/{name}.php` is included inside an IIFE; `$cms`

@@ -302,7 +302,9 @@ Important parameters of `jumpList()`: `skip`, `maximum` (7), `boundaries` (alway
 first/last page), `separator`, `tpl_link`, `tpl_active`, `ellipsis`, `prefix`,
 `suffix`, `ifempty`. `Cms::$list_rows` comes from `admin.skiplist_default` (20). The
 backend has ready-made wrappers: `Backend::paginationTop()`, `paginationTopShort()`,
-`paginationBottom()`.
+`paginationBottom()`; `paginationTop()` and `paginationBottom()` take the page size of the
+query as an optional parameter (`0` = all, omitted = `Cms::$list_rows`). The record list
+uses the area setting `area.details.page_size`.
 
 `{href}` in the templates is HTML-escaped (`&amp;` instead of `&`), `'` and `\` are
 percent-encoded – see [14](14-security-web.md).

@@ -12,8 +12,8 @@ genau einer Benutzergruppe. Die Frontend-Community hat ein eigenes Rechtemodell
 | Modul | Benutzergruppe → Formular | Zugriff ja/nein je gelistetem Modul, darunter die **Zusatzrechte** des Moduls |
 | Instanz | dito | zugewiesene Instanzen; nur ihre Bereiche erscheinen |
 | Sprache | dito (instanzübergreifend) | kein Zugriff / lesen / lesen und schreiben – für Inhalte |
-| Status | dito und Status → Formular („Setzen dürfen") | welche Status die Benutzergruppe einem Datensatz geben darf (flacher Workflow); lesen dürfen alle alle Status. Neue Benutzergruppe: alle |
-| Bereich | Benutzergruppe → Reiter „Bereichsrechte" und Bereich → Reiter „Zugriff" | Lesen · eigene Benutzergruppe: Schreiben/Löschen · andere Benutzergruppe: Schreiben/Löschen · „Erweitert" (Owner ändern); Template-Bereiche nur Lesen/Schreiben; Ordner haben keine Rechte |
+| Status | dito und Status → Formular („Setzen dürfen“) | welche Status die Benutzergruppe einem Datensatz geben darf (flacher Workflow); lesen dürfen alle alle Status. Neue Benutzergruppe: alle |
+| Bereich | Benutzergruppe → Reiter „Bereichsrechte“ und Bereich → Reiter „Zugriff“ | Lesen · eigene Benutzergruppe: Schreiben/Löschen · andere Benutzergruppe: Schreiben/Löschen · „Erweitert“ (Owner ändern); Template-Bereiche nur Lesen/Schreiben; Ordner haben keine Rechte |
 
 Benutzergruppe **1 (Superuser)** darf alles, hat keine Rechte-Zeilen und ist nicht bearbeitbar.
 Verwaltung der Benutzergruppen, Bereichsrechte, XML-Import/-Export und einige Werkzeuge sind
@@ -24,7 +24,7 @@ Ableitungen, die überall gelten:
 * Leserecht auf einen Bereich = Leserecht auf alle seine Datensätze; Schreiben setzt
   Lesen voraus.
 * Die **Benutzergruppe eines Datensatzes** ist die Benutzergruppe seines Owners (`record.owner_id` →
-  `admin.group_id`); danach gelten die Rechte „eigene Benutzergruppe" oder „andere Benutzergruppe".
+  `admin.group_id`); danach gelten die Rechte „eigene Benutzergruppe“ oder „andere Benutzergruppe“.
 * **Verschieben** braucht im Quellbereich Schreiben und Löschen, im Zielbereich Schreiben.
 * **Ändern** braucht neben dem Schreibrecht das Recht, den **aktuellen Status** des
   Datensatzes zu setzen (`Access::recordWrite()`): Was die Benutzergruppe nicht in einen
@@ -33,7 +33,7 @@ Ableitungen, die überall gelten:
   mindestens einen Zielbereich wird ein Verknüpfungsfeld nicht gezeigt, beim Speichern
   nicht angefasst, und der Datensatz lässt sich weder verschieben noch kopieren.
 * Eine neu zugewiesene Instanz gibt der Benutzergruppe alle ihre Bereiche (volle Rechte ohne
-  „Erweitert") und Sprachen (lesen) frei; ein neu angelegter Bereich bekommt die Rechte
+  „Erweitert“) und Sprachen (lesen) frei; ein neu angelegter Bereich bekommt die Rechte
   der beim Anlegen gewählten Benutzergruppen, eine Bereichskopie die des Originals.
 
 ## Datenmodell
@@ -94,7 +94,7 @@ $access->statusWrite($statusId);         $access->settableStatusIds();
 $access->recordWrite($areaId, $ownerId, $statusId);   // areaWrite() + statusWrite()
 $access->interface('php');               $access->groupInterface($groupId, 'cli');   // ohne Laden
 $access->script('Tools', 'index_developer.php');
-$access->denied();                       // Meldung „Zugriff verweigert" und Ende
+$access->denied();                       // Meldung „Zugriff verweigert“ und Ende
 echo $access->deniedHtml();              // nur die Meldung
 ```
 
@@ -111,7 +111,7 @@ Ohne geladene Rechte (Frontend, Cron ohne Benutzer) ist `Access` **ungeladen und
 nichts** – das Frontend prüft über `RecordUser`, Cron läuft als System. Hintergrundjobs,
 die ein Benutzer im Backend auslöst (Import, Export, Stapelverarbeitung, Massenlöschung),
 laden seine Rechte (`Session::setCliAdmin($id, withAccess: true)`); sonst ließe sich
-jede Prüfung über „als Hintergrundprozess" umgehen.
+jede Prüfung über „als Hintergrundprozess“ umgehen.
 
 Rebuild der Gruppendateien: bei jeder Änderung an Benutzergruppen, Instanzen, Sprachen,
 Bereichen und Rechten automatisch; von Hand `InstanceCache::rebuild()` bzw. Werkzeuge →
@@ -174,7 +174,7 @@ Zusatzrechte im Core (Auszug):
 Jeder Datensatz gehört einem Benutzer (`record.owner_id`): beim Anlegen im Backend
 dem Session-Benutzer, im Frontend dem Parameter `owner` von `CMS:USER_REGISTER` /
 `CMS:USER_INPUT` bzw. `user.default_owner_id`. Ändern darf ihn nur, wer im Bereich
-„Erweitert" hat (`areaSetOwner()`) – und nur auf Benutzer der eigenen Benutzergruppe (Superuser:
+„Erweitert“ hat (`areaSetOwner()`) – und nur auf Benutzer der eigenen Benutzergruppe (Superuser:
 alle); `Record::hookOnSave()` setzt sonst den bisherigen Wert zurück.
 
 ## Rechte testen

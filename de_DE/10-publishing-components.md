@@ -6,7 +6,7 @@ Wie aus einem Modul, einem Prozessor oder einer Extension ein Paket wird, das an
 ## Wie Composer ein Paket findet
 
 Ein Composer-Paket ist ein Git-Repository mit einer `composer.json` im Wurzelverzeichnis
-und **Tags** als Versionen. Es gibt kein „Hochladen" – Composer lädt den Stand des Tags
+und **Tags** als Versionen. Es gibt kein „Hochladen“ – Composer lädt den Stand des Tags
 direkt aus dem Repository.
 
 | Weg | Eintrag im Projekt | Repository privat? | Bemerkung |
@@ -119,7 +119,7 @@ Den benötigten Core nennt die Komponente zweimal, mit gleichem Wert:
 'requires' => ['core' => '^9.0']                 settings.php – ComponentManager prüft beim install/activate/upgrade
 ```
 
-`^9.0` heißt „9.0.0 bis unter 10.0.0". Läuft die Komponente mit Core 10 unverändert, wird
+`^9.0` heißt „9.0.0 bis unter 10.0.0“. Läuft die Komponente mit Core 10 unverändert, wird
 daraus `^9.0 || ^10.0` in einem PATCH-Release; braucht sie Anpassungen, kommt ein
 MAJOR-Release mit `^10.0`. Unterstützte Syntax in `settings.php`
 (`Install\VersionConstraint`): `^`, `~`, `*`, `>=`, `<`, `||`, Komma.

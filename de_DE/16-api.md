@@ -142,7 +142,7 @@ Backend-Sprache (der Assistent nimmt `en_US`).
 | `record.restore` | `record_id` | aus dem Papierkorb zurück, wie im Modul Papierkorb |
 | `record.message` | `record_id`, `to` (Id oder Name), `subject`, `body` | interne Nachricht, der Datensatz ist verlinkt |
 | `record.preview_url` | `record_id`, `language` | Vorschau-Adresse – nur nach `attach()` |
-| `record.batch` | `area_id`, `mode` (`edit`, `move`, `delete`), Umfang: `ids` \| `filter`/`filterop`/`filtermode` \| `all`; `data`, `relations`, `files`, `parent_id`, `previous_id` (edit – Baumfelder: die Datensätze werden in ihrer bisherigen Reihenfolge ans Ende des Eltern-Datensatzes bzw. hinter den Vorgänger gestellt), `target_area_id`, `mapping`, `auto_map` (move), `simulate`, `background` (`auto`, `yes`, `no`) | `total`, `done`, `failed`, `errors` je Datensatz – bzw. `background.token`; Zusatzrecht „Stapelverarbeitung" |
+| `record.batch` | `area_id`, `mode` (`edit`, `move`, `delete`), Umfang: `ids` \| `filter`/`filterop`/`filtermode` \| `all`; `data`, `relations`, `files`, `parent_id`, `previous_id` (edit – Baumfelder: die Datensätze werden in ihrer bisherigen Reihenfolge ans Ende des Eltern-Datensatzes bzw. hinter den Vorgänger gestellt), `target_area_id`, `mapping`, `auto_map` (move), `simulate`, `background` (`auto`, `yes`, `no`) | `total`, `done`, `failed`, `errors` je Datensatz – bzw. `background.token`; Zusatzrecht „Stapelverarbeitung“ |
 | `record.export_fields` | `area_id`, `type` (`csv`, `docx`) | wählbare Feldschlüssel mit Vorauswahl und Unterfeldern |
 | `record.export` | `area_id`, `type` (`csv`, `docx`, `xml`), Umfang `ids` bzw. `filter` (sonst alle), `fields`, `languages` (CSV: Codes; DOCX: [von, nach]), `options` (`header`, `bom`, `separator`, `enclosure`, `eol`; XML: `files`; DOCX: `split` = ein Datensatz je Datei), `background` | `zip`, `path`, `size`, `records`, `valid_until` – bzw. `background.token`; Rechte wie in der Maske |
 | `record.exports` | – | vorhandene Exportdateien |
@@ -161,7 +161,7 @@ Backend-Sprache (der Assistent nimmt `en_US`).
 
 **Audit-Log und Papierkorb:** `audit.*` (Modul Audit, `AuditApi`) prüft für Superuser
 dasselbe Script wie die Oberfläche (`Access::script('Audit', 'index.php')`) und zeigt
-alles samt IP-Adressen. Alle anderen sehen – wie im Reiter „Änderungen" – nur Einträge zu
+alles samt IP-Adressen. Alle anderen sehen – wie im Reiter „Änderungen“ – nur Einträge zu
 Datensätzen in lesbaren Bereichen; maßgeblich ist `area_id` der Audit-Zeile
 (`AuditLog::search()` mit den Einschränkungen `object_types`/`area_ids`), damit die
 Prüfung auch nach dem Löschen greift. `audit.history` lädt den Datensatz nicht, sondern
@@ -226,7 +226,7 @@ Transaktion. Mit `simulate` wird nur geprüft.
   `api.base64_max_bytes`), `tmpfile` (unter `var/tmp`), `null` entfernt; mehrsprachig
   `{Code: …}`. Eine Datei per URL holt die API bewusst nicht.
 * Baum und Reihenfolge über `parent_id` und `previous_id`, der Owner über `owner_id`
-  (Recht „Owner anpassen"). Eingebettete Inhalte (`link`) ändert man über ihre eigene
+  (Recht „Owner anpassen“). Eingebettete Inhalte (`link`) ändert man über ihre eigene
   `record_id`.
 
 ## Aus Templates und Custom Tools
@@ -257,7 +257,7 @@ php Core/cron/camindo.php api logout
 ```
 
 Ausgabe ist JSON; der Exit-Code ist 1, wenn die API einen Fehler meldet. Die Benutzergruppe des
-Benutzers braucht die Oberfläche „Kommandozeile".
+Benutzers braucht die Oberfläche „Kommandozeile“.
 
 ## Eigene API-Methoden
 

@@ -11,7 +11,7 @@
 Ein Prozessor allein tut nichts. Erst der Konverter legt fest, auf welche Medientypen er
 anspringt und mit welchen Einstellungen; ein Thumbnail-Feld verweist auf einen oder
 mehrere Konverter. Prozessoren laufen nur, wenn ein Datensatz mit einer neuen Datei
-gespeichert wird (oder über Werkzeuge → Daten „Thumbnails neu erzeugen").
+gespeichert wird (oder über Werkzeuge → Daten „Thumbnails neu erzeugen“).
 
 ## Core-Prozessoren
 

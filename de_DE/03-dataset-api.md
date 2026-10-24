@@ -83,8 +83,8 @@ Er verhält sich wie `json` (Wert ist ein Array, `min`/`max` zählen Einträge,
 geschrieben: Die Kindklasse schreibt ihn in `hookOnSaved()` und liest ihn in
 `hookOnLoaded()`. `select()` kann danach weder filtern noch sortieren.
 
-**Datumswerte.** Datumsspalten sind `NOT NULL`. „Kein Datum" ist
-`Cms::DATE_MIN = '1000-01-01 00:00:00'`, „kein Ende" `Cms::DATE_MAX =
+**Datumswerte.** Datumsspalten sind `NOT NULL`. „Kein Datum“ ist
+`Cms::DATE_MIN = '1000-01-01 00:00:00'`, „kein Ende“ `Cms::DATE_MAX =
 '9000-01-01 00:00:00'`; beide gibt `_formatDate()` als Leerstring aus. Kleinere Werte
 werden abgewiesen, nicht stillschweigend angehoben. SQL-Funktionen (`NOW()`,
 `UTC_TIMESTAMP()` – nur aus `Cms::$funcWhitelist`) sind von `min`/`max` ausgenommen.
@@ -302,7 +302,7 @@ URL-Pfad samt Slug-Prefix (`Record::slugPathOk()`).
 
 Der Wert liegt als `language_id => eingabe` vor (`data[feld][{language_id}]` aus der
 Maske). Die Hauptsprache wird vollständig geprüft, eine weitere Sprache nur, wenn dort
-etwas eingegeben wurde – leer heißt „nicht übersetzt". Fehler werden unter
+etwas eingegeben wurde – leer heißt „nicht übersetzt“. Fehler werden unter
 `{feld}.{language_id}` registriert; `unique` gilt je Sprache. Ein einzelner Skalar
 (Import, CLI) gilt als Wert der Hauptsprache.
 

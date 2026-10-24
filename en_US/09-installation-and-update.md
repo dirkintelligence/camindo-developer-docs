@@ -181,7 +181,7 @@ second, unprotected path into the database.
 
 | Step (`--step=`) | Does |
 |---|---|
-| `requirements` | PHP version and extensions, write permissions, look for programs (`magick`, `ffmpeg`, `mysqldump`) |
+| `requirements` | PHP version and extensions, write permissions, look for programs (`magick`, `ffmpeg`, `mysqldump`); the connection test also checks the server's time zone tables (warning only: without them, `Database` sets the zone's current UTC offset, `Database::$timezoneFallback`, start page and `status` warn) |
 | `key` | create `.camindo.key` (32 random bytes, `0600`) – **losing it = encrypted content unreadable**. An existing file is kept |
 | `config` | `.camindo.php` from `Core/install/templates/camindo.php.dist` |
 | `sqlpwd` | `.sqlpwd` for `mysqldump` |
@@ -202,7 +202,9 @@ repeated with `--step=NAME` to repair a damaged installation.
 variable – `--db-host` / `CAMINDO_DB_HOST`, `--db-name`, `--db-user`, `--db-pass-file`,
 `--admin-name`, `--admin-email`, `--admin-pass-file`, `--admin-lang`, `--timezone`,
 `--locale`, `--https=y|n`, `--backend-domain`, `--web-user` (each `CAMINDO_…`). Passwords only from
-files or environment variables, never as an argument (process list).
+files (`--db-pass-file` / `CAMINDO_DB_PASS_FILE`, `--admin-pass-file` / `CAMINDO_ADMIN_PASS_FILE`,
+e.g. Docker secrets) or environment variables (`CAMINDO_DB_PASS`, `CAMINDO_ADMIN_PASS`), never as
+an argument (process list); a file wins over the variable with the value.
 `CAMINDO_DB_PASS` also applies at runtime ([13](13-security-authentication.md#secrets-from-the-environment)):
 if the password comes from there, the installer does not write it to `.camindo.php` and
 creates no `.sqlpwd`; with `CAMINDO_KEY`, no `.camindo.key` is created. With

@@ -45,6 +45,12 @@ trash. Names must match `^[a-z][a-z0-9_]+$`. If a whole instance directory is mi
 assignments are lost; better rename in the backend. Conversely, the backend creates,
 renames and moves files and directories.
 
+A template area in the trash keeps its files under `var/templates/.trash/{area_id}`;
+its name is free for a new area (e.g. from an import). Templates of a deleted area read
+their source code from the trash copy and can be neither saved nor moved. The final
+deletion removes only the trash copy – never the directory of a new area with the same
+name.
+
 `php Core/cron/camindo.php cache templates` recompiles all files
 (`Template::rebuildFiles()`) and synchronises afterwards.
 
@@ -362,7 +368,8 @@ remembered; an unknown reference counts as an empty value (`ifempty` applies).
 * **Overview (prefix only):** if the path is exactly an area's slug prefix in the
   request language and the area has an overview template (`area.overview_template_id`,
   `Cms::overviewAreaIdByPath()`), `Page` includes it without a record – like a template
-  chosen by the CMS, without the standalone flag and without canonical redirect.
+  chosen by the CMS, without the standalone flag; the canonical redirect targets
+  `Cms::areaUrl()`.
   `Cms::$overviewAreaId` holds the area; `CMS:URL` without `id` then points to the same
   overview (language switcher), `(CMS:URL area=…)` builds the address from elsewhere
   (`Cms::areaUrl()`). Without an overview template: 404. Instead of a record, `$cms`

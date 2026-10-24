@@ -79,7 +79,7 @@ Die Gruppen entsprechen Arrays in `Cms` (`textTypes`, `numericTypes`, `dateTypes
 **Sonderfälle**
 
 * `data_dft` – genau eine Zeile je Datensatz und Sprache mit dem Textinhalt des
-  ***Default-Felds*** des Bereichs (`area.default_field_id`). So lässt sich der „Titel"
+  ***Default-Felds*** des Bereichs (`area.default_field_id`). So lässt sich der „Titel“
   jedes Datensatzes mit einem JOIN holen, ohne zu wissen, welches Feld es ist
   (Pseudo-Feldname `_default` in `select()`). Ist das Default-Feld verschlüsselt, ein
   Passwort oder JSON, steht dort `ID {record_id}` – kein Klartext.
@@ -175,7 +175,8 @@ overview_template_id, login_name_field_id, login_password_field_id, deleted …
 * `overview_template_id`: Template für die Adresse, die nur aus dem Slug-Präfix
   besteht (`/de_DE/termine`) – eine Übersicht ohne Datensatz ([06](06-template-compiler.md#url-und-slug)).
 * `details` (JSON): u. a. `tabs` (mehrsprachige Maske mit Reitern), `slug_prefix` je
-  Sprache, `profile_area_ids` (`ugc`), `second_factor` (`profile`).
+  Sprache, `page_size` (Datensätze je Seite der Backend-Liste, `0` = alle, leer =
+  `admin.skiplist_default`), `profile_area_ids` (`ugc`), `second_factor` (`profile`).
 
 ### `field` – Eingabefelder
 
@@ -194,7 +195,7 @@ overview_template_id, login_name_field_id, login_password_field_id, deleted …
 
 Die Konverter eines Thumbnail-Felds stehen sortiert in `rel_field_converter`.
 Typ und Mehrsprachigkeit eines bestehenden Felds ändert nur `Field::convert()` (Button
-„Typ ändern"): Text ↔ Zahl wird zeilenweise umkopiert, `relation` ↔ `relation1` behält
+„Typ ändern“): Text ↔ Zahl wird zeilenweise umkopiert, `relation` ↔ `relation1` behält
 bei `…1` nur die erste Verknüpfung, ein- ↔ mehrsprachig stellt das `empty`-Kennzeichen
 bzw. die Dateien um. `conversionTargets()` nennt die möglichen Ziele,
 `conversionLossy()` warnt vor Datenverlust. Bearbeitungssperren hält die Umwandlung
@@ -267,9 +268,9 @@ tmp, origin_id, locked, deleted                            ← Arbeitskopien, Pa
 | Spalte | Rolle |
 |---|---|
 | `parent_id` | direkter Elternknoten |
-| `position` | Reihenfolge unter den Geschwistern |
+| `position` | Reihenfolge unter den Geschwistern – zählt **je Elternteil** 1..n |
 | `depth` | Ebene, **0-basiert** |
-| `lft`, `rgt` | Nested Set – Teilbäume ohne Rekursion |
+| `lft`, `rgt` | Nested Set – Teilbäume ohne Rekursion; `ORDER BY lft` ist die Baumreihenfolge des ganzen Bereichs |
 | `parent_ids` | JSON-Liste aller Vorfahren – Breadcrumbs ohne Abfrage |
 
 Bei `record` gehört jeder Baum **einem Inhaltsbereich**: `lft`/`rgt` beginnen je Bereich
@@ -295,7 +296,7 @@ mitbringt – ein `load()` + `save()` lässt den Datensatz an seinem Platz. Ein 
 | `isInSubtree($nodeId, $rootId, $areaId)` | ist `$nodeId` der Datensatz `$rootId` selbst oder einer seiner Nachfahren? |
 | `lastChildId($parentId, $areaId, $excludeId)` | letztes Kind einer Ebene – Vorgänger für „ans Ende anhängen“ |
 | `resetTreeFields($areaId)` / `initTreeArea($areaId)` | Bereich flach machen / Baum aufbauen |
-| `externalRebuildTree($areaId)` | `lft`/`rgt`/`depth` neu berechnen |
+| `externalRebuildTree($areaId)` | `lft`/`rgt`/`depth` neu berechnen (geschrieben werden nur geänderte Zeilen) |
 
 Enthält ein Dataset-Schema `parent_id`, **müssen** auch `parent_ids`, `lft`, `rgt`,
 `position` und `depth` darin stehen – sonst wirft der Konstruktor. Reparatur eines
@@ -311,7 +312,7 @@ Bestands: `php Core/cron/rebuild_trees.php`.
 | `pointer1` | gerichtet, höchstens ein Ziel |
 | `link` | gerichtet wie `pointer`, aber die Ziele **gehören** der Quelle (s. u.) |
 
-„Höchstens ein Ziel" setzt der Code an zwei Stellen durch: `createRelations()` weist
+„Höchstens ein Ziel“ setzt der Code an zwei Stellen durch: `createRelations()` weist
 mehrere Ziele für ein `…1`-Feld ab, und beim Check-in verliert ein Zieldatensatz, dessen
 Gegenfeld nur ein Ziel erlaubt, seine bisherige Verknüpfung
 (`TemporaryTrait::_enforceSingleRelations()`).
@@ -388,8 +389,8 @@ geschrieben wird er von `refreshStandardFulltext()` nach jedem Speichern
 (`refreshAffectedFulltext()`). `select()` filtert über den Feldnamen und braucht keine Felddefinition: `filter[fulltext]` wirkt
 in jedem Bereich und bereichsübergreifend; die Suchmasken bieten ihn von selbst an
 (`RecordBackendSearch`). Ein `fulltext` aus älteren Export-Dateien übergeht der Import.
-Anzeige: Datensatz-Info, Reiter „Metadaten" → „Volltext anzeigen"
-(`RecordBackendInfo::fulltext()`, alle Volltexte je Sprache); im Reiter „Inhalte"
+Anzeige: Datensatz-Info, Reiter „Metadaten“ → „Volltext anzeigen“
+(`RecordBackendInfo::fulltext()`, alle Volltexte je Sprache); im Reiter „Inhalte“
 erscheinen Volltextfelder nicht.
 
 ### Veraltet statt sofort neu (`FulltextState`)

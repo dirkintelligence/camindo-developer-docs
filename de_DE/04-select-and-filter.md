@@ -88,7 +88,7 @@ $cms->select(['relation' => 'any', 'dest_id' => 4902]);
 
 `filter[relation_any]=4902,4903` ist dasselbe als Filterwert (mehrere Ziele, ODER). Die
 Backend-Liste (`RecordBackendList`) reicht `relation` + `dest_id` aus dem Request geprüft
-weiter („Alle Verweise auf diesen Datensatz" im Metafeld-Reiter) und beschränkt ohne
+weiter („Alle Verweise auf diesen Datensatz“ im Metafeld-Reiter) und beschränkt ohne
 festen Bereich auf die lesbaren Bereiche der Benutzergruppe (`Backend::areaAccessSql()`). Das
 Suchfeld `_url` (Id, Slug mit/ohne Slug-Präfix oder URL) löst
 `RecordService::urlFilter()` in `record_id` bzw. `slug` (+ `area_id`, `instance_id`) auf.
@@ -149,7 +149,7 @@ Templates.
 | `henrik`, `=henrik` | gleich (Vorgabe), `*` ist Platzhalter |
 | `==henrik` | exakt gleich – `*` ist ein normales Zeichen |
 | `!henrik`, `!=henrik` | ungleich |
-| `!*mann` | endet nicht auf „mann" |
+| `!*mann` | endet nicht auf „mann“ |
 | `!!*mann` | ungleich dem Literal `*mann` |
 | `>100`, `>=100`, `<100`, `<=100` | Vergleich |
 | `=` bzw. `==` allein | leerer Wert; bei Zahlen `0` |
@@ -227,7 +227,7 @@ das Ende des Zeitraums: `>=2023` ab 01.01.2023 00:00:00, `<2023-06` bis 30.06.20
 Verglichen wird der deterministische HMAC (`data_enc.hash`), nicht der Geheimtext.
 Daraus folgt: nur exakte Gleichheit und Ungleichheit, byte-genau, keine Platzhalter,
 keine Bereiche. Ein Platzhalter oder Bereichsoperator ist ein **Fehler** und liefert
-nichts (`1=0`) – bewusst nicht „Bedingung weglassen", das gäbe alle Datensätze zurück.
+nichts (`1=0`) – bewusst nicht „Bedingung weglassen“, das gäbe alle Datensätze zurück.
 
 ### Volltextfelder
 
@@ -307,7 +307,9 @@ Wichtige Parameter von `jumpList()`: `skip`, `maximum` (7), `boundaries` (erste/
 Seite immer), `separator`, `tpl_link`, `tpl_active`, `ellipsis`, `prefix`, `suffix`,
 `ifempty`. `Cms::$list_rows` kommt aus `admin.skiplist_default` (20). Im Backend gibt es
 fertige Hüllen: `Backend::paginationTop()`, `paginationTopShort()`,
-`paginationBottom()`.
+`paginationBottom()`; `paginationTop()` und `paginationBottom()` nehmen als optionalen
+Parameter die Seitengröße der Abfrage (`0` = alle, ohne Angabe `Cms::$list_rows`). Die
+Datensatzliste verwendet die Einstellung `area.details.page_size` des Bereichs.
 
 `{href}` in den Vorlagen ist HTML-maskiert (`&amp;` statt `&`), `'` und `\` sind
 prozentkodiert – siehe [14](14-security-web.md).

@@ -29,7 +29,7 @@ braucht (Stylesheets der Editoren, Download einer Exportdatei, `file.php`,
 `preview.php`), kommt ohne Token aus und darf deshalb nur lesen.
 
 **Eingabemaske und Arbeitskopie:** Ein GET auf `record_edit.php` (Lesezeichen, F5, Link
-von außen, Frontend-Editing) zeigt nur einen Platzhalter mit der Schaltfläche „Bearbeiten";
+von außen, Frontend-Editing) zeigt nur einen Platzhalter mit der Schaltfläche „Bearbeiten“;
 erst ein POST legt Arbeitskopie und Sperre an. Aus der Oberfläche geöffnete Layer tragen
 ein Merkmal und laden die Maske sofort per POST – der Nutzer merkt nichts.
 
@@ -267,7 +267,7 @@ Backend-Domain, für alle Hauptdomains außer der, unter der das Backend läuft.
 **Abgleich mit allen Websites.** Ein Cookie für eine fremde Domain lässt sich weder per
 Ajax noch per iframe zuverlässig setzen (Drittanbieter-Cookies werden gesperrt bzw.
 partitioniert). Nach dem Speichern einer geänderten Einstellung – und über die Schaltfläche
-„Auf allen Websites übernehmen" – läuft der Browser deshalb als normale Navigation durch
+„Auf allen Websites übernehmen“ – läuft der Browser deshalb als normale Navigation durch
 die Websites: `FrontendHandover::fedSyncData()` signiert die Liste der Domains, den Modus
 (auch 0 = Cookie löschen) und die Rücksprung-Adresse ins Backend; der Parameter `c9hops`
 wählt nur Indizes aus dieser Liste (kein offener Redirect). `cApp.ui.fedSync()` prüft

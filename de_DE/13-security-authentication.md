@@ -140,8 +140,8 @@ einem Schlüsselwechsel, für Entwicklungsdaten):
   Namen der Session – dagegen helfen HTML-Filter und Script-Policy ([14](14-security-web.md)).
 * Arbeitskopien hängen am Benutzer; `admin_session_record` hält fest, welche zu welcher
   Session gehört. Abmelden verwirft nur die Arbeitskopien dieser Session; „auf allen
-  Geräten abmelden" alle Arbeitskopien und Sessions des Benutzers; „Alle anderen
-  Sitzungen beenden" (Geräte und Sitzungen) die Arbeitskopien der übrigen Sessions
+  Geräten abmelden“ alle Arbeitskopien und Sessions des Benutzers; „Alle anderen
+  Sitzungen beenden“ (Geräte und Sitzungen) die Arbeitskopien der übrigen Sessions
   (`Record::cancelOtherSessions()`) und diese Sessions.
 * Jede Session gehört zu einer ***Oberfläche*** (`admin_session.interface`: `backend`,
   `cli`, `php`), die in ihrer Signatur steckt. Die Backend-Einstiege laden nur
@@ -248,7 +248,7 @@ und nicht ausgewertet – es zählt der Besitz des Schlüssels, nicht die Herkun
   PEM, `alg`, Zähler, Transportwege, Bezeichnung), je Zeile signiert (`Integrity::
   passkeySignature()`, auch in `signAll()`), höchstens 20 je Konto (`Passkeys`).
 * **Entfernen** mit dem Passwort; ohne Passkeys und TOTP endet der eigene Faktor und die
-  Codes verfallen. „Zweiten Faktor zurücksetzen" durch einen Superuser entfernt App und
+  Codes verfallen. „Zweiten Faktor zurücksetzen“ durch einen Superuser entfernt App und
   Passkeys. Ereignisse `passkey_added`, `passkey_removed` gehen an den Notifier und ins
   Audit-Log.
 * **Selbsttest:** `php Core/cron/check_webauthn.php` – ein Software-Authenticator
@@ -392,12 +392,12 @@ verraten Arbeitszeiten, aber keine Änderungen).
   Logdateien vollständig nach und die Dateien unter `var/audit`
   (`AuditLog::anonymizeFileIps()`); gesenkt bringt nichts zurück.
 
-Anzeige: Reiter „Änderungen" der Detailansichten – Datensatz und jede andere
+Anzeige: Reiter „Änderungen“ der Detailansichten – Datensatz und jede andere
 Dataset-Info-Seite (Bereich, Feld, Template, Status, Instanz, Sprache, Konverter,
 Aufgabe, Komponente, Benutzergruppe; Benutzer nur Superuser) über `Backend::auditTabAdd()`,
 `auditTabActive()`, `auditHistory()` bzw. `infoAuditTabs()` für Seiten ohne eigene
 Reiter –, Modul Audit (Superuser),
-Reiter „Aktivitäten" der Detailansicht eines Benutzers (Superuser, `AdminBackend::audit()` →
+Reiter „Aktivitäten“ der Detailansicht eines Benutzers (Superuser, `AdminBackend::audit()` →
 `AuditBackend::adminActivity()`: zuletzt bearbeitete Datensätze über
 `AuditLog::recentObjects()`, darunter alle Einträge des Benutzers). Über die API:
 `audit.search` und `audit.history` ([16](16-api.md)) – ohne Superuser nur Datensätze

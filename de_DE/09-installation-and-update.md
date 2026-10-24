@@ -157,7 +157,7 @@ Regeln:
 * **Keine Backend-Klassen** (`Backend`, `Session`). Dataset-Klassen laufen mit neuem Code
   gegen ein halb migriertes Schema – im Zweifel reines SQL.
 * **Migrationen bauen keine Caches** – das macht `upgrade` am Ende.
-* Keine Seed-Zeile mit der Id 0 in Tabellen mit Eingabemaske (0 heißt dort „neu").
+* Keine Seed-Zeile mit der Id 0 in Tabellen mit Eingabemaske (0 heißt dort „neu“).
 
 **SQL-Modus.** Das Schema setzt den nicht-strikten Modus voraus: Viele `NOT NULL`-Spalten
 haben kein `DEFAULT`, INSERTs lassen sie weg, und einige Spalten haben die Vorgabe
@@ -226,7 +226,7 @@ Stammdaten einen Entwicklungsbestand (`dev.sql`, falls vorhanden).
 
 ```
 php Core/cron/camindo.php maintenance on        empfohlen
-composer update camindo/cms                     Dateien; der Hook meldet „core update pending"
+composer update camindo/cms                     Dateien; der Hook meldet „core update pending“
 php Core/cron/camindo.php upgrade               Datenbank und Laufzeit
 ```
 
@@ -246,7 +246,7 @@ Wartungsmodus stehen):
 8. Wartungsmodus aufheben (nur den eigenen, oder mit `--unlock`)
 
 `upgrade` ist **wiederholbar**: ohne Versionswechsel läuft nur der Laufzeitteil – das
-ist zugleich der Befehl „alles neu aufbauen" nach einem Deployment.
+ist zugleich der Befehl „alles neu aufbauen“ nach einem Deployment.
 
 **Rollback** ist ein Rezept, kein Befehl – DDL ist nicht zurückrollbar, und die Dateien
 gehören Composer:

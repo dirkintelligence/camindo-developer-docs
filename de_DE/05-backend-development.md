@@ -300,7 +300,7 @@ php Core/cron/camindo.php cache html --prefix=blog
 
 Im Backend: Werkzeuge → Entwickler. Die Builder sind `SnippetCache` und `HtmlCache`.
 Nach Änderungen an `install/settings.php`: `php Core/cron/camindo.php refresh` bzw.
-„Refresh" im Modul Component.
+„Refresh“ im Modul Component.
 
 ## Die Klasse `Backend`
 
@@ -383,7 +383,7 @@ Entwickeln sofort auf.
 **Leere Felder.** `serializeFiles()` lässt leere Werte weg, und ein ausgeschalteter
 Switch steht gar nicht im POST. Die Datensatz-Maske führt deshalb das versteckte Feld
 `shown` mit allen gerenderten Feldern; was dort steht, aber in `data[]` fehlt, gilt als
-geleert. Eigene Formulare, die „leer" vom „nicht angezeigt" unterscheiden müssen,
+geleert. Eigene Formulare, die „leer“ vom „nicht angezeigt“ unterscheiden müssen,
 brauchen denselben Mechanismus. Aus demselben Grund überträgt ein
 `<button type="submit" name="x" value="y">` nichts – Aktionen gehören in ein
 `<input type="hidden">`, das ein Handler setzt.
@@ -500,7 +500,7 @@ Hintergrundprozess (`Core/cron/record_export.php`, `record_import.php`); das Erg
 kommt als interne Nachricht.
 
 Für **Template-Sätze**, die in eine fremde Datenbank übertragen werden sollen, markiert
-der Export (Option „Templates für Import in Fremddatenbank optimieren") Verweise in den
+der Export (Option „Templates für Import in Fremddatenbank optimieren“) Verweise in den
 Parametern der `(CMS:…)`-Befehle:
 
 ```

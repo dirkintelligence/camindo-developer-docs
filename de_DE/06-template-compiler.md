@@ -46,6 +46,13 @@ Dateisystem ist Löschen + Anlegen – Zuweisungen gehen verloren; umbenennen al
 im Backend. Umgekehrt legt das Backend Dateien und Verzeichnisse an, benennt sie um und
 verschiebt sie.
 
+Ein Template-Bereich im Papierkorb liegt mit seinen Dateien unter
+`var/templates/.trash/{area_id}`; sein Name ist frei für einen neuen Bereich (z. B. per
+Import). Templates eines gelöschten Bereichs lesen ihren Quelltext aus der
+Papierkorb-Kopie und lassen sich nicht speichern oder verschieben. Das endgültige
+Löschen entfernt nur die Papierkorb-Kopie – nie das Verzeichnis eines gleichnamigen
+neuen Bereichs.
+
 `php Core/cron/camindo.php cache templates` kompiliert alle Dateien neu
 (`Template::rebuildFiles()`) und gleicht danach ab.
 
@@ -222,7 +229,7 @@ Schlüssel setzt:
 * Die Methode bekommt das Parameter-Array `$_a` und gibt entweder Text aus bzw. zurück
   oder – bei Befehlen mit `include` – den Namen des einzubindenden Templates.
 
-Ist das Modul inaktiv, kennt der Parser seine Befehle nicht („Unknown command"), und
+Ist das Modul inaktiv, kennt der Parser seine Befehle nicht („Unknown command“), und
 ein bereits kompiliertes Template scheitert am Zugriff auf den Dienst. Beispiel:
 das Modul `Pdf`.
 
@@ -358,19 +365,19 @@ und gemerkt; ein unbekannter Verweis gilt als leerer Wert (`ifempty` greift).
   Feld; `Record::hookOnSave()` füllt es aus dem Default-Feld, wenn es leer ist
   (`Cms::textToUri()`: Tags entfernt, Sonderzeichen zu Bindestrichen, Kleinschreibung,
   Umlaute und `/` bleiben, höchstens `system.link_length` Zeichen).
-* **Ein Slug ist nie eine reine Ziffernfolge** – aus „2024" wird `-2024`. `Page`
+* **Ein Slug ist nie eine reine Ziffernfolge** – aus „2024“ wird `-2024`. `Page`
   unterscheidet nach derselben Regel: reine Ziffern = `record_id`, alles andere = Slug.
 * Ein gesetzter Slug wird **nicht** nachgeführt, wenn sich der Titel ändert – geteilte
   Links bleiben gültig.
 * **Slug-Prefix:** Ein Bereich kann je Sprache ein Präfix führen
   (`area.details.slug_prefix`), das vor den Slug gesetzt wird: `/de_DE/farben/blau`.
   Eindeutig sein muss der ganze Pfad (`Record::slugPathOk()`); zwei Treffer für einen
-  Pfad beantwortet `Page` mit „Ambiguous path".
+  Pfad beantwortet `Page` mit „Ambiguous path“.
 * **Übersicht (Präfix allein):** Ist der Pfad genau der Slug-Präfix eines Bereichs in
   der Sprache des Aufrufs und hat der Bereich ein Übersichts-Template
   (`area.overview_template_id`, `Cms::overviewAreaIdByPath()`), bindet `Page` es ohne
-  Datensatz ein – wie ein vom CMS gewähltes Template, ohne Standalone-Flag und ohne
-  kanonische Umleitung. `Cms::$overviewAreaId` hält den Bereich; `CMS:URL` ohne `id`
+  Datensatz ein – wie ein vom CMS gewähltes Template, ohne Standalone-Flag; die
+  kanonische Umleitung zielt auf `Cms::areaUrl()`. `Cms::$overviewAreaId` hält den Bereich; `CMS:URL` ohne `id`
   verweist dann auf dieselbe Übersicht (Sprachumschalter), `(CMS:URL area=…)` baut die
   Adresse von außen (`Cms::areaUrl()`). Ohne Übersichts-Template: 404. `$cms` hält
   statt eines Datensatzes die Angaben des Bereichs (`Page::overviewData()`):
@@ -406,7 +413,7 @@ braucht eine Berechtigung:
 | `template.standalone` | darf **ohne** Datensatz aufgerufen werden (`/0,{name}`) |
 | `template.type = 'scheduler'` | nie über eine Adresse, nur vom Zeitplaner ([07](07-media-processing.md#zeitplaner-modul-scheduler)) |
 
-Ohne Berechtigung endet der Request mit „Invalid template request".
+Ohne Berechtigung endet der Request mit „Invalid template request“.
 
 ## Templates im Backend
 
@@ -479,7 +486,7 @@ Fehler mit Zeilennummer (unbekannter Befehl, unbekannter Parameter, fehlende Kla
 und **Hinweise** (`TemplateParserTrait::inlineHandlerWarnings()`, gelb dargestellt):
 `<script>` ohne `(CMS:NONCE)` sowie `on…`-Attribute und `javascript:`-Adressen im
 HTML-Teil – beides blockiert eine aktive Script-Policy. Das Widget
-„Template-Meldungen" listet alle Templates mit Meldungen.
+„Template-Meldungen“ listet alle Templates mit Meldungen.
 
 `TemplateParserTrait::styleCode()` liefert dasselbe Markup ohne zu kompilieren und ohne
 Template-Links. Das Modul Docs färbt damit die ```` ```cms ````-Blöcke der Handbücher

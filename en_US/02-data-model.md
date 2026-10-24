@@ -174,7 +174,8 @@ overview_template_id, login_name_field_id, login_password_field_id, deleted …
 * `overview_template_id`: template for the address that consists only of the slug
   prefix (`/en_US/events`) – an overview without a record ([06](06-template-compiler.md#url-and-slug)).
 * `details` (JSON): among others `tabs` (multilingual form with tabs), `slug_prefix`
-  per language, `profile_area_ids` (`ugc`), `second_factor` (`profile`).
+  per language, `page_size` (records per page of the backend list, `0` = all, empty =
+  `admin.skiplist_default`), `profile_area_ids` (`ugc`), `second_factor` (`profile`).
 
 ### `field` – input fields
 
@@ -265,9 +266,9 @@ tmp, origin_id, locked, deleted                            ← working copies, t
 | Column | Role |
 |---|---|
 | `parent_id` | direct parent node |
-| `position` | order among siblings |
+| `position` | order among siblings – counts 1..n **per parent** |
 | `depth` | level, **0-based** |
-| `lft`, `rgt` | nested set – subtrees without recursion |
+| `lft`, `rgt` | nested set – subtrees without recursion; `ORDER BY lft` is the tree order of the whole area |
 | `parent_ids` | JSON list of all ancestors – breadcrumbs without a query |
 
 For `record`, every tree belongs to **one content area**: `lft`/`rgt` start at 1 in
@@ -292,7 +293,7 @@ record itself) is refused (`updateInTree()`, error `error_parent_in_subtree`).
 | `isInSubtree($nodeId, $rootId, $areaId)` | is `$nodeId` the record `$rootId` itself or one of its descendants? |
 | `lastChildId($parentId, $areaId, $excludeId)` | last child of a level – predecessor for "append at the end" |
 | `resetTreeFields($areaId)` / `initTreeArea($areaId)` | flatten an area / build its tree |
-| `externalRebuildTree($areaId)` | recompute `lft`/`rgt`/`depth` |
+| `externalRebuildTree($areaId)` | recompute `lft`/`rgt`/`depth` (only changed rows are written) |
 
 If a dataset schema contains `parent_id`, it **must** also contain `parent_ids`, `lft`,
 `rgt`, `position` and `depth` – otherwise the constructor throws. Repairing existing

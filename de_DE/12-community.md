@@ -1,7 +1,7 @@
 # 12 – Frontend-Community
 
-„Frontend-User" ist in camindo der registrierte Website-Besucher mit Konto – nicht der
-Backend-Benutzer, der heißt schlicht „Benutzer". Ein Frontend-User hat **keine eigene
+„Frontend-User“ ist in camindo der registrierte Website-Besucher mit Konto – nicht der
+Backend-Benutzer, der heißt schlicht „Benutzer“. Ein Frontend-User hat **keine eigene
 Tabelle**: sein Abbild im CMS, der Profil-Datensatz, ist ein
 Datensatz in einem Bereich vom Typ `profile`, seine Beiträge sind Datensätze in Bereichen
 vom Typ `ugc`. Gelesen wird über `Cms::select()`, geschrieben über `Record` –
@@ -32,7 +32,7 @@ Template-Programmierer; hier steht, was dahinter passiert.
 |---|---|
 | `record.user_id` | Besitzer im Frontend = Profil-Datensatz; Grundlage der Besitzprüfung |
 | `record.owner_id` | Besitzer im Backend (Benutzer), siehe [11](11-permissions.md#owner) |
-| `record.status_id = 2` | „unbestätigt" – nach der Registrierung, bis zur Bestätigung |
+| `record.status_id = 2` | „unbestätigt“ – nach der Registrierung, bis zur Bestätigung |
 | `record.needs_review` | 1 bei allem, was ein Frontend-User anlegt oder ändert |
 | `user_session`, `user_basket`, `user_token`, `user_login_attempt` | Sessions, Warenkorb, Einmal-Tokens, Fehlversuche |
 | `user_second_factor`, `user_recovery_code` | zweiter Faktor |
@@ -71,11 +71,11 @@ zählt **jede** Anfrage in einem gleitenden Fenster, Grenzen in
 
 | Bucket | Vorgabe | wofür |
 |---|---|---|
-| `pw_value`, `pw_ip` | 3 / h, 10 / h | „Passwort vergessen" je eingegebenem Wert bzw. Herkunft |
+| `pw_value`, `pw_ip` | 3 / h, 10 / h | „Passwort vergessen“ je eingegebenem Wert bzw. Herkunft |
 | `register_ip`, `register_value` | 5 / h, 3 / Tag | Registrierung je Herkunft bzw. E-Mail |
 | `mail_instance` | 200 / h | Mails aus `USER_PW` + `USER_REGISTER` je Instanz |
 | `login_ip` | 30 / 10 min | Fehlanmeldungen je Herkunft über alle Namen |
-| `login_code` | 3 / 10 min | „Neuen Code senden" je Profil |
+| `login_code` | 3 / 10 min | „Neuen Code senden“ je Profil |
 | `email_ip` | 5 / h | `CMS:EMAIL throttle=true` |
 | `zip_ip` | 30 / h | neu erzeugte Archive von `CMS:ZIP` je Herkunft (Treffer im Zwischenspeicher zählen nicht) |
 
@@ -119,7 +119,7 @@ Uploads unter demselben Namen in `$_FILES` – dieselbe Form wie die Backend-Mas
 | `USER_2FA` | zweiten Faktor einrichten, wechseln, abschalten, neue Wiederherstellungscodes |
 | `USER_LOGOUT` | Session beenden |
 | `USER_REGISTER` / `USER_REGISTER_CONFIRM` | Profil anlegen (Status 2) / Token einlösen (Status 0) |
-| `USER_PW` | Reset-Token für „Passwort vergessen" in `$set['hash']` |
+| `USER_PW` | Reset-Token für „Passwort vergessen“ in `$set['hash']` |
 | `USER_INPUT` | Datensatz anlegen oder ändern (s. u.) |
 | `USER_DELETE` | eigenen Datensatz oder das eigene Profil in den Papierkorb |
 | `USER_BASKET` | Warenkorb (s. u.) |
@@ -127,7 +127,7 @@ Uploads unter demselben Namen in `$_FILES` – dieselbe Form wie die Backend-Mas
 | `USER_PASSWORD_RULES` | Passwort-Richtlinie als JSON für die Extension `Password` im Frontend |
 
 **Kein `USER_*`-Befehl verschickt selbst E-Mails.** Freischalt-Link, Reset-Link,
-Anmeldecode und Hinweise („neues Gerät", „Passwort geändert") versendet das
+Anmeldecode und Hinweise („neues Gerät“, „Passwort geändert“) versendet das
 Erfolgstemplate mit `CMS:EMAIL` – die Befehle legen Token, Codes und Ereignisse in
 `$set` ab. Wer den Code per SMS will, ruft im Template seinen SMS-Dienst statt
 `CMS:EMAIL`.
@@ -190,7 +190,7 @@ zählen im `LoginGuard` auf denselben Namen, nach drei verfällt die wartende An
 und meldet dann vollständig an. Der Zähler des `LoginGuard` wird erst nach vollständiger
 Anmeldung geleert. TOTP-Secret verschlüsselt (`Crypt::encrypt`, AAD `utotp|{id}`),
 Replay-Sperre über den letzten Zeitschritt, zehn Wiederherstellungscodes als HMAC.
-Zurücksetzen im Backend: Detailansicht des Profils → „Zweiter Faktor".
+Zurücksetzen im Backend: Detailansicht des Profils → „Zweiter Faktor“.
 
 ## Geschützte Medien
 

@@ -179,7 +179,7 @@ zweiter, ungeschützter Weg in die Datenbank.
 
 | Schritt (`--step=`) | Tut |
 |---|---|
-| `requirements` | PHP-Version und -Erweiterungen, Schreibrechte, Programme (`magick`, `ffmpeg`, `mysqldump`) suchen |
+| `requirements` | PHP-Version und -Erweiterungen, Schreibrechte, Programme (`magick`, `ffmpeg`, `mysqldump`) suchen; der Verbindungstest prüft auch die Zeitzonentabellen des Servers (nur Warnung: ohne sie setzt `Database` den aktuellen UTC-Versatz der Zone, `Database::$timezoneFallback`, Startseite und `status` warnen) |
 | `key` | `.camindo.key` erzeugen (32 Zufallsbytes, `0600`) – **Verlust = verschlüsselte Inhalte unlesbar**. Eine vorhandene Datei bleibt |
 | `config` | `.camindo.php` aus `Core/install/templates/camindo.php.dist` |
 | `sqlpwd` | `.sqlpwd` für `mysqldump` |
@@ -200,7 +200,10 @@ setzt bewusst neu auf (Datenbank wird geleert). Einzelne Schritte lassen sich mi
 Umgebungsvariable – `--db-host` / `CAMINDO_DB_HOST`, `--db-name`, `--db-user`,
 `--db-pass-file`, `--admin-name`, `--admin-email`, `--admin-pass-file`, `--admin-lang`,
 `--timezone`, `--locale`, `--https=y|n`, `--backend-domain`, `--web-user` (jeweils `CAMINDO_…`).
-Passwörter nur aus Dateien oder Umgebungsvariablen, nie als Argument (Prozessliste).
+Passwörter nur aus Dateien (`--db-pass-file` / `CAMINDO_DB_PASS_FILE`, `--admin-pass-file` /
+`CAMINDO_ADMIN_PASS_FILE`, z. B. Docker-Secrets) oder Umgebungsvariablen (`CAMINDO_DB_PASS`,
+`CAMINDO_ADMIN_PASS`), nie als Argument (Prozessliste); eine Datei geht der Variablen mit dem
+Wert vor.
 `CAMINDO_DB_PASS` gilt auch im Betrieb ([13](13-security-authentication.md#geheimnisse-aus-der-umgebung)):
 Kommt das Passwort von dort, schreibt der Installer es nicht in `.camindo.php` und legt
 keine `.sqlpwd` an; mit `CAMINDO_KEY` entsteht keine `.camindo.key`.

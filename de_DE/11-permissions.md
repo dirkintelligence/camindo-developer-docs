@@ -40,7 +40,8 @@ Ableitungen, die überall gelten:
 
 ```
 group                 group_id, label, details JSON {"modules": {"Record": ["batch"], "Tools": []},
-                                                    "interfaces": ["backend", "php"]}, sig
+                                                    "interfaces": ["backend", "php"],
+                                                    "assignable_groups": [3]}, sig
 rel_group_instance    group_id, instance_id                                     (Zeile = Zugriff)
 rel_group_area        group_id, area_id, group_write, group_delete,
                       other_write, other_delete, set_owner, sig                 (Zeile = Leserecht)
@@ -51,7 +52,9 @@ record.owner_id       Besitzer im Backend (FK admin, ON DELETE SET NULL)
 
 `group.details.modules`: Schlüssel vorhanden = Modulzugriff, Werte = gewährte
 Zusatzrechte. `group.details.interfaces`: erlaubte ***Oberflächen*** aus
-`Access::INTERFACES` (`backend`, `cli`, `php`); fehlt der Schlüssel, nur `backend`. Alle Rechte-Zeilen sind **signiert** – eine per SQL eingefügte oder
+`Access::INTERFACES` (`backend`, `cli`, `php`); fehlt der Schlüssel, nur `backend`.
+`group.details.assignable_groups`: ***untergeordnete Benutzergruppen*** (siehe
+[unten](#untergeordnete-benutzergruppen)). Alle Rechte-Zeilen sind **signiert** – eine per SQL eingefügte oder
 geänderte Zeile gilt als nicht vorhanden ([13](13-security-authentication.md#signaturen)).
 
 Sprachrechte nimmt `Group::save()` je Sprache als Stufe (`Group::LANGUAGE_NONE|READ|WRITE`)
@@ -93,6 +96,7 @@ $access->languageRead($languageId);      $access->writableLanguageIds();
 $access->statusWrite($statusId);         $access->settableStatusIds();
 $access->recordWrite($areaId, $ownerId, $statusId);   // areaWrite() + statusWrite()
 $access->interface('php');               $access->groupInterface($groupId, 'cli');   // ohne Laden
+$access->assignableGroupIds();           $access->groupAssignable($groupId);         // Modul Admin
 $access->script('Tools', 'index_developer.php');
 $access->denied();                       // Meldung „Zugriff verweigert“ und Ende
 echo $access->deniedHtml();              // nur die Meldung
@@ -168,6 +172,23 @@ Zusatzrechte im Core (Auszug):
 | `Record` | `import_csv`, `import_media`, `export_csv`, `import_docx`, `export_docx`, `batch`, `personal_data` |
 | `Admin` | `admin_read_group`, `admin_read_other`, `admin_create`, `admin_change` |
 | `Tools` | `server`, `database`, `data`, `developer` (je Reiter) |
+
+## Untergeordnete Benutzergruppen
+
+Die Zusatzrechte `admin_create` und `admin_change` gelten für die eigene Benutzergruppe
+**und** ihre untergeordneten Benutzergruppen (`group.details.assignable_groups`, im
+Gruppenformular „Untergeordnete Benutzergruppen“); `admin_read_group` ebenso.
+`Group::hookOnSave()` behält nur bestehende Gruppen, nie die Superuser-Gruppe und nie die
+Gruppe selbst. Die Gruppendatei führt `assignable_group_ids` = eigene Gruppe plus diese
+(Superuser: alle); eine später gelöschte Gruppe fällt dort heraus.
+
+* `Access::groupAssignable($groupId)` entscheidet, ob ein Benutzer dieser Gruppe angelegt,
+  geändert, gelesen und ob ihm diese Gruppe gegeben werden darf.
+* `AdminBackend` zeigt Nicht-Superusern nur diese Gruppen zur Auswahl. Beim Speichern
+  ersetzt `_assignableGroupId()` eine nicht erlaubte Gruppe aus dem Formular durch die
+  eigene (Anlegen) bzw. die gespeicherte (Ändern) – ein manipuliertes Formular erreicht
+  weder eine fremde noch die Superuser-Gruppe.
+* Die Unterordnung ist nicht transitiv.
 
 ## Owner
 

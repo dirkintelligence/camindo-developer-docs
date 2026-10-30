@@ -63,7 +63,7 @@ ptr_ (pointer)  pn1_ (pointer1)  rel_ (relation)  rn1_ (relation1)  lnk_ (link)
 | `file` | `data_fil` | eigene Spalten, s. u. | Array |
 | `float` | `data_flt` | `double` | numerisch |
 | `fulltext` | `data_ftx` | `mediumtext` + FULLTEXT-Index | – |
-| `id` | `data_rid` | `bigint unsigned` (FK `record`) | numerisch |
+| `id` | `data_rid` | `bigint unsigned` (FK `record`), ohne Verweis `NULL` | numerisch |
 | `integer` | `data_int` | `bigint` | numerisch |
 | `json` | `data_jsn` | `mediumtext` + Multi-Value-Index | Array |
 | `password` | `data_pwd` | `varchar(255)` – Hash, nie im Cache | Text |
@@ -114,7 +114,14 @@ Mehrsprachig sein können `bit`, `chars`, `currency`, `datetime`, `decimal`,
 `encrypted`, `float`, `integer`, `json`, `text`, `time`, `timestampl` und `file`. Nicht:
 `fulltext` (wird erzeugt), Relationen, `id`, `password` und Metafelder.
 
-Geschrieben werden die Zeilen von `VirtualFieldsTrait::saveVirtualFields()`. Ändert
+Geschrieben werden die Zeilen von `VirtualFieldsTrait::saveVirtualFields()`. Ein
+**neues Feld** in einem Bereich mit Datensätzen schreibt `Field::fillExistingRecords()`
+sofort für alle nicht temporären Datensätze (auch im Papierkorb) und alle Sprachen den
+Leerwert seines Typs: `''` (`chars`, `text`, `encrypted` verschlüsselt), `[]` (`json`),
+`0` (Zahlen, `bit`), `Cms::DATE_MIN` (`datetime`, `timestampl`), `00:00:00` (`time`),
+`NULL` (`id`); mehrsprachig mit `empty` = 1 außer in der Hauptsprache. Keine Zeilen
+bekommen Relationen, `file`, `password`, `fulltext` und Felder auf Meta-Spalten; der
+`record_cache` des Bereichs wird verworfen. Ändert
 sich die Sprachliste einer Instanz, zieht `LanguageData` den Bestand nach (neue Sprache:
 Zeilen der Hauptsprache kopieren; entfernte Sprache: Zeilen, `record_cache` und
 `privacy_template` löschen, eigene Dateien löschen – auch im Papierkorb –, Datei-Fallbacks

@@ -39,7 +39,8 @@ Derivations that apply everywhere:
 
 ```
 group                 group_id, label, details JSON {"modules": {"Record": ["batch"], "Tools": []},
-                                                    "interfaces": ["backend", "php"]}, sig
+                                                    "interfaces": ["backend", "php"],
+                                                    "assignable_groups": [3]}, sig
 rel_group_instance    group_id, instance_id                                     (row = access)
 rel_group_area        group_id, area_id, group_write, group_delete,
                       other_write, other_delete, set_owner, sig                 (row = read right)
@@ -51,6 +52,8 @@ record.owner_id       owner in the backend (FK admin, ON DELETE SET NULL)
 `group.details.modules`: key present = module access, values = granted extra rights.
 `group.details.interfaces`: permitted ***interfaces*** from `Access::INTERFACES`
 (`backend`, `cli`, `php`); without the key, only `backend`.
+`group.details.assignable_groups`: ***subordinate user groups*** (see
+[below](#subordinate-user-groups)).
 All rights rows are **signed** – a row inserted or changed via SQL counts as not present
 ([13](13-security-authentication.md#signatures)).
 
@@ -94,6 +97,7 @@ $access->languageRead($languageId);      $access->writableLanguageIds();
 $access->statusWrite($statusId);         $access->settableStatusIds();
 $access->recordWrite($areaId, $ownerId, $statusId);   // areaWrite() + statusWrite()
 $access->interface('php');               $access->groupInterface($groupId, 'cli');   // without loading
+$access->assignableGroupIds();           $access->groupAssignable($groupId);         // module Admin
 $access->script('Tools', 'index_developer.php');
 $access->denied();                       // "access denied" message and exit
 echo $access->deniedHtml();              // just the message
@@ -168,6 +172,23 @@ Extra rights in the core (excerpt):
 | `Record` | `import_csv`, `import_media`, `export_csv`, `import_docx`, `export_docx`, `batch`, `personal_data` |
 | `Admin` | `admin_read_group`, `admin_read_other`, `admin_create`, `admin_change` |
 | `Tools` | `server`, `database`, `data`, `developer` (one per tab) |
+
+## Subordinate user groups
+
+The extra rights `admin_create` and `admin_change` apply to the own user group **and**
+its subordinate user groups (`group.details.assignable_groups`, in the group form
+“Subordinate user groups”); so does `admin_read_group`. `Group::hookOnSave()` keeps only
+existing groups, never the superuser group and never the group itself. The group file
+holds `assignable_group_ids` = own group plus these (superuser: all); a group deleted
+later drops out there.
+
+* `Access::groupAssignable($groupId)` decides whether a user of that group may be
+  created, changed, or read, and whether that group may be given to a user.
+* `AdminBackend` offers non-superusers only these groups. On save, `_assignableGroupId()`
+  replaces a group from the form that is not allowed with the own group (create) or the
+  stored one (change) – a manipulated form reaches neither a foreign group nor the
+  superuser group.
+* Subordination is not transitive.
 
 ## Owner
 

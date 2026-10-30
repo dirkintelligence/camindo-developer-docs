@@ -63,7 +63,7 @@ ptr_ (pointer)  pn1_ (pointer1)  rel_ (relation)  rn1_ (relation1)  lnk_ (link)
 | `file` | `data_fil` | own columns, see below | array |
 | `float` | `data_flt` | `double` | numeric |
 | `fulltext` | `data_ftx` | `mediumtext` + FULLTEXT index | – |
-| `id` | `data_rid` | `bigint unsigned` (FK `record`) | numeric |
+| `id` | `data_rid` | `bigint unsigned` (FK `record`), `NULL` without a reference | numeric |
 | `integer` | `data_int` | `bigint` | numeric |
 | `json` | `data_jsn` | `mediumtext` + multi-valued index | array |
 | `password` | `data_pwd` | `varchar(255)` – hash, never cached | text |
@@ -114,7 +114,14 @@ Types that can be multilingual: `bit`, `chars`, `currency`, `datetime`, `decimal
 `encrypted`, `float`, `integer`, `json`, `text`, `time`, `timestampl` and `file`. Not:
 `fulltext` (generated), relations, `id`, `password` and meta fields.
 
-The rows are written by `VirtualFieldsTrait::saveVirtualFields()`. When the language
+The rows are written by `VirtualFieldsTrait::saveVirtualFields()`. A **new field** in an
+area with records gets them right away from `Field::fillExistingRecords()`: for all
+non-temporary records (including those in the trash) and all languages, the empty value
+of its type – `''` (`chars`, `text`, `encrypted` encrypted), `[]` (`json`), `0` (numbers,
+`bit`), `Cms::DATE_MIN` (`datetime`, `timestampl`), `00:00:00` (`time`), `NULL` (`id`);
+multilingual with `empty` = 1 except in the primary language. Relations, `file`,
+`password`, `fulltext` and fields on meta columns get no rows; the area's `record_cache`
+is discarded. When the language
 list of an instance changes, `LanguageData` updates the existing data (new language:
 copy the primary language's rows; removed language: delete its rows, `record_cache` and
 `privacy_template`, delete its own files – in the trash too –, point file fallbacks to the

@@ -136,7 +136,8 @@ Jeder Befehl ist ein Array-Eintrag:
     'oneof'      => 'filter,relation',          // mindestens einer davon
     'params'     => [
         'resulttemplate' => [
-            'mandatory'   => true,
+            'mandatory'   => false,
+            'mandatory_unless' => ['hits' => 'false'],  // Pflicht, außer mit diesem Wert
             'subparam'    => 0,                 // 0 = kein Unterschlüssel, 1, 2
             'default'     => '',
             'value'       => '#template.cmdval_template_name',  // erwarteter Wert

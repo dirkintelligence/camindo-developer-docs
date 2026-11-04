@@ -133,7 +133,8 @@ Every command is an array entry:
     'oneof'      => 'filter,relation',          // at least one of them
     'params'     => [
         'resulttemplate' => [
-            'mandatory'   => true,
+            'mandatory'   => false,
+            'mandatory_unless' => ['hits' => 'false'],  // required, except with this value
             'subparam'    => 0,                 // 0 = no sub-key, 1, 2
             'default'     => '',
             'value'       => '#template.cmdval_template_name',  // expected value

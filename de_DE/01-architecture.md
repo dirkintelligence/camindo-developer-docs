@@ -150,6 +150,9 @@ Der generierte Block in `public/.htaccess` (zwischen `## CAMINDO SYNTAX START` u
 3. **Datensatz**: `request` wird an Kommata zerlegt – `{slug|id},{template},…`. Eine
    reine Ziffernfolge ist eine `record_id`, alles andere ein Pfad
    `[slug-prefix/]slug` (`Cms::recordIdsBySlugPath()`). Leer = Startseite der Instanz.
+   Was der Pfad offen lässt, dürfen die Query-Parameter `id` und `template` liefern
+   (`/?id=7&template=print`, `/{slug}?template=print`) – nur im Frontend, nicht in der
+   Vorschau.
 4. **Template**, in dieser Rangfolge: aus der URL (nur mit Berechtigung, siehe
    [06](06-template-compiler.md#template-zuweisung)), `record.template_id`,
    `area.default_template_id`.
@@ -160,7 +163,9 @@ Der generierte Block in `public/.htaccess` (zwischen `## CAMINDO SYNTAX START` u
    `Vary: Accept-Language`, weil das Ziel von der Browsersprache abhängt), bei einer
    Sprache unter `/`; die Übersicht unter `/{lang}/{prefix}` (`Cms::areaUrl()`). So landet
    schon der erste Aufruf einer Neben-Domain auf der Haupt-Domain – Skripte und Module der
-   Seite kämen sonst von einer anderen Origin (CORS).
+   Seite kämen sonst von einer anderen Origin (CORS). Wurden `id`/`template` als
+   Query-Parameter übergeben, wird immer umgeleitet; die beiden Parameter fallen dabei aus
+   der Query, die übrigen bleiben. Ohne `canonical` wird direkt ausgeliefert.
 6. Der Datensatz muss **veröffentlicht** sein (`Cms::publishedSql()`: Status 0,
    `online_at` erreicht); ein abgelaufener bleibt unter seiner Adresse erreichbar.
 7. Die kompilierte Datei `var/php/{area_id}/{name}.php` wird innerhalb einer IIFE

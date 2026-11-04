@@ -152,6 +152,9 @@ with a checksum – do not edit by hand, written by `HtaccessWriter`) contains:
 3. **Record**: `request` is split at commas – `{slug|id},{template},…`. A pure digit
    sequence is a `record_id`, everything else a path `[slug-prefix/]slug`
    (`Cms::recordIdsBySlugPath()`). Empty = the instance's start page.
+   Whatever the path leaves open may come from the query parameters `id` and `template`
+   (`/?id=7&template=print`, `/{slug}?template=print`) – only in the frontend, not in the
+   preview.
 4. **Template**, in this order: from the URL (only if permitted, see
    [06](06-template-compiler.md#template-assignment)), `record.template_id`,
    `area.default_template_id`.
@@ -162,7 +165,10 @@ with a checksum – do not edit by hand, written by `HtaccessWriter`) contains:
    `Vary: Accept-Language`, since the target depends on the browser language), with one
    language at `/`; the overview at `/{lang}/{prefix}` (`Cms::areaUrl()`). So the very
    first request on a secondary domain already lands on the main domain – otherwise the
-   page's scripts and modules would come from a different origin (CORS).
+   page's scripts and modules would come from a different origin (CORS). If `id`/`template`
+   were passed as query parameters, there is always a redirect; the two parameters are
+   dropped from the query, the others are kept. Without `canonical` the page is delivered
+   directly.
 6. The record must be **published** (`Cms::publishedSql()`: status 0, `online_at`
    reached); an expired record remains reachable at its address.
 7. The compiled file `var/php/{area_id}/{name}.php` is included inside an IIFE; `$cms`

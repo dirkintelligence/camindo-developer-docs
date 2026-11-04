@@ -483,7 +483,7 @@ the fields. Copying an area uses the same path.
   shipped one of the same name and type.
 - The area's `<label>` and `<note>` are the heading and explanation in the selection –
   text or a snippet reference (`#key`, `#module.key`). The shipped blueprints use the
-  core's general labels (`#label_area_articles`, `#label_title` …).
+  core's general labels (`#label_area_pages`, `#label_title` …).
 
 ## Import and export
 

@@ -487,7 +487,7 @@ legt die Felder an. Das Kopieren eines Bereichs nutzt denselben Weg.
   ersetzt einen mitgelieferten gleichen Namens und Typs.
 - `<label>` und `<note>` des Bereichs sind Überschrift und Erklärung in der Auswahl –
   Text oder Snippet-Verweis (`#key`, `#modul.key`). Die mitgelieferten Baupläne
-  verwenden die allgemeinen Beschriftungen des Cores (`#label_area_articles`,
+  verwenden die allgemeinen Beschriftungen des Cores (`#label_area_pages`,
   `#label_title` …).
 
 ## Import und Export

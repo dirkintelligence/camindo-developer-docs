@@ -187,7 +187,7 @@ andere mit Markdown (visuell) haben. Ein Feld hat höchstens eine Extension.
 | `Calendar` | `text` / `datetime`, `timestampl`, `time` | native Datums-/Zeitauswahl |
 | `Datepicker` | `text` / `datetime`, `timestampl` | Kalender in der Locale des Benutzers |
 | `MarkdownVisual` | `textarea` / `text`, `chars` | Markdown-Editor, bearbeitet wird die formatierte Ansicht |
-| `HTMLVisual` | `textarea` / `text`, `chars` | HTML-Editor mit derselben Oberfläche, Quelltext über die Schaltfläche `<>`; Ausgabe mit `(CMS:TEXT feld entitydecode=false lbrconvert=false)` |
+| `HTMLVisual` | `textarea` / `text`, `chars` | HTML-Editor mit derselben Oberfläche, Quelltext über die Schaltfläche `<>`; Ausgabe mit `(CMS:TEXT feld lbrconvert=false)` |
 | `IconPicker` | `text` | Auswahl eines Material-Symbols |
 | `Snippets` | `text` | Snippet-Suche für Beschriftungsfelder |
 | `Password` | `password` | Stärkeanzeige und Passwort-Richtlinie |

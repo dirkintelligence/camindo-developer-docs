@@ -83,7 +83,10 @@ mehrdeutigen oder unbekannten Namen mit einer `RuntimeException` ab.
 * Parameter durch Leerraum getrennt, Zeilenumbrüche erlaubt.
 * Werte in `"…"` oder `'…'` werden übernommen, inklusive PHP-Interpolation (`$var`,
   `{$ausdruck}`); alles andere wird in doppelte Anführungszeichen gesetzt.
-* Unterschlüssel in eckigen Klammern; derselbe Schlüsselpfad mehrfach wird zum Array.
+* Unterschlüssel in eckigen Klammern; derselbe Schlüsselpfad mehrfach wird zum Array. Das gilt nur für
+  Parameter mit `subparam` > 0 oder `multiple`: Bei allen anderen gilt der letzte Wert, `key[]=` zählt
+  wie `key=`, und der Parser ergänzt einen Hinweis (`singleValueParams()`). Die aufgerufene Methode
+  bekommt dort also nie ein Array.
 * Zwischen Schlüssel und Wert steht `=` oder ein Vergleichsoperator (`==`, `!=`, `!`,
   `!!`, `<`, `>`, `<=`, `>=`, `<<`, `>>`; der längste passende gilt, `key=>5` ist also
   weiterhin `=` mit dem Wert `>5`). Der Compiler stellt den Operator dem Wert in
@@ -139,6 +142,7 @@ Jeder Befehl ist ein Array-Eintrag:
             'mandatory'   => false,
             'mandatory_unless' => ['hits' => 'false'],  // Pflicht, außer mit diesem Wert
             'subparam'    => 0,                 // 0 = kein Unterschlüssel, 1, 2
+            'multiple'    => false,             // true: Liste trotz subparam 0 (sql, request …)
             'default'     => '',
             'value'       => '#template.cmdval_template_name',  // erwarteter Wert
             'description' => '#template.cmd_select__resulttemplate',
@@ -488,6 +492,14 @@ und **Hinweise** (`TemplateParserTrait::inlineHandlerWarnings()`, gelb dargestel
 `<script>` ohne `(CMS:NONCE)` sowie `on…`-Attribute und `javascript:`-Adressen im
 HTML-Teil – beides blockiert eine aktive Script-Policy. Das Widget
 „Template-Meldungen“ listet alle Templates mit Meldungen.
+
+**Falsche Argumente halten eine Seite nicht an.** Befehlsmethoden lösen Template-Namen über
+`Cms::commandTemplate()` auf: Findet es nichts, liefert es `''`, es wird nichts eingebunden.
+`Cms::templateFile()` wirft weiterhin eine Exception, für Aufrufer mit eigener Fehlerbehandlung
+(`Email`). Unbrauchbare Argumente meldet `Cms::commandProblem()`: je Anfrage ein Eintrag als
+PHP-Warnung im Log, keine Ausgabe, und eine laufende Aufzeichnung von `CMS:INCLUDE` wird verworfen.
+`die()` (`_cmsError()`) bleibt der endlosen Einbindung vorbehalten; `CMS:USER_PROTECT` beendet die
+Seite ohne auffindbares `errortemplate` mit Status 403.
 
 `TemplateParserTrait::styleCode()` liefert dasselbe Markup ohne zu kompilieren und ohne
 Template-Links. Das Modul Docs färbt damit die ```` ```cms ````-Blöcke der Handbücher

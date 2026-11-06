@@ -80,7 +80,10 @@ with a `RuntimeException` for an ambiguous or unknown name.
 * Parameters are separated by whitespace; line breaks are allowed.
 * Values in `"…"` or `'…'` are taken as they are, including PHP interpolation (`$var`,
   `{$expression}`); everything else is put in double quotes.
-* Sub-keys in square brackets; the same key path used several times becomes an array.
+* Sub-keys in square brackets; the same key path used several times becomes an array. This only
+  applies to parameters with `subparam` > 0 or `multiple`: for all others the last value applies,
+  `key[]=` counts as `key=`, and the parser adds a note (`singleValueParams()`). The called method
+  therefore never receives an array there.
 * Between key and value there is either `=` or a comparison operator (`==`, `!=`, `!`,
   `!!`, `<`, `>`, `<=`, `>=`, `<<`, `>>`; the longest match wins, so `key=>5` is still
   `=` with the value `>5`). The compiler prepends the operator to the value in its
@@ -136,6 +139,7 @@ Every command is an array entry:
             'mandatory'   => false,
             'mandatory_unless' => ['hits' => 'false'],  // required, except with this value
             'subparam'    => 0,                 // 0 = no sub-key, 1, 2
+            'multiple'    => false,             // true: list despite subparam 0 (sql, request …)
             'default'     => '',
             'value'       => '#template.cmdval_template_name',  // expected value
             'description' => '#template.cmd_select__resulttemplate',
@@ -480,6 +484,14 @@ errors with line numbers (unknown command, unknown parameter, missing parenthesi
 without `(CMS:NONCE)` as well as `on…` attributes and `javascript:` addresses in the
 HTML part – both are blocked by an active script policy. The "Template messages" widget
 lists all templates with messages.
+
+**Wrong arguments do not stop a page.** Command methods resolve template names through
+`Cms::commandTemplate()`: if it finds nothing, it returns `''` and nothing is included.
+`Cms::templateFile()` keeps throwing an exception, for callers with their own error handling
+(`Email`). Unusable arguments are reported by `Cms::commandProblem()`: one entry per request as a
+PHP warning in the log, no output, and a running recording of `CMS:INCLUDE` is discarded. `die()`
+(`_cmsError()`) remains reserved for endless inclusion; `CMS:USER_PROTECT` ends the page with
+status 403 if no `errortemplate` can be found.
 
 `TemplateParserTrait::styleCode()` returns the same markup without compiling and without
 template links. The Docs module uses it to colour the ```` ```cms ```` blocks of the manuals

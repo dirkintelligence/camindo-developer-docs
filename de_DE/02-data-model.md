@@ -242,6 +242,10 @@ im Papierkorb liegt, ist sein Name im Bereich belegt: Der Primärschlüssel
 `(language_id, record_id, fieldname_id)` ließe kein zweites Feld gleichen Namens zu.
 Ausnahme vom „nur lebende Felder“: Ein `parent_id`-Feld im Papierkorb erhält den Baum
 seines Bereichs (`isTreeArea()`), erst das endgültige Löschen macht ihn flach.
+Ein `status_id`-Feld setzt beim Löschen `record.status_id` aller Datensätze des Bereichs
+auf 0 (auch Arbeitskopien und Datensätze im Papierkorb); `restore()` macht das nicht
+rückgängig; ebenso ein `needs_review`-Feld mit `record.needs_review`. Beim Löschen des ganzen Bereichs (`Field::$areaCascade`) bleibt der Status
+stehen. Felder auf `online_at`/`offline_at` lassen die Spalten unverändert.
 
 ### `record` – Datensätze
 

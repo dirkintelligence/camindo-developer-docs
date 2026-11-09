@@ -239,7 +239,11 @@ the restore, and the media directory is locked. As long as the field is in the t
 name is taken in the area: the primary key `(language_id, record_id, fieldname_id)` would
 not allow a second field of the same name. Exception to “live fields only”: a `parent_id`
 field in the trash keeps the tree of its area (`isTreeArea()`); only the final deletion
-flattens it.
+flattens it. Deleting a `status_id` field sets `record.status_id` of all records of the area
+to 0 (also working copies and records in the trash); `restore()` does not undo this. A
+`needs_review` field does the same with `record.needs_review`. When the
+whole area is deleted (`Field::$areaCascade`), the status stays. Fields on
+`online_at`/`offline_at` leave the columns unchanged.
 
 ### `record` – records
 

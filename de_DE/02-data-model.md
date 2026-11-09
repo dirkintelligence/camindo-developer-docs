@@ -45,8 +45,14 @@ Typs beginnen:
 
 ```
 bit_ chr_ cur_ dat_ dec_ enc_ fil_ flt_ ftx_ rid_ ids_ int_ jsn_ pwd_ txt_ tim_ tsl_
-ptr_ (pointer)  pn1_ (pointer1)  rel_ (relation)  rn1_ (relation1)  lnk_ (link)
+rel_ (relation)  rn1_ (relation1)  ptr_ (pointer)  pn1_ (pointer1)  lnk_ (link)
 ```
+
+Auch die beiden Kardinalitäten haben eigene Präfixe: `Cms::select()` baut für `…1`
+andere Abfragen, und das Gegenfeld `rel_{Bereichsname}` kann so nie mit einem Feld anderen
+Typs kollidieren (`generateUniqueFieldName()` überspringt zusätzlich Namen, die in
+`fieldname` an einen anderen Typ gebunden sind). Beim Typwechsel nimmt `Field::convert()`
+den neuen Namen im selben Schritt; `conversionName()` schlägt ihn vor.
 
 ### Typ → Tabelle
 
@@ -203,9 +209,17 @@ overview_template_id, login_name_field_id, login_password_field_id, deleted …
 Die Konverter eines Thumbnail-Felds stehen sortiert in `rel_field_converter`.
 Typ und Mehrsprachigkeit eines bestehenden Felds ändert nur `Field::convert()` (Button
 „Typ ändern“): Text ↔ Zahl wird zeilenweise umkopiert, `relation` ↔ `relation1` behält
-bei `…1` nur die erste Verknüpfung, ein- ↔ mehrsprachig stellt das `empty`-Kennzeichen
+bei `…1` nur die erste Verknüpfung, `relation` ↔ `pointer` (gleiche Kardinalität) behält die
+Zeilen in `data_rel` und tauscht Gegenfeld gegen `rel_field_area` (`switchRelationKind()`:
+zum Verweis wird das Gegenfeld samt Spiegelzeilen gelöscht, zur Verknüpfung – nur mit genau
+einem Zielbereich, `pointerRelationArea()` – angelegt und mit Spiegelzeilen gefüllt), ein- ↔ mehrsprachig stellt das `empty`-Kennzeichen
 bzw. die Dateien um. `conversionTargets()` nennt die möglichen Ziele,
-`conversionLossy()` warnt vor Datenverlust. Bearbeitungssperren hält die Umwandlung
+`conversionLossy()` warnt vor Datenverlust. Beim Typwechsel nimmt `convert()` optional
+einen neuen Namen (`$newName`, geprüft von `conversionNameAllowed()` wie eine
+Umbenennung, Vorschlag mit passendem Präfix: `conversionName()`): Die Zeilen wandern
+dann auf den `fieldname`-Eintrag des neuen Namens, der alte Name bleibt für andere
+Felder mit seinem Typ stehen oder wird aufgeräumt, `record_cache`-Schlüssel der
+Arbeitskopien werden umbenannt. Bearbeitungssperren hält die Umwandlung
 nicht auf: Der Arbeitsstand offener Arbeitskopien (ihr `record_cache`) bleibt stehen und
 bekommt den neuen Typ (`Record::retypeWorkingCopies()`, bei Datei-Feldern samt neu
 hochgeladener Dateien `Record::migrateWorkingCopyFiles()`), nur der Cache der produktiven

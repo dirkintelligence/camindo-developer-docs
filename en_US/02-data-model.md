@@ -45,8 +45,14 @@ at least two characters – `_…` is reserved for pseudo field names such as `_
 
 ```
 bit_ chr_ cur_ dat_ dec_ enc_ fil_ flt_ ftx_ rid_ ids_ int_ jsn_ pwd_ txt_ tim_ tsl_
-ptr_ (pointer)  pn1_ (pointer1)  rel_ (relation)  rn1_ (relation1)  lnk_ (link)
+rel_ (relation)  rn1_ (relation1)  ptr_ (pointer)  pn1_ (pointer1)  lnk_ (link)
 ```
+
+The two cardinalities have their own prefixes as well: `Cms::select()` builds different
+queries for `…1`, and the counter field `rel_{area name}` can therefore never collide with a
+field of another type (`generateUniqueFieldName()` additionally skips names bound to another
+type in `fieldname`). On a type change, `Field::convert()` takes the new name in the same
+step; `conversionName()` suggests it.
 
 ### Type → table
 
@@ -202,9 +208,17 @@ overview_template_id, login_name_field_id, login_password_field_id, deleted …
 The converters of a thumbnail field are stored, sorted, in `rel_field_converter`.
 Only `Field::convert()` (button "Change type") changes the type or the multilingual
 flag of an existing field: text ↔ number is copied row by row, `relation` ↔
-`relation1` keeps only the first link for `…1`, mono- ↔ multilingual switches the
+`relation1` keeps only the first link for `…1`, `relation` ↔ `pointer` (same cardinality)
+keeps the rows in `data_rel` and swaps the counter field for `rel_field_area`
+(`switchRelationKind()`: towards a pointer the counter field and its mirror rows are deleted,
+towards a relation – only with exactly one target area, `pointerRelationArea()` – it is
+created and filled with mirror rows), mono- ↔ multilingual switches the
 `empty` flag or the files. `conversionTargets()` lists the possible targets,
-`conversionLossy()` warns about data loss. Edit locks do not stop a conversion: the
+`conversionLossy()` warns about data loss. On a type change, `convert()` optionally takes
+a new name (`$newName`, checked by `conversionNameAllowed()` like a rename, suggestion with
+a fitting prefix: `conversionName()`): the rows then move to the `fieldname` entry of the
+new name, the old name stays with its type for other fields or is cleaned up, and the
+`record_cache` keys of working copies are renamed. Edit locks do not stop a conversion: the
 working state of open working copies (their `record_cache`) is kept and gets the new
 type (`Record::retypeWorkingCopies()`, for file fields including newly uploaded files
 `Record::migrateWorkingCopyFiles()`); only the cache of productive records is

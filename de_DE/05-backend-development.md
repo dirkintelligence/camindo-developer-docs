@@ -430,6 +430,7 @@ $backend->isSuperuser();
 | `cApp.extensions` | Extensions der Eingabefelder ([08](08-components-and-extensions.md#extensions)) |
 | `cApp.handlers` | Binden markierter Event-Handler |
 | `cApp.a11y` | Sprunglinks, Fokus beim Öffnen/Schließen von Ebenen (`focusLayer()`, `restoreFocus()`), Tastatur für Listenzeilen und Kontextmenüs, Fokus auf das erste fehlerhafte Feld (`afterSubmit()`) |
+| `cApp.quicksearch` | Schnellsuche (Strg+G / Cmd+G, Lupe im Kopf): `open()`, `close()`, `toggle()` – siehe [Schnellsuche](#schnellsuche) |
 
 Alle Ajax-Aufrufe laufen über `$(el).cLoadContent(options)`:
 
@@ -473,6 +474,41 @@ Moduls instanziieren. Die Methode hat keine Parameter und **gibt das HTML zurüc
 Karte drumherum liefert `Widgets`. Eine Ausnahme landet in
 `var/log/{Datum}_widget-errors.log`, die Startseite läuft weiter. Ein Widget sieht nur,
 wer auch das Modul darf.
+
+## Schnellsuche
+
+Strg+G (macOS Cmd+G) bzw. die Lupe in der Kopfleiste öffnet ein Suchfeld oben in der
+Mitte des Fensters (`backend-quicksearch.js`, `cApp.quicksearch`). Der Benutzer wählt
+zuerst ein Präfix (`content:`, `area:` …), dann sucht der Server im Hauptfeld des
+Moduls. Server-Seite ist `Camindo\Core\Modules\Start\StartQuickSearch` hinter
+`Start/quicksearch.php` – nur GET, Antwort JSON:
+
+| Anfrage | Antwort |
+|---|---|
+| `?texts=1` | Texte des Fensters und die Präfixe, die die Gruppe nutzen darf (`[{prefix, label, icon}]`) |
+| `?q=content:sch` | `{prefix, term, starts: [...], contains: [...], submit: [...]}` |
+| `?q=…&submit=1` | nur `submit` – die Ebenen der Eingabetaste ohne Auswahl |
+
+Ein Treffer hat `title`, `detail` (klein neben dem Titel), `sub` (Zeile darunter:
+Bereich, bei mehreren sichtbaren Instanzen auch die Instanz), `icon` und `path` – den
+Layer-Pfad, den die Auswahl mit `cApp.layers.add()` öffnet. `starts` enthält bis zu
+`StartQuickSearch::LIMIT` (8) Treffer, deren Hauptfeld mit dem Begriff beginnt;
+`contains` nur, wenn es weniger sind. Datensätze sucht die Klasse nur in der bevorzugten
+Sprachversion des Benutzers (`Cms::languageExpr()` – je Instanz wie in den
+Datensatzlisten, sonst die Hauptsprache). Datensätze (`data_dft`) und Benutzer (`admin.ft`)
+vergleicht MySQL über die Kollation der Spalten; kleine Tabellen, deren Beschriftungen
+Snippet-Verweise sein können, lädt die Klasse und vergleicht nach
+`Collation::fold()` in der Backend-Sprache. `submit` führt zur Volltextsuche des Moduls
+(`filter[fulltext]` bzw. `filter[ft]`, jedes Wort mit `*`), sonst zur Übersicht.
+
+Rechte wie im Modul selbst: `Access::module()` je Präfix, dazu lesbare Bereiche und
+Sprachen (`content`), Instanzen, Template-Bereiche (`templateRead()`), die Zusatzrechte
+der Werkzeug-Reiter (`tool`), Superuser für `group`. Die Werkzeuge stehen in
+`ToolsBackend::QUICK_SEARCH` (Reiter → Snippet der Beschriftung → Script), gelöschte
+Datensätze liefert `Trash::searchRecords()` mit denselben Bedingungen wie die
+Papierkorb-Liste. Ein neues Präfix bekommt einen Eintrag in
+`StartQuickSearch::PREFIXES` (Modul, Icon, Snippet der Beschriftung) und eine
+Provider-Methode, die `[starts, contains]` zurückgibt.
 
 ## Baupläne für neue Bereiche
 

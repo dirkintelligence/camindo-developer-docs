@@ -426,6 +426,7 @@ $backend->isSuperuser();
 | `cApp.extensions` | extensions of input fields ([08](08-components-and-extensions.md#extensions)) |
 | `cApp.handlers` | binding of marked event handlers |
 | `cApp.a11y` | skip links, focus when opening/closing layers (`focusLayer()`, `restoreFocus()`), keyboard for list rows and context menus, focus on the first invalid field (`afterSubmit()`) |
+| `cApp.quicksearch` | quick search (Ctrl+G / Cmd+G, magnifier in the header): `open()`, `close()`, `toggle()` – see [Quick search](#quick-search) |
 
 All Ajax calls go through `$(el).cLoadContent(options)`:
 
@@ -469,6 +470,40 @@ of its own module. The method takes no parameters and **returns the HTML**; the 
 around it comes from `Widgets`. An exception ends up in
 `var/log/{date}_widget-errors.log`, the start page keeps working. Only users who may
 use the module see its widget.
+
+## Quick search
+
+Ctrl+G (macOS Cmd+G) or the magnifier in the header opens a search field at the top
+centre of the window (`backend-quicksearch.js`, `cApp.quicksearch`). The user first
+picks a prefix (`content:`, `area:` …), then the server searches the main field of the
+module. The server side is `Camindo\Core\Modules\Start\StartQuickSearch` behind
+`Start/quicksearch.php` – GET only, JSON response:
+
+| Request | Response |
+|---|---|
+| `?texts=1` | texts of the window and the prefixes the group may use (`[{prefix, label, icon}]`) |
+| `?q=content:sch` | `{prefix, term, starts: [...], contains: [...], submit: [...]}` |
+| `?q=…&submit=1` | only `submit` – the layers of Enter without a selection |
+
+A hit has `title`, `detail` (small, next to the title), `sub` (line below: area, and the
+instance if more than one is visible), `icon` and `path` – the layer path the selection
+opens with `cApp.layers.add()`. `starts` holds up to `StartQuickSearch::LIMIT` (8) hits
+whose main field begins with the term; `contains` only if there are fewer. Records are
+searched only in the user's preferred language version (`Cms::languageExpr()` – per
+instance as in the record lists, otherwise the main language). Records
+(`data_dft`) and users (`admin.ft`) are compared by MySQL through the collation of the
+columns; small tables whose labels may be snippet references are loaded by the class and
+compared after `Collation::fold()` in the backend language. `submit` leads to the
+module's full-text search (`filter[fulltext]` or `filter[ft]`, every word with `*`),
+otherwise to its overview.
+
+Rights as in the module itself: `Access::module()` per prefix, plus readable areas and
+languages (`content`), instances, template areas (`templateRead()`), the additional
+rights of the tools tabs (`tool`), superusers for `group`. The tools are listed in
+`ToolsBackend::QUICK_SEARCH` (tab → label snippet → script); deleted records come from
+`Trash::searchRecords()` with the same conditions as the trash list. A new prefix needs
+an entry in `StartQuickSearch::PREFIXES` (module, icon, label snippet) and a provider
+method that returns `[starts, contains]`.
 
 ## Blueprints for new areas
 

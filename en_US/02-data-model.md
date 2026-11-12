@@ -45,7 +45,7 @@ at least two characters – `_…` is reserved for pseudo field names such as `_
 
 ```
 bit_ chr_ cur_ dat_ dec_ enc_ fil_ flt_ ftx_ rid_ ids_ int_ jsn_ pwd_ txt_ tim_ tsl_
-rel_ (relation)  rn1_ (relation1)  ptr_ (pointer)  pn1_ (pointer1)  lnk_ (link)
+rel_ (relation)  rel1_ (relation1)  ptr_ (pointer)  ptr1_ (pointer1)  lnk_ (link)
 ```
 
 The two cardinalities have their own prefixes as well: `Cms::select()` builds different

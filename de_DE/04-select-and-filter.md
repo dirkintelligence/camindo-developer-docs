@@ -69,6 +69,10 @@ Der Request kann eine Abfrage nur **einschränken** (`Cms::requestParams()`):
 * Felder in `Cms::$unsearchableTypes` (`password`) sind nie filter- oder sortierbar, auch
   nicht aus `$param`: Ein Präfixfilter oder die Sortierung gäbe den Hash Zeichen für Zeichen
   preis. Der Filter liefert `0 = 1` und registriert `error_field_not_searchable`.
+* Schemafelder mit `'unsearchable' => true` (z. B. `uid`, `uid_date`, `code` von `admin`)
+  übernimmt `requestParams()` weder in `filter`/`filterop`/`filtermode` noch in `sort` –
+  der Request kann interne Werte nicht über Treffer oder Reihenfolge abfragen. Der
+  Aufrufer selbst darf sie per `$param` verwenden.
 
 Falsch typisierte Request-Werte werden verworfen und als `error_param_invalid` registriert.
 `CMS:SELECT` lässt in seinem `request` nur einzelne Schlüssel zu (`Cms::templateRequestKeys()`):

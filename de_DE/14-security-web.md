@@ -9,7 +9,7 @@ camindo setzt drei Hürden:
 | Hürde | Wo |
 |---|---|
 | **Token** | `Session::csrfToken()` = HMAC über die Session-Id (nichts wird gespeichert). `cConfig.csrf_token`, von `cApp.system.csrfHeaders()` bei **jedem** Request als Header `X-Camindo-Token` mitgeschickt, ersatzweise POST-Feld `_token`, nie aus dem Query-String. `Backend::backendPath()` prüft es bei jeder Methode außer GET/HEAD – auch für Extension-Endpunkte. |
-| **POST-Bindung** | Jeder Endpunkt mit Seiteneffekt verlangt POST: `if (!$backend->requirePost()) …`. Die Oberfläche löst ihn per `replacePost()`, `openPost()`, Formular oder Kontextmenü-Eintrag mit `data-method="post"` aus. |
+| **POST-Bindung** | Jeder Endpunkt mit Seiteneffekt verlangt POST: `if (!$backend->requirePost()) …`. Die Oberfläche löst ihn per `replacePost()`, `openPost()`, Formular oder Kontextmenü-Eintrag mit `data-method="post"` aus. Zentral lehnt `Backend::backendPath()` jeden Nicht-POST ab, dessen Parameter `function` einen schreibenden Zustand nennt (`Backend::WRITE_FUNCTIONS`: `save`, `delete_confirm`, `run`, `prepare`, `convert`, `tab`, `swap` …) – das Script selbst prüft zusätzlich. |
 | **Herkunft** | `Backend::originAllowed()`: bei POST muss `Origin` (ersatzweise `Referer`) zum Host des Backends oder zu `admin.allowed_origins` passen; fehlen beide, entscheidet das Token. |
 
 Fehlschläge antworten mit `##accessdenied##` und landen im Log `security`. Dazu
@@ -223,6 +223,14 @@ Skript-Inhalt würde als Skriptformat verarbeitet. Der Prozessor `Magick` sicher
   (PDF braucht Ghostscript). Die Detailansicht des Konverters zeigt per Probelauf, was
   tatsächlich läuft.
 * **Versionswarnung** unter ImageMagick 7.1.1 in der Konverter-Ansicht.
+* **Freie Parameter** (Expertenmodus, auch bei den FFmpeg-Prozessoren): `Execute::unsafeParameter()`
+  prüft die Tokens beim Speichern und vor jedem Aufruf. Abgelehnt werden Optionen, die
+  weitere Dateien schreiben oder lesen (`-write`, `-script`, `-profile` bzw. `-i`,
+  `-dump_attachment`, `-filter_script`, `-progress` …), Werte mit Pfad, URL, Coder- oder
+  Protokoll-Präfix (`text:`, `file:`), `@datei` und `|`, bei FFmpeg zusätzlich Filter, die
+  Dateien öffnen (`movie`, `subtitles`, `textfile` …), und Wörter, die eine weitere
+  Ausgabedatei wären. Die Module Konverter, Komponenten und Zeitplaner sind Superusern
+  vorbehalten (`'superuser' => true`).
 
 Die Policy greift für die Programme, nicht für die PHP-Erweiterung Imagick – ein
 Zusatzmodul, das Imagick nutzt, arbeitet unter der Policy des Systems. Wer ImageMagick

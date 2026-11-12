@@ -202,7 +202,11 @@ interface SecondFactorInterface {
 `Admin::secondFactor()` wählt je Benutzer; `security.admin_2fa` = `email` | `totp`
 (Vorgabe, freiwillig) | `totp_required` (Superuser müssen). Die Anmeldung ist
 zweistufig: nach dem Passwort eine einmalige `uid` im Formular, die genau ein
-Prüfversuch einlösen darf.
+Prüfversuch einlösen darf. Die Tabelle hält nur `SHA-256(Stufe|uid)` (`Admin::_uidHash()`,
+binär verglichen); die Stufe – Code-Formular, Passwort erneuern, TOTP einrichten – bindet
+die `uid` an den Schritt, der sie ausgegeben hat. `uid`, `uid_date` und `code` sind im
+Schema `'unsearchable' => true`: Listen filtern und sortieren sie nicht aus dem Request
+(`Cms::requestParams()`).
 
 * TOTP-Secret verschlüsselt mit AAD `totp|{admin_id}`; Replay-Sperre über
   `UPDATE … WHERE totp_step < ?`.

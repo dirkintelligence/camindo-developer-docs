@@ -69,6 +69,10 @@ The request can only **narrow** a query (`Cms::requestParams()`):
 * Fields in `Cms::$unsearchableTypes` (`password`) can never be filtered or sorted, not even
   from `$param`: a prefix filter or the sort order would reveal the hash character by
   character. The filter yields `0 = 1` and registers `error_field_not_searchable`.
+* Schema fields with `'unsearchable' => true` (e.g. `uid`, `uid_date`, `code` of `admin`)
+  are taken over by `requestParams()` neither into `filter`/`filterop`/`filtermode` nor
+  into `sort` – the request cannot probe internal values via hits or order. The caller
+  itself may use them via `$param`.
 
 Wrongly typed request values are discarded and registered as `error_param_invalid`.
 `CMS:SELECT` only allows single keys in its `request` (`Cms::templateRequestKeys()`): no

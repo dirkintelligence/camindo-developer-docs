@@ -165,6 +165,12 @@ Snippet convention: `{module}.access_{right}`. In code:
 `$backend->access()->moduleRight('Blog', 'publish')`. After changing `settings.php`:
 `camindo.php refresh`.
 
+Only `'superuser' => true` locks a module for other groups; a module without its own
+rights check that installs code or starts processes and scripts needs it. In the core:
+Audit, Logfiles, Areas, Instances, Languages, Status, Components, Converter, Scheduler. Script names in `_path` must be
+`{Component}/{script}.php` in lowercase – otherwise a file system without case
+distinction would find the file but not its entry in `script_access`.
+
 Extra rights in the core (excerpt):
 
 | Module | Rights |

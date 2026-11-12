@@ -165,6 +165,13 @@ Snippet-Konvention: `{modul}.access_{recht}`. Im Code:
 `$backend->access()->moduleRight('Blog', 'publish')`. Nach einer Änderung an
 `settings.php`: `camindo.php refresh`.
 
+Nur `'superuser' => true` sperrt ein Modul für andere Gruppen; ein Modul ohne eigene
+Rechteprüfung, das Code installiert oder Prozesse und Scripte startet, braucht es. Im Core:
+Audit, Logfiles, Bereiche, Instanzen, Sprachen, Status, Komponenten, Konverter, Zeitplaner. Script-Namen in `_path` müssen
+`{Komponente}/{script}.php` in Kleinschreibung sein – sonst fände ein Dateisystem ohne
+Unterscheidung von Groß- und Kleinschreibung die Datei, aber nicht ihren Eintrag in
+`script_access`.
+
 Zusatzrechte im Core (Auszug):
 
 | Modul | Rechte |

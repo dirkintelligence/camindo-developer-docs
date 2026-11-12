@@ -201,7 +201,10 @@ interface SecondFactorInterface {
 `Admin::secondFactor()` chooses per user; `security.admin_2fa` = `email` | `totp`
 (default, optional) | `totp_required` (superusers must). The login has two stages:
 after the password, a one-time `uid` in the form that exactly one verification attempt
-may redeem.
+may redeem. The table only holds `SHA-256(stage|uid)` (`Admin::_uidHash()`, compared in
+binary); the stage – code form, renew password, set up TOTP – binds the `uid` to the step
+that issued it. `uid`, `uid_date` and `code` are `'unsearchable' => true` in the schema:
+lists do not filter or sort them from the request (`Cms::requestParams()`).
 
 * TOTP secret encrypted with AAD `totp|{admin_id}`; replay is blocked via
   `UPDATE … WHERE totp_step < ?`.

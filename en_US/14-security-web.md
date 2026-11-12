@@ -9,7 +9,7 @@ camindo sets three hurdles:
 | Hurdle | Where |
 |---|---|
 | **Token** | `Session::csrfToken()` = HMAC over the session id (nothing is stored). `cConfig.csrf_token`, sent by `cApp.system.csrfHeaders()` with **every** request as header `X-Camindo-Token`, alternatively the POST field `_token`, never from the query string. `Backend::backendPath()` checks it for every method except GET/HEAD – extension endpoints included. |
-| **POST binding** | Every endpoint with side effects requires POST: `if (!$backend->requirePost()) …`. The UI triggers it via `replacePost()`, `openPost()`, a form or a context menu entry with `data-method="post"`. |
+| **POST binding** | Every endpoint with side effects requires POST: `if (!$backend->requirePost()) …`. The UI triggers it via `replacePost()`, `openPost()`, a form or a context menu entry with `data-method="post"`. Centrally, `Backend::backendPath()` rejects every non-POST whose parameter `function` names a writing state (`Backend::WRITE_FUNCTIONS`: `save`, `delete_confirm`, `run`, `prepare`, `convert`, `tab`, `swap` …) – the script checks additionally. |
 | **Origin** | `Backend::originAllowed()`: for POST, `Origin` (alternatively `Referer`) must match the backend's host or `admin.allowed_origins`; if both are missing, the token decides. |
 
 Failures answer with `##accessdenied##` and are recorded in the `security` log. On top,
@@ -224,6 +224,14 @@ this:
 * **SVG and PDF only on request:** `security.magick_allow = ['svg']` or `['pdf']` (PDF
   needs Ghostscript). The converter detail view shows by test run what actually works.
 * **Version warning** below ImageMagick 7.1.1 in the converter view.
+* **Free parameters** (expert mode, also for the FFmpeg processors): `Execute::unsafeParameter()`
+  checks the tokens on saving and before every call. Rejected are options that write or
+  read further files (`-write`, `-script`, `-profile` or `-i`, `-dump_attachment`,
+  `-filter_script`, `-progress` …), values with a path, URL, coder or protocol prefix
+  (`text:`, `file:`), `@file` and `|`, for FFmpeg additionally filters that open files
+  (`movie`, `subtitles`, `textfile` …) and words that would be another output file. The
+  modules Converter, Components and Scheduler are reserved for superusers
+  (`'superuser' => true`).
 
 The policy applies to the programs, not to the PHP extension Imagick – an add-on module
 using Imagick works under the system policy. If you call ImageMagick yourself, call

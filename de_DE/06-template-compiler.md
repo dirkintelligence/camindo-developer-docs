@@ -83,6 +83,10 @@ mehrdeutigen oder unbekannten Namen mit einer `RuntimeException` ab.
 * Parameter durch Leerraum getrennt, Zeilenumbrüche erlaubt.
 * Werte in `"…"` oder `'…'` werden übernommen, inklusive PHP-Interpolation (`$var`,
   `{$ausdruck}`); alles andere wird in doppelte Anführungszeichen gesetzt.
+  Eine Index-Kette mit mehr als einer Ebene (`$page[key][subkey]`, Schlüssel ohne
+  Anführungszeichen, Ziffern oder `$var`) schreibt `normToken()` in die komplexe Syntax um
+  (`{$page['key']['subkey']}`) – PHP selbst liest in `"…"` nur den ersten Index. In `'…'`
+  bleibt alles unverändert; `findPhpSpans()` färbt die ganze Kette als `c9-php`.
 * Unterschlüssel in eckigen Klammern; derselbe Schlüsselpfad mehrfach wird zum Array. Das gilt nur für
   Parameter mit `subparam` > 0 oder `multiple`: Bei allen anderen gilt der letzte Wert, `key[]=` zählt
   wie `key=`, und der Parser ergänzt einen Hinweis (`singleValueParams()`). Die aufgerufene Methode

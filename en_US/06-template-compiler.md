@@ -80,6 +80,10 @@ with a `RuntimeException` for an ambiguous or unknown name.
 * Parameters are separated by whitespace; line breaks are allowed.
 * Values in `"…"` or `'…'` are taken as they are, including PHP interpolation (`$var`,
   `{$expression}`); everything else is put in double quotes.
+  An index chain with more than one level (`$page[key][subkey]`, keys without quotes, digits
+  or `$var`) is rewritten by `normToken()` into the complex syntax (`{$page['key']['subkey']}`)
+  – PHP itself reads only the first index inside `"…"`. In `'…'` everything stays unchanged;
+  `findPhpSpans()` colors the whole chain as `c9-php`.
 * Sub-keys in square brackets; the same key path used several times becomes an array. This only
   applies to parameters with `subparam` > 0 or `multiple`: for all others the last value applies,
   `key[]=` counts as `key=`, and the parser adds a note (`singleValueParams()`). The called method

@@ -188,7 +188,12 @@ overview_template_id, login_name_field_id, login_password_field_id, deleted …
   prefix (`/en_US/events`) – an overview without a record ([06](06-template-compiler.md#url-and-slug)).
 * `details` (JSON): among others `tabs` (multilingual form with tabs), `slug_prefix`
   per language, `page_size` (records per page of the backend list, `0` = all, empty =
-  `admin.skiplist_default`), `profile_area_ids` (`ugc`), `second_factor` (`profile`).
+  `admin.skiplist_default`), `profile_area_ids` (`ugc`), `second_factor` (`profile`),
+  `sort_field` (`online_at` or `created_at`).
+* Default sorting: `sort_field_id` (foreign key to `field`) or – for the columns
+  `online_at`/`created_at` of `record` without an input field of their own –
+  `details.sort_field` (`Area::SORT_META_FIELDS`, `sort_field_id` then stays empty); without
+  either, `changed_at`. `Backend::areaData()` returns the resolved name as `sort_field_name`.
 
 ### `field` – input fields
 

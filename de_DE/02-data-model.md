@@ -189,7 +189,12 @@ overview_template_id, login_name_field_id, login_password_field_id, deleted …
   besteht (`/de_DE/termine`) – eine Übersicht ohne Datensatz ([06](06-template-compiler.md#url-und-slug)).
 * `details` (JSON): u. a. `tabs` (mehrsprachige Maske mit Reitern), `slug_prefix` je
   Sprache, `page_size` (Datensätze je Seite der Backend-Liste, `0` = alle, leer =
-  `admin.skiplist_default`), `profile_area_ids` (`ugc`), `second_factor` (`profile`).
+  `admin.skiplist_default`), `profile_area_ids` (`ugc`), `second_factor` (`profile`),
+  `sort_field` (`online_at` oder `created_at`).
+* Standardsortierung: `sort_field_id` (Fremdschlüssel auf `field`) oder – für die Spalten
+  `online_at`/`created_at` von `record` ohne eigenes Eingabefeld – `details.sort_field`
+  (`Area::SORT_META_FIELDS`, `sort_field_id` bleibt dann leer); ohne beides `changed_at`.
+  `Backend::areaData()` liefert den aufgelösten Namen als `sort_field_name`.
 
 ### `field` – Eingabefelder
 

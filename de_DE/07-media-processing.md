@@ -140,6 +140,51 @@ Ablauf beim Speichern:
 So übersteht ein Upload eine gescheiterte Prüfung, und die teure Umwandlung läuft nur
 einmal.
 
+Ist der Prozessor Magick eingerichtet, dreht `_saveUploadField()` ein hochgeladenes Bild
+gleich nach dem Ablegen nach seiner EXIF-Ausrichtung (`Magick::autoOrient()`, nur Formate aus
+`Magick::EDITABLE_CODERS`, JPEG/WebP mit der geschätzten Qualität des Originals; die übrigen
+Metadaten bleiben). Thumbnails von Magick-Konvertern drehen ohnehin per `-auto-orient`;
+`source_width`/`source_height` melden die ausgerichteten Maße.
+
+## Bildbearbeitung und Ausschnitt
+
+Auf der Info-Seite (`RecordBackendImageEdit`, Layer `record_image_edit.php`, Ajax
+`ajax_image_edit.php`) – nur mit Magick, auf dem produktiven Datensatz, mit Schreibrecht.
+Der Layer sperrt den Datensatz wie die Eingabemaske, aber ohne Arbeitskopie:
+`TemporaryTrait::lockOnly()` legt nur die Zeile (`tmp` = 1, `origin_id`, `changed_by`,
+`changed_at`) an – ohne Arbeitsstand, Verknüpfungen, Dateien – und macht ältere
+Arbeitskopien ungültig (`invalidateWorkingCopies()`, wie `checkOut()`). Geöffnet wird nur per
+POST (Platzhalter mit `cApp.layers.openPost()`); eine fremde Sperre zeigt den Hinweis mit
+„Sperre aufheben“ (`unlock=1`), eine eigene offene Eingabemaske einen Fehler. Jede Anfrage
+trägt die Id der Sperre; `lockHeld()` prüft und erneuert sie, „Speichern“ und „Abbrechen“
+geben sie frei (`Record::cancel()`), die Abmeldung über `admin_session_record`.
+
+* **Upload-Feld:** Drehen, Mitteltöne (`-gamma 3^(g/100)`), Ausschnitt mit optionaler
+  Zielgröße. `Magick::normalizeEdit()` bringt die Einstellungen in die feste Form
+  `{rotate, gamma, crop: {x, y, w, h} | null, width, height}` – `crop` als Bruchteile des
+  gedrehten Bildes. Jede Vorschau rechnet `Magick::renderEdit()` aus dem Original nach
+  `paths.tmp_dir/image_edit/` (Name aus Session-Token und Ids, ausgeliefert nur von
+  `ajax_image_edit.php?function=image` mit Leserecht). Beim Speichern wird das unveränderte
+  Original unter `{var_dir}/media_source/{field_id}/{record_id}[_{language_id}].{ext}`
+  aufgehoben (`imageOriginalPath()`), die Datei des Felds neu berechnet, `size`, `width`,
+  `height`, `version` und `data.edit` geschrieben und `regenerateThumbnails()` für dieses
+  Feld aufgerufen. Ohne Einstellungen kommt das Original zurück. Ein neuer Upload, das
+  Entfernen der Datei und das endgültige Löschen entfernen das Original
+  (`deleteImageOriginals()`).
+* **Thumbnail-Feld:** nur wenn der wirksame Konverter (`effectiveConverter()`, dieselbe
+  Wahl wie `writeThumbnails()`) ein Magick-Konverter mit Zielbreite und -höhe in Pixeln
+  ist. Der Rahmen hat deren Seitenverhältnis und wird als `data.crop` (Bruchteile der
+  ausgerichteten Quelldatei) gespeichert. `regenerateThumbnails()` liest die Ausschnitte
+  (`storedThumbnailCrops()`), `writeThumbnails()` gibt sie als `details.manual_crop` an den
+  Prozessor; `Magick::buildArguments()` schneidet nach `-auto-orient` aus und passt den
+  Rahmen an das Seitenverhältnis an (`Magick::cropBox()`: gleiche Fläche und Mitte), falls
+  sich die Quelle inzwischen geändert hat. Beim Speichern mit neuem Upload gibt es keine
+  Ausschnitte – sie gehen verloren.
+
+`writeDeferredThumbnails()` überschreibt `data` der Quelldatei nur, wenn der Konverter etwas
+liefert, damit `data.edit` neue Thumbnails übersteht. Der Dateiname lässt sich nur am
+Upload-Feld ändern; `Record::renameFile()` überträgt ihn auf alle Thumbnail-Felder darunter.
+
 ## Ablage und Auslieferung
 
 ```

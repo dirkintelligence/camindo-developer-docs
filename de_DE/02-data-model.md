@@ -93,7 +93,9 @@ Die Gruppen entsprechen Arrays in `Cms` (`textTypes`, `numericTypes`, `dateTypes
   deterministischer HMAC in `hash` für die Gleichheitssuche.
 * `data_fil` – statt `data` die Metadaten der Datei: `extension`, `mime_type`,
   `filename`, `size`, `width`, `height`, `token`, `version`, `file_language_id` und ein
-  JSON-Feld `data`. Die Datei selbst liegt im Dateisystem.
+  JSON-Feld `data`. Die Datei selbst liegt im Dateisystem. In `data` stehen die
+  Einstellungen der Bildbearbeitung (`edit` am Upload-Feld, `crop` am Thumbnail, siehe
+  [07](07-media-processing.md#bildbearbeitung-und-ausschnitt)); ein neuer Upload schreibt `{}`.
 * `data_rel` – Kantentabelle `(src_id, fieldname_id, dest_id)` mit `position` für
   sortierbare Verknüpfungen; ein zweiter Index bedient die Gegenrichtung. Hat keine
   `language_id`.

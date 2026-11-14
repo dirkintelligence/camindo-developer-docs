@@ -93,7 +93,9 @@ The groups correspond to arrays in `Cms` (`textTypes`, `numericTypes`, `dateType
   deterministic HMAC in `hash` for equality searches.
 * `data_fil` – instead of `data`, the file's metadata: `extension`, `mime_type`,
   `filename`, `size`, `width`, `height`, `token`, `version`, `file_language_id` and a
-  JSON field `data`. The file itself lives in the file system.
+  JSON field `data`. The file itself lives in the file system. `data` holds the
+  settings of the image editing (`edit` on the upload field, `crop` on the thumbnail, see
+  [07](07-media-processing.md#image-editing-and-crop-area)); a new upload writes `{}`.
 * `data_rel` – edge table `(src_id, fieldname_id, dest_id)` with `position` for
   sortable links; a second index serves the reverse direction. It has no
   `language_id`.

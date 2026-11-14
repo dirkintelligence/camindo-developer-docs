@@ -139,6 +139,49 @@ Sequence on save:
 This way an upload survives a failed validation, and the expensive conversion runs only
 once.
 
+If the Magick processor is set up, `_saveUploadField()` turns an uploaded image right after
+storing it according to its EXIF orientation (`Magick::autoOrient()`, only formats from
+`Magick::EDITABLE_CODERS`, JPEG/WebP with the estimated quality of the original; the other
+metadata remain). Thumbnails of Magick converters turn via `-auto-orient` anyway;
+`source_width`/`source_height` report the aligned dimensions.
+
+## Image editing and crop area
+
+On the info page (`RecordBackendImageEdit`, layer `record_image_edit.php`, Ajax
+`ajax_image_edit.php`) – only with Magick, on the productive record, with write permission.
+The layer locks the record like the input form, but without a working copy:
+`TemporaryTrait::lockOnly()` creates only the row (`tmp` = 1, `origin_id`, `changed_by`,
+`changed_at`) – without working state, relations or files – and invalidates older working
+copies (`invalidateWorkingCopies()`, like `checkOut()`). It opens only via POST (placeholder
+with `cApp.layers.openPost()`); someone else's lock shows the notice with “Unlock”
+(`unlock=1`), an input form of one's own still open an error. Every request carries the id of
+the lock; `lockHeld()` checks and renews it, “Save” and “Cancel” release it
+(`Record::cancel()`), sign-out via `admin_session_record`.
+
+* **Upload field:** rotate, midtones (`-gamma 3^(g/100)`), crop area with an optional target
+  size. `Magick::normalizeEdit()` brings the settings into the fixed form
+  `{rotate, gamma, crop: {x, y, w, h} | null, width, height}` – `crop` as fractions of the
+  turned image. Every preview is calculated by `Magick::renderEdit()` from the original into
+  `paths.tmp_dir/image_edit/` (name from the session token and the ids, delivered only by
+  `ajax_image_edit.php?function=image` with read permission). On saving, the unchanged
+  original is kept under `{var_dir}/media_source/{field_id}/{record_id}[_{language_id}].{ext}`
+  (`imageOriginalPath()`), the file of the field is calculated anew, `size`, `width`,
+  `height`, `version` and `data.edit` are written and `regenerateThumbnails()` is called for
+  this field. Without settings the original comes back. A new upload, removing the file and
+  the permanent deletion remove the original (`deleteImageOriginals()`).
+* **Thumbnail field:** only if the effective converter (`effectiveConverter()`, the same
+  choice as `writeThumbnails()`) is a Magick converter with target width and height in
+  pixels. The box has their aspect ratio and is stored as `data.crop` (fractions of the
+  aligned source file). `regenerateThumbnails()` reads the crop areas
+  (`storedThumbnailCrops()`), `writeThumbnails()` passes them to the processor as
+  `details.manual_crop`; `Magick::buildArguments()` crops after `-auto-orient` and adjusts
+  the box to the aspect ratio (`Magick::cropBox()`: same area and center) in case the source
+  has changed since. A save with a new upload has no crop areas – they are lost.
+
+`writeDeferredThumbnails()` overwrites `data` of the source file only if the converter
+supplies something, so that `data.edit` survives new thumbnails. The file name can only be
+changed on the upload field; `Record::renameFile()` passes it on to all thumbnail fields below.
+
 ## Storage and delivery
 
 ```

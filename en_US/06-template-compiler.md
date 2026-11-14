@@ -55,7 +55,11 @@ name.
 (`Template::rebuildFiles()`) and synchronises afterwards.
 
 Syntax errors do **not** block saving – they are stored in `error_text` and shown in
-the backend with line numbers.
+the backend with line numbers. After the translation `phpSyntaxError()` checks the generated
+PHP code with `token_get_all($php, TOKEN_PARSE)`; a `ParseError` ends up in `error_text` as
+“PHP syntax error” with the line in the source code (translating keeps the line count), instead
+of only showing up when the page is called. Errors that PHP only finds when compiling (such as
+`break` outside a loop) are not detected by the check.
 
 ### Referring to templates
 
@@ -77,6 +81,12 @@ with a `RuntimeException` for an ambiguous or unknown name.
 ```
 
 * The command name is case-insensitive.
+* ***Not in PHP comments:*** `scan()` first splits the source code with `PhpToken::tokenize()`
+  (`phpZones()`). A `(cms:` in a `T_COMMENT`/`T_DOC_COMMENT` is not a command, the rest of the
+  comment stays unchanged – the generated `<?php … ?>` would end a `//` comment at the `?>` and
+  a `/* */` comment at the `*/` of the marker. The tokenizer decides, so exactly PHP's view
+  applies (a `//` comment also ends at `?>`). In other PHP tokens (code, strings) a command is
+  translated as before, with a note.
 * Parameters are separated by whitespace; line breaks are allowed.
 * Values in `"…"` or `'…'` are taken as they are, including PHP interpolation (`$var`,
   `{$expression}`); everything else is put in double quotes.

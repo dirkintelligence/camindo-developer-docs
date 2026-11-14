@@ -57,7 +57,11 @@ neuen Bereichs.
 (`Template::rebuildFiles()`) und gleicht danach ab.
 
 Syntaxfehler blockieren das Speichern **nicht** – sie stehen in `error_text` und werden
-im Backend mit Zeilennummer angezeigt.
+im Backend mit Zeilennummer angezeigt. Nach dem Übersetzen prüft `phpSyntaxError()` den
+erzeugten PHP-Code mit `token_get_all($php, TOKEN_PARSE)`; ein `ParseError` landet als
+„PHP syntax error“ mit der Zeile im Quelltext (die Zeilenzahl bleibt beim Übersetzen gleich)
+in `error_text`, statt erst beim Aufruf der Seite aufzufallen. Fehler, die PHP erst beim
+Kompilieren findet (etwa `break` außerhalb einer Schleife), erkennt die Prüfung nicht.
 
 ### Templates ansprechen
 
@@ -80,6 +84,12 @@ mehrdeutigen oder unbekannten Namen mit einer `RuntimeException` ab.
 ```
 
 * Befehlsname ohne Rücksicht auf Groß-/Kleinschreibung.
+* ***Nicht in PHP-Kommentaren:*** `scan()` zerlegt den Quelltext vorab mit `PhpToken::tokenize()`
+  (`phpZones()`). Ein `(cms:` in einem `T_COMMENT`/`T_DOC_COMMENT` ist kein Befehl, der Rest
+  des Kommentars bleibt unverändert – das erzeugte `<?php … ?>` würde einen `//`-Kommentar am
+  `?>` und einen `/* */`-Kommentar am `*/` der Markierung beenden. Maßgeblich ist der
+  Tokenizer, also genau die Sicht von PHP (ein `//`-Kommentar endet auch an `?>`). In anderen
+  PHP-Tokens (Code, Strings) wird ein Befehl wie bisher übersetzt, mit einem Hinweis.
 * Parameter durch Leerraum getrennt, Zeilenumbrüche erlaubt.
 * Werte in `"…"` oder `'…'` werden übernommen, inklusive PHP-Interpolation (`$var`,
   `{$ausdruck}`); alles andere wird in doppelte Anführungszeichen gesetzt.

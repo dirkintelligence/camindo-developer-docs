@@ -411,7 +411,7 @@ needs a permission:
 |---|---|
 | `rel_area_template.selectable` | selectable in this area |
 | `rel_area_template.override` | may replace the assigned template via URL |
-| `template.standalone` | may be called **without** a record (`/0,{name}`) |
+| `template.standalone` | may be called **without** a record (`/0,{name}`); not needed for the start template of the instance (`instance.template_id`) |
 | `template.type = 'scheduler'` | never through an address, only by the scheduler ([07](07-media-processing.md#scheduler-module-scheduler)) |
 
 Without permission, the request ends with "Invalid template request".

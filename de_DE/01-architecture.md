@@ -263,12 +263,22 @@ Der URL-Hash bildet den Zustand des Backends ab; mehrere mit `~` verkettete Pfad
 | `cApp.layers.replace(path)` / `replacePost(path, params)` | obersten Layer ersetzen (GET bzw. POST) |
 | `cApp.layers.close()` | obersten Layer schließen |
 | `cApp.layers.refresh()` | obersten Layer neu laden |
-| `cApp.layers.invalidate([callback], [levels])` | den Layer darunter (bzw. `levels` Layer) als veraltet markieren – er lädt neu, sobald er wieder oben liegt |
+| `cApp.layers.invalidate([callback])` | alle aktualisierbaren Layer darunter als veraltet markieren – jeder lädt neu, sobald er wieder oben liegt; `callback` nach dem Neuladen des Layers direkt darunter |
 | `cApp.layers.removeReferer()` | den Layer darunter entfernen |
 | `cApp.aside.open(path)` / `openPost(path)` | Seitenleiste laden |
 
-Nach Speichern, Löschen oder Import gilt einheitlich:
-`cApp.layers.invalidate(); cApp.layers.close();` (bzw. `replace()` statt `close()`).
+***Aktualisierbare Layer:*** Seiten, die nur Daten zeigen – Listen, Infoseiten,
+Übersichten –, rufen `Backend::refreshable()` auf (Markierung `data-c9-refresh`).
+Eingabemasken tun das nie: Neu laden würde ihre Arbeitskopie und die Eingaben verwerfen.
+Nach einer Änderung lädt jeder markierte Layer unter dem aktuellen neu, sobald er wieder
+oben liegt; die Startseite gilt immer als markiert. Das geschieht
+
+* automatisch nach jedem erfolgreichen POST aus einem Layer (`cLoadContent`) – ändernde
+  Aktionen laufen ohnehin nur per POST ([14](14-security-web.md)),
+* ausdrücklich mit `cApp.layers.invalidate(); cApp.layers.close();` (bzw. `replace()`),
+  etwa wenn ein Callback nach dem Neuladen folgen soll.
+
+Eine neue Listen- oder Infoseite braucht daher nur `$this->backend->refreshable()`.
 
 ## Kernklassen (`Core/src/`)
 

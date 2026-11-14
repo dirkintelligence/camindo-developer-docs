@@ -419,7 +419,7 @@ braucht eine Berechtigung:
 |---|---|
 | `rel_area_template.selectable` | in diesem Bereich auswählbar |
 | `rel_area_template.override` | darf per URL das zugewiesene Template ersetzen |
-| `template.standalone` | darf **ohne** Datensatz aufgerufen werden (`/0,{name}`) |
+| `template.standalone` | darf **ohne** Datensatz aufgerufen werden (`/0,{name}`); nicht nötig für das Start-Template der Instanz (`instance.template_id`) |
 | `template.type = 'scheduler'` | nie über eine Adresse, nur vom Zeitplaner ([07](07-media-processing.md#zeitplaner-modul-scheduler)) |
 
 Ohne Berechtigung endet der Request mit „Invalid template request“.

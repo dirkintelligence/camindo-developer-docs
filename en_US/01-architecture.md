@@ -265,12 +265,22 @@ stacked layers:
 | `cApp.layers.replace(path)` / `replacePost(path, params)` | replace the top layer (GET or POST) |
 | `cApp.layers.close()` | close the top layer |
 | `cApp.layers.refresh()` | reload the top layer |
-| `cApp.layers.invalidate([callback], [levels])` | mark the layer below (or `levels` layers) as stale – it reloads as soon as it is on top again |
+| `cApp.layers.invalidate([callback])` | mark all refreshable layers below as stale – each reloads as soon as it is on top again; `callback` after the layer directly below has reloaded |
 | `cApp.layers.removeReferer()` | remove the layer below |
 | `cApp.aside.open(path)` / `openPost(path)` | load the side panel |
 
-After saving, deleting or importing, the rule is:
-`cApp.layers.invalidate(); cApp.layers.close();` (or `replace()` instead of `close()`).
+***Refreshable layers:*** pages that only show data – lists, info pages, overviews – call
+`Backend::refreshable()` (marker `data-c9-refresh`). Input masks never do: reloading would
+discard their working copy and the entries. After a change every marked layer below the
+current one reloads as soon as it is on top again; the start page always counts as marked.
+This happens
+
+* automatically after every successful POST from a layer (`cLoadContent`) – changing actions
+  run via POST only anyway ([14](14-security-web.md)),
+* explicitly with `cApp.layers.invalidate(); cApp.layers.close();` (or `replace()`), for
+  example when a callback is to follow the reload.
+
+A new list or info page therefore only needs `$this->backend->refreshable()`.
 
 ## Core classes (`Core/src/`)
 

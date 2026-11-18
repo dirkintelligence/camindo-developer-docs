@@ -172,8 +172,8 @@ geben sie frei (`Record::cancel()`), die Abmeldung über `admin_session_record`.
   Entfernen der Datei und das endgültige Löschen entfernen das Original
   (`deleteImageOriginals()`).
 * **Thumbnail-Feld:** nur wenn der wirksame Konverter (`effectiveConverter()`, dieselbe
-  Wahl wie `writeThumbnails()`) ein Magick-Konverter mit Zielbreite und -höhe in Pixeln
-  ist. Der Rahmen hat deren Seitenverhältnis und wird als `data.crop` (Bruchteile der
+  Wahl wie `writeThumbnails()`) ein Magick-Konverter mit Zielbreite und/oder -höhe in Pixeln
+  ist. Der Rahmen hat deren Seitenverhältnis – bei nur einer Angabe das der Quelldatei – und wird als `data.crop` (Bruchteile der
   ausgerichteten Quelldatei) gespeichert. `regenerateThumbnails()` liest die Ausschnitte
   (`storedThumbnailCrops()`), `writeThumbnails()` gibt sie als `details.manual_crop` an den
   Prozessor; `Magick::buildArguments()` schneidet nach `-auto-orient` aus und passt den

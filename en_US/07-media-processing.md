@@ -170,8 +170,8 @@ the lock; `lockHeld()` checks and renews it, “Save” and “Cancel” release
   this field. Without settings the original comes back. A new upload, removing the file and
   the permanent deletion remove the original (`deleteImageOriginals()`).
 * **Thumbnail field:** only if the effective converter (`effectiveConverter()`, the same
-  choice as `writeThumbnails()`) is a Magick converter with target width and height in
-  pixels. The box has their aspect ratio and is stored as `data.crop` (fractions of the
+  choice as `writeThumbnails()`) is a Magick converter with target width and/or height in
+  pixels. The box has their aspect ratio – with only one of them that of the source file – and is stored as `data.crop` (fractions of the
   aligned source file). `regenerateThumbnails()` reads the crop areas
   (`storedThumbnailCrops()`), `writeThumbnails()` passes them to the processor as
   `details.manual_crop`; `Magick::buildArguments()` crops after `-auto-orient` and adjusts

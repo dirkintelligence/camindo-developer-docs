@@ -221,7 +221,9 @@ Der Schlüssel (`paths.watermark_key_file`, Modus `0600`) entscheidet, ob sich e
 Wasserzeichen lesen lässt; `camindo.php watermark key` legt ihn an und überschreibt nie.
 Das Programm bekommt ihn per `-key-file`, nie auf der Kommandozeile. `watermark detect`
 und `Watermark::detect()` liefern das JSON des Programms plus die Instanzen zum Code
-(`instancesForCode()`).
+(`instancesForCode()`). Im Backend prüft das Core-Modul `Watermark` hochgeladene Bilder
+(`WatermarkBackend`): Typ per `finfo`, höchstens 30 MB, nur die temporäre Upload-Datei,
+Instanznamen nur bei `Access::instance()`.
 
 ## Ablage und Auslieferung
 

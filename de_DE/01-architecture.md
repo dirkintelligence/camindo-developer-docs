@@ -339,6 +339,7 @@ Rückrufe nach dem äußersten Commit.
 | `Tools` | Caches, Datenbankpflege, Server-Informationen, Entwicklerwerkzeuge |
 | `Trash` | Papierkorb |
 | `User` | Backend-Sicht auf die Frontend-Community (Gegenlesen) |
+| `Watermark` | Bilder auf das unsichtbare Wasserzeichen der Installation prüfen ([07](07-media-processing.md#unsichtbares-wasserzeichen)) |
 
 Core-Prozessoren: `ImageGd`, `Magick`, `FFmpegVideo`, `FFmpegAudio`, `FFmpegImage`.
 Core-Extensions: `Calendar`, `Datepicker`, `HTMLVisual`, `IconPicker`, `MarkdownVisual`,

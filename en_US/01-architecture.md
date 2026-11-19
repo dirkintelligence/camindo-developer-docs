@@ -341,6 +341,7 @@ callbacks after the outermost commit.
 | `Tools` | caches, database maintenance, server information, developer tools |
 | `Trash` | trash |
 | `User` | backend view of the frontend community (review) |
+| `Watermark` | check images for the invisible watermark of the installation ([07](07-media-processing.md#invisible-watermark)) |
 
 Core processors: `ImageGd`, `Magick`, `FFmpegVideo`, `FFmpegAudio`, `FFmpegImage`.
 Core extensions: `Calendar`, `Datepicker`, `HTMLVisual`, `IconPicker`, `MarkdownVisual`,

@@ -217,7 +217,9 @@ error. The cause is in the error log.
 The key (`paths.watermark_key_file`, mode `0600`) decides whether a watermark can be read at
 all; `camindo.php watermark key` creates it and never overwrites. The program gets it via
 `-key-file`, never on the command line. `watermark detect` and `Watermark::detect()` return
-the JSON of the program plus the instances for the code (`instancesForCode()`).
+the JSON of the program plus the instances for the code (`instancesForCode()`). In the back end,
+the core module `Watermark` checks uploaded images (`WatermarkBackend`): type via `finfo`, at most
+30 MB, only the temporary upload file, instance names only with `Access::instance()`.
 
 ## Storage and delivery
 

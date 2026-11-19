@@ -185,6 +185,44 @@ geben sie frei (`Record::cancel()`), die Abmeldung über `admin_session_record`.
 liefert, damit `data.edit` neue Thumbnails übersteht. Der Dateiname lässt sich nur am
 Upload-Feld ändern; `Record::renameFile()` überträgt ihn auf alle Thumbnail-Felder darunter.
 
+## Unsichtbares Wasserzeichen
+
+`Camindo\Core\Watermark` bettet mit dem externen Programm
+[`camindo-watermark`](https://github.com/dirkintelligence/camindo-watermark) einen Code aus
+ein bis sechs Zeichen `A`–`Z` und `-` in Bilder ein: Jedes Zeichen ist eine Ziffer 1–27 zur
+Basis 28 (0 = kein Zeichen), 28⁶ Codes passen in die 32 Bit des Programms, ein siebtes Zeichen
+nicht mehr. Das Verfahren arbeitet im
+Frequenzraum: Die Luma wird auf ein festes 512er-Raster umgerechnet und per DCT in einem Ring
+mittlerer Frequenzen markiert (Spread Spectrum mit schlüsselabhängigen Vorzeichen, CRC-16,
+Pilotbits). Skalierung, JPEG und Drehen um 90° übersteht es, Zuschneiden nicht.
+
+| Wo | Was |
+|---|---|
+| `instance.details.watermark_code` | Code der Instanz; `Instance::hookOnSave()` normalisiert (`Watermark::normalizeCode()`) und lehnt einen Code ab, den eine andere Instanz schon trägt |
+| `field.details.watermark` | Schalter an Upload- und Thumbnail-Feldern |
+| `VirtualFieldsTrait::_saveUploadField()` | markiert den Upload nach `autoOrient()` |
+| `VirtualFieldsTrait::writeThumbnails()` | markiert eine sofort erzeugte Version direkt nach `convert()` – vor der Kaskade |
+| `TriggerMedia::finalize()` | markiert eine im Hintergrund erzeugte Version nach `rectifyParams()` |
+| `RecordBackendImageEdit::_saveEdit()` | markiert das Ergebnis der Bildbearbeitung neu (`Record::applyWatermark()`), bevor es die Datei ersetzt |
+
+`Watermark::codeForField()` liefert den Code nur, wenn Feld-Schalter **und** Instanz-Code
+gesetzt sind (Cache je Request). `apply()` schreibt in eine temporäre Datei neben dem Ziel
+und benennt um. JPEG und PNG verarbeitet das Programm selbst; WebP schreibt es als PNG, und
+`Magick::renderEdit()` erzeugt daraus wieder WebP. GIF, SVG, AVIF u. a. bleiben unmarkiert
+(`supports()`). Ohne vorgegebene Qualität schätzt ImageMagick die der Datei (JPEG), sonst
+gilt `DEFAULT_QUALITY` (92) bzw. `DEFAULT_QUALITY_WEBP` (80).
+
+Fehlerverhalten: Ist `paths.watermark` leer, bleibt alles unmarkiert. Ist das Programm
+eingetragen, aber nicht nutzbar (`available()`: Programm nicht ausführbar, Schlüssel fehlt)
+oder scheitert der Aufruf, schlägt das Speichern mit `error_watermark` fehl; im Hintergrund
+endet der Prozess mit diesem Fehler. Die Ursache steht im Fehlerprotokoll.
+
+Der Schlüssel (`paths.watermark_key_file`, Modus `0600`) entscheidet, ob sich ein
+Wasserzeichen lesen lässt; `camindo.php watermark key` legt ihn an und überschreibt nie.
+Das Programm bekommt ihn per `-key-file`, nie auf der Kommandozeile. `watermark detect`
+und `Watermark::detect()` liefern das JSON des Programms plus die Instanzen zum Code
+(`instancesForCode()`).
+
 ## Ablage und Auslieferung
 
 ```
@@ -383,6 +421,8 @@ Template mit `type = 'scheduler'` als Adresse (`/0,name`) immer mit 404, und
     'ffmpeg'    => '/usr/bin/ffmpeg',
     'php'       => '/usr/local/bin/php',  // startet die Trigger
     'mysqldump' => '/usr/bin/mysqldump',
+    'watermark' => '/opt/camindo-watermark/camindo-watermark',  // '' = aus
+    'watermark_key_file' => '/pfad/zum/projekt/.camindo-watermark.key',
 ],
 ```
 

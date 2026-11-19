@@ -324,6 +324,7 @@ php Core/cron/camindo.php <command> [arguments] [--options]
 | `refresh` | directories → `component`, runtime lists; `refresh snippets\|html\|records` like `cache …` |
 | `htaccess [status] \| renew` | check (exit code 1: outdated) or write the managed block of `public/.htaccess` (`HtaccessWriter`) |
 | `template commands [--lang=…] \| --all --out=DIR` | command definitions (`Template::commandDefinitions()`, texts via `Template::commandText()` in one backend language) as JSON – basis of the VS Code extension `camindo-vscode` |
+| `watermark status \| key \| detect FILE [--json]` | invisible watermark (`Watermark`, [07](07-media-processing.md#invisible-watermark)): state, create the key, check an image (exit code 1 = none) |
 | `admin password NAME [--pass-file=…] \| sign` | set a backend password; rewrite all signatures |
 | `key status \| rotate \| retire KID` | key ring of `.camindo.key` ([13](13-security-authentication.md#key-rotation)) |
 | `audit verify [TYPE ID] \| restore [--dry-run] \| reseal TYPE ID \| delete TYPE ID \| strip-names \| migrate` | audit log: verify the chain, cut back after restoring a dump, re-chain a broken chain, delete a history, strip names ([13](13-security-authentication.md#audit-log)) |

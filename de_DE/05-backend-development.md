@@ -533,7 +533,9 @@ Datensätze in allen Sprachen, Verknüpfungen, Dateien, Templates, Konverter), *
 (eine Zeile je Datensatz, Unterfelder in Punkt-Schreibweise) und **DOCX** (für
 Übersetzungen) und importiert dieselben Formate. Größere Mengen laufen als
 Hintergrundprozess (`Core/cron/record_export.php`, `record_import.php`); das Ergebnis
-kommt als interne Nachricht.
+kommt als interne Nachricht. Ebenso der Medien-Import aus einer Zip-Datei
+(`RecordMediaImport::start()`, `Core/cron/media_import.php`, gleiche Schwelle
+`admin.import_background_threshold`, gezählt in Dateien).
 
 Für **Template-Sätze**, die in eine fremde Datenbank übertragen werden sollen, markiert
 der Export (Option „Templates für Import in Fremddatenbank optimieren“) Verweise in den

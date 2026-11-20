@@ -340,7 +340,8 @@ replace the code that is running it.
 Further scripts under `Core/cron/`: `cron.php` (the only cron job), `scheduler.php` (started by it),
 `template_sync.php`, `trigger_ff.php`, `trigger_magick.php` (started by it),
 `record_export.php`, `record_import.php`, `record_batch.php`, `mass_delete.php`,
-`thumbnails.php` (background processes from the backend), `rebuild_trees.php` (repair
+`thumbnails.php`, `media_import.php` (background processes from the backend), `imagick_convert.php`
+(worker of the Imagick conversions), `rebuild_trees.php` (repair
 trees) and the self-tests `check_dateparse.php`, `check_nested_select.php`,
 `check_tree_positions.php`, `check_template_params.php`, `check_include_cache.php`,
 `check_webauthn.php`, `check_record_files.php` (working copy and file fields). The CI runs

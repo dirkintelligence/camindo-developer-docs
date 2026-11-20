@@ -526,7 +526,9 @@ The Record module exports records as **XML** (backup format: areas, fields, reco
 all languages, links, files, templates, converters), **CSV** (one row per record,
 sub-fields in dot notation) and **DOCX** (for translation), and imports the same
 formats. Larger amounts run as a background process (`Core/cron/record_export.php`,
-`record_import.php`); the result arrives as an internal message.
+`record_import.php`); the result arrives as an internal message. The same applies to the
+media import from a zip file (`RecordMediaImport::start()`, `Core/cron/media_import.php`,
+same threshold `admin.import_background_threshold`, counted in files).
 
 For **template sets** meant to be transferred to another database, the export (option
 "Optimise templates for import into another database") marks references in the

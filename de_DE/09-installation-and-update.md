@@ -340,7 +340,8 @@ Code aus, der es gerade ausführt.
 Weitere Scripts unter `Core/cron/`: `cron.php` (der einzige Cronjob), `scheduler.php` (von ihm gestartet),
 `template_sync.php`, `trigger_ff.php`, `trigger_magick.php` (von ihm gestartet),
 `record_export.php`, `record_import.php`, `record_batch.php`, `mass_delete.php`,
-`thumbnails.php` (Hintergrundprozesse aus dem Backend), `rebuild_trees.php` (Bäume
+`thumbnails.php`, `media_import.php` (Hintergrundprozesse aus dem Backend), `imagick_convert.php`
+(Worker der Imagick-Umwandlungen), `rebuild_trees.php` (Bäume
 reparieren) und die Selbsttests `check_dateparse.php`, `check_nested_select.php`,
 `check_tree_positions.php`, `check_template_params.php`, `check_include_cache.php`,
 `check_webauthn.php`, `check_record_files.php` (Arbeitskopie und Datei-Felder). Die CI führt

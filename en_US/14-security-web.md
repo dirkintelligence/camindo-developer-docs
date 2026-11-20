@@ -247,8 +247,11 @@ argument list into Imagick calls and replaces the policy as far as possible:
   `jpeg:`); additionally `Execute::unsafeParameter()`. Checked on saving and before every
   call.
 * Limits from `MagickPolicy::resources()` via `Imagick::setResourceLimit()` before every
-  call; `-limit` can only lower them. The time limit is not set – ImageMagick measures it
-  from the first image of the PHP process – `max_execution_time` takes its place.
+  call; `-limit` can only lower them. Every conversion runs in a PHP process of its own
+  (`cron/imagick_convert.php`, [07](07-media-processing.md#imagick-worker)): the caller ends
+  it after `Magick::TIMEOUT_CONVERT`, and ImageMagick's time limit applies inside it. In the
+  web server or background process itself it could not be set – ImageMagick measures it from
+  the first image of the process and ends the process when it is exceeded.
 * SVG and PDF are never processed (`unsupported`); without the policy, delegates cannot be
   blocked.
 

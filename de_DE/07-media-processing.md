@@ -18,7 +18,7 @@ gespeichert wird (oder über Werkzeuge → Daten „Thumbnails neu erzeugen“).
 | Prozessor | Typ | Grundlage |
 |---|---|---|
 | `ImageGd` | image | PHP-GD – einfache Bildbearbeitung ohne externe Programme, kein Hintergrundmodus |
-| `Magick` | image | ImageMagick (`paths.magick`) – auch TIFF, PSD, HEIC, AVIF; immer unter eigener Sicherheits-Policy ([14](14-security-web.md#imagemagick)). Wahlweise je Konverter über die PHP-Erweiterung Imagick (`details.engine`, `ImagickCommand`): gleiche Argumente, übersetzt in Methodenaufrufe, ohne Hintergrundbetrieb, ohne SVG/PDF. Bildbearbeitung, `autoOrient()` und Wasserzeichen haben keinen Konverter: Sie nehmen das Programm und nur ohne `paths.magick` die Erweiterung (`Magick::fallbackImagick()`, `available()` = Programm oder Erweiterung, `cliAvailable()` = nur Programm); Selbsttest `check_imagick.php` |
+| `Magick` | image | ImageMagick (`paths.magick`) – auch TIFF, PSD, HEIC, AVIF; immer unter eigener Sicherheits-Policy ([14](14-security-web.md#imagemagick)). Wahlweise je Konverter über die PHP-Erweiterung Imagick (`details.engine`, `ImagickCommand`): gleiche Argumente, übersetzt in Methodenaufrufe, jede Umwandlung in einem eigenen Worker-Prozess ([Imagick-Worker](#imagick-worker)), ohne SVG/PDF. Bildbearbeitung, `autoOrient()` und Wasserzeichen haben keinen Konverter: Sie nehmen das Programm und nur ohne `paths.magick` die Erweiterung (`Magick::fallbackImagick()`, `available()` = Programm oder Erweiterung, `cliAvailable()` = nur Programm); Selbsttest `check_imagick.php` |
 | `Poppler` | document | pdftoppm (`paths.pdftoppm`, `pdfinfo` daneben) – eine PDF-Seite als PNG/JPEG/TIFF, ohne Ghostscript; feste Argumente, kein Expertenmodus, kein Hintergrundbetrieb ([14](14-security-web.md#pdf-mit-poppler)); Selbsttest `check_poppler.php` |
 | `FFmpegVideo` | video | ffmpeg – Videokonvertierung |
 | `FFmpegAudio` | audio | ffmpeg – Audiokonvertierung |
@@ -114,6 +114,10 @@ kann. `Converter::settingsHash()` (Prozessor, Endung, Medientypen, `details`) er
 Konverter über Datenbankgrenzen hinweg wieder – der XML-Import ordnet damit zu.
 
 `details.background_process = 1` schickt die Umwandlung in einen Hintergrundprozess.
+Bei `Magick` (beide Engines) gilt der Schalter nur für Aufrufe über den Webserver: Ein
+Prozess auf der Kommandozeile (Hintergrundlauf eines Werkzeugs oder Imports, API über die
+CLI) läuft schon im Hintergrund und wandelt direkt um – sonst startete er je Datei einen
+Prozess. `$forceBgproc` gilt immer.
 `ImageGd` kennt keinen Hintergrundmodus: Entsteht ein Bild im Hintergrund (etwa per
 `FFmpegImage`), lassen sich weitere Versionen davon nur mit einem hintergrundfähigen
 Prozessor (`Magick`) erzeugen.
@@ -340,8 +344,35 @@ Ein neuer Prozessor mit vorhandenem Fortschrittsformat braucht am Trigger nichts
 `BGPROC_TYPE` passend setzen, `rectifyParams()` implementieren, mit
 `startBackgroundProcess()` starten. Ein neues Format braucht eine Kindklasse von
 `TriggerMedia` (`BGPROC_TYPE`, `PROGRESS_PREFIX`, `DEFAULT_PROCESSOR`,
-`readProgress()` → `['percent' => int, 'finished' => bool]`), ein CLI-Script nach dem
-Muster von `trigger_ff.php` und einen Aufruf in `TriggerCron::tick2s()`.
+`readProgress()` → `['percent' => int, 'finished' => bool]`, optional `'error' => string`), ein CLI-Script
+nach dem Muster von `trigger_ff.php` und einen Aufruf in `TriggerCron::tick2s()`.
+
+`TriggerMagick` setzt `FINISH_ON_EXIT`: Bei `-monitor` läuft jede Operation (Lesen,
+Skalieren, Schreiben …) für sich bis 100 %, fertig ist deshalb erst der beendete Prozess –
+außer die Fortschrittsdatei enthält eine Fehlerzeile (`error: …` des Workers,
+`… @ error/…` bzw. `@ fatal/…` von magick). Ob die Datei taugt, prüft danach
+`rectifyParams()`. Damit `Execute::processStates()` den Prozess am Token erkennt, steht das
+Token in der Kommandozeile: beim Programm als `-define camindo:job={token}`, beim Worker im
+Namen der Auftragsdatei.
+
+### Imagick-Worker
+
+Mit der Engine Imagick (und im Rückfall ohne Programm: Bildbearbeitung, `autoOrient()`,
+Wasserzeichen) läuft jede Umwandlung in `Core/cron/imagick_convert.php`, einem eigenen
+PHP-Prozess. `Magick::workerCommand()` schreibt die Auftragsdatei
+`{paths.tmp_dir}/imagick-job-{token}.json` (Quelle, Ziel, Coder, Argumente, Grenzen); der
+Worker liest und löscht sie, nimmt nur Dateien dieses Namens aus `paths.tmp_dir` an und
+setzt neben den Grenzen auch ImageMagicks Zeitgrenze (`new ImagickCommand(timeLimit: true)`) –
+in einem Prozess mit genau einer Umwandlung misst sie richtig.
+
+| Fall | Ablauf |
+|---|---|
+| Vordergrund | `Execute::execute()` mit `TIMEOUT_CONVERT`, danach `EXEC_TIMEOUT` → `proc.magick.error_timeout`; Fehlertext aus `Magick::workerError()` |
+| Hintergrund | `startBackgroundProcess()`, stderr = Fortschrittsdatei; `ImagickCommand::monitor()` schreibt über `Imagick::setProgressMonitor()` Zeilen wie `Imagick: 42% complete`, `TriggerMagick` liest sie wie `-monitor` |
+| ohne `paths.php` | Umwandlung im aufrufenden Prozess, ohne Zeitgrenze, nie im Hintergrund (`Magick::workerAvailable()`, Hinweis auf der Infoseite des Konverters) |
+
+Der Start kostet rund 30 ms. `identify()` (`pingImage()`, liest keine Pixel) bleibt im
+aufrufenden Prozess.
 
 ## Zeitplaner (Modul Scheduler)
 

@@ -388,11 +388,11 @@ und gemerkt; ein unbekannter Verweis gilt als leerer Wert (`ifempty` greift).
   unterscheidet nach derselben Regel: reine Ziffern = `record_id`, alles andere = Slug.
 * Ein gesetzter Slug wird **nicht** nachgeführt, wenn sich der Titel ändert – geteilte
   Links bleiben gültig.
-* **Slug-Prefix:** Ein Bereich kann je Sprache ein Präfix führen
+* **Slug-Präfix:** Ein Bereich kann je Sprache ein Präfix führen
   (`area.details.slug_prefix`), das vor den Slug gesetzt wird: `/de_DE/farben/blau`.
   Eindeutig sein muss der ganze Pfad (`Record::slugPathOk()`); zwei Treffer für einen
   Pfad beantwortet `Page` mit „Ambiguous path“.
-* **Übersicht (Präfix allein):** Ist der Pfad genau der Slug-Präfix eines Bereichs in
+* **Übersicht (Präfix allein):** Ist der Pfad genau das Slug-Präfix eines Bereichs in
   der Sprache des Aufrufs und hat der Bereich ein Übersichts-Template
   (`area.overview_template_id`, `Cms::overviewAreaIdByPath()`), bindet `Page` es ohne
   Datensatz ein – wie ein vom CMS gewähltes Template, ohne Standalone-Flag; die
@@ -405,7 +405,7 @@ und gemerkt; ein unbekannter Verweis gilt als leerer Wert (`ifempty` greift).
   Aufrufs), `overview` (true) – etwa für `filter[area]="{$cms['area_id']}"`. Im Backend
   gibt `Backend::buttonAddAreaPreview()` Bereichen mit Übersichts-Template und Präfix
   eine Vorschau-Schaltfläche (Bereichs-Info, Datensatzliste); `buttonAddPreview()` nimmt
-  dafür statt eines Pfads auch `language_id => Pfad` (der Präfix ist je Sprache übersetzt).
+  dafür statt eines Pfads auch `language_id => Pfad` (das Präfix ist je Sprache übersetzt).
 * **Nur das Sprachkürzel** (`/en`, ohne Schrägstrich): Die Rewrite-Regel für das
   Sprachsegment verlangt den Schrägstrich, der Pfad kommt deshalb als Slug `en` an.
   Ist er ein Sprachkürzel des Auftritts (`InstanceCache::findByCode()`, dieselbe Regel

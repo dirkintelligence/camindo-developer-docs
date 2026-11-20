@@ -136,7 +136,7 @@ the overview.
 | `record.move_options` | `record_id`, `target_area_id` | per source field: has content, matching target fields, preselection |
 | `record.move` | `record_id`, `target_area_id`, `mapping`, `auto_map`, `unlock`, `simulate` | mapping used, `dropped` (fields whose content is discarded) |
 | `record.delete` | `record_id`, `with_childs`, `unlock` | recycle bin (`deleted`) or background process (`background`) |
-| `record.restore` | `record_id` | back from the recycle bin, as in the recycle bin module |
+| `record.restore` | `record_id` | back from the recycle bin, as in the recycle bin module; unique values taken in the meantime (slug, `unique`) → validation error listing all conflicts, nothing is restored |
 | `record.message` | `record_id`, `to` (id or name), `subject`, `body` | internal message, the record is linked |
 | `record.preview_url` | `record_id`, `language` | preview address – only after `attach()` |
 | `record.batch` | `area_id`, `mode` (`edit`, `move`, `delete`), scope: `ids` \| `filter`/`filterop`/`filtermode` \| `all`; `data`, `relations`, `files`, `parent_id`, `previous_id` (edit – tree fields: the records are appended to the parent record or placed after the predecessor in their current order), `target_area_id`, `mapping`, `auto_map` (move), `simulate`, `background` (`auto`, `yes`, `no`) | `total`, `done`, `failed`, `errors` per record – or `background.token`; extra right "batch processing" |

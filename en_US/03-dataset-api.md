@@ -295,6 +295,24 @@ non-deleted records); for `encrypted`, the HMAC is compared. Relations and files
 no uniqueness. The `slug` field checks the whole URL path including the slug prefix
 instead (`Record::slugPathOk()`).
 
+Because deleted records do not count, a value of a record in the trash may have been taken
+in the meantime. `restore()` itself does not check this; the Trash module
+(`Trash::restore()`) first checks all records of the operation with
+`Record::restoreConflicts($recordIds)` (`Record::restoreIds()`, for an area its records),
+also against each other. An operation with several records is then refused (`'conflicts'`),
+a single record goes to the input form (`'edit'`): working copy via
+`RecordService::checkOut(…, fromTrash: true)` (`TemporaryTrait::checkOut()` with
+`$fromTrash`, action `restore` in `loadForAction()`), saving via
+`RecordService::checkIn(…, restore: true)` → `Record::saveAndRestore()`: `save()` with the
+usual checks, then `restore()` in the same transaction; “Cancel” leaves the record in the
+trash. The API (`record.restore`) reports both cases as validation errors.
+
+A **new `slug` field** (or one renamed to `slug`) is filled by `Field::hookOnSaved()` via
+`Record::fillSlugs()`: per record and language from the default field in the same language
+(further languages only with their own translation), checked with `slugPathOk()`; on a
+conflict the slug stays empty. The result (`written`, `source`, `conflicts`) is in
+`Field::$slugFill`.
+
 ### Multilingual fields
 
 The value arrives as `language_id => input` (`data[field][{language_id}]` from the

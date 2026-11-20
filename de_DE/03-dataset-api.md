@@ -296,7 +296,25 @@ Instanz. Seiteneffekte außerhalb der Datenbank (Medien-Sperre, Datei-Cache) geh
 Bei virtuellen Feldern prüft `uniqueVirtualOk()` gegen die `data_*`-Tabelle (produktive,
 nicht gelöschte Datensätze); bei `encrypted` wird der HMAC verglichen. Relationen und
 Dateien kennen keine Eindeutigkeit. Das Feld `slug` prüft statt dessen den ganzen
-URL-Pfad samt Slug-Prefix (`Record::slugPathOk()`).
+URL-Pfad samt Slug-Präfix (`Record::slugPathOk()`).
+
+Weil gelöschte Datensätze nicht zählen, kann ein Wert eines Datensatzes im Papierkorb
+inzwischen vergeben sein. `restore()` selbst prüft das nicht; das Modul Papierkorb
+(`Trash::restore()`) prüft vorher mit `Record::restoreConflicts($recordIds)` alle
+Datensätze des Vorgangs (`Record::restoreIds()`, bei einem Bereich dessen Datensätze),
+auch untereinander. Ein Vorgang mit mehreren Datensätzen wird dann verweigert
+(`'conflicts'`), ein einzelner Datensatz geht in die Eingabemaske (`'edit'`): Arbeitskopie
+per `RecordService::checkOut(…, fromTrash: true)` (`TemporaryTrait::checkOut()` mit
+`$fromTrash`, Aktion `restore` in `loadForAction()`), Speichern über
+`RecordService::checkIn(…, restore: true)` → `Record::saveAndRestore()`: `save()` mit der
+üblichen Prüfung, dann `restore()` in derselben Transaktion; „Abbrechen“ lässt den
+Datensatz im Papierkorb. Die API (`record.restore`) meldet beide Fälle als Prüffehler.
+
+Ein **neues Feld `slug`** (oder ein in `slug` umbenanntes) füllt `Field::hookOnSaved()` über
+`Record::fillSlugs()`: je Datensatz und Sprache aus dem Default-Feld derselben Sprache
+(weitere Sprachen nur mit eigener Übersetzung), geprüft mit `slugPathOk()`; bei einem
+Konflikt bleibt der Slug leer. Das Ergebnis (`written`, `source`, `conflicts`) steht in
+`Field::$slugFill`.
 
 ### Mehrsprachige Felder
 

@@ -139,7 +139,7 @@ Backend-Sprache (der Assistent nimmt `en_US`).
 | `record.move_options` | `record_id`, `target_area_id` | je Quellfeld: Inhalt vorhanden, passende Zielfelder, Vorauswahl |
 | `record.move` | `record_id`, `target_area_id`, `mapping`, `auto_map`, `unlock`, `simulate` | verwendete Zuordnung, `dropped` (Felder, deren Inhalt verworfen wird) |
 | `record.delete` | `record_id`, `with_childs`, `unlock` | Papierkorb (`deleted`) bzw. Hintergrundprozess (`background`) |
-| `record.restore` | `record_id` | aus dem Papierkorb zurück, wie im Modul Papierkorb |
+| `record.restore` | `record_id` | aus dem Papierkorb zurück, wie im Modul Papierkorb; inzwischen vergebene eindeutige Werte (Slug, `unique`) → Prüffehler mit allen Konflikten, nichts wird wiederhergestellt |
 | `record.message` | `record_id`, `to` (Id oder Name), `subject`, `body` | interne Nachricht, der Datensatz ist verlinkt |
 | `record.preview_url` | `record_id`, `language` | Vorschau-Adresse – nur nach `attach()` |
 | `record.batch` | `area_id`, `mode` (`edit`, `move`, `delete`), Umfang: `ids` \| `filter`/`filterop`/`filtermode` \| `all`; `data`, `relations`, `files`, `parent_id`, `previous_id` (edit – Baumfelder: die Datensätze werden in ihrer bisherigen Reihenfolge ans Ende des Eltern-Datensatzes bzw. hinter den Vorgänger gestellt), `target_area_id`, `mapping`, `auto_map` (move), `simulate`, `background` (`auto`, `yes`, `no`) | `total`, `done`, `failed`, `errors` je Datensatz – bzw. `background.token`; Zusatzrecht „Stapelverarbeitung“ |

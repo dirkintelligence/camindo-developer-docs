@@ -233,9 +233,24 @@ this:
   modules Converter, Components and Scheduler are reserved for superusers
   (`'superuser' => true`).
 
-The policy applies to the programs, not to the PHP extension Imagick – an add-on module
-using Imagick works under the system policy. If you call ImageMagick yourself, call
-`MagickPolicy::apply()` first.
+The policy applies to the programs, not to the PHP extension Imagick: the extension reads
+`policy.xml` when it is loaded, a `MAGICK_CONFIGURE_PATH` set later has no effect. An
+add-on module using Imagick works under the system policy. If you call ImageMagick
+yourself, call `MagickPolicy::apply()` first.
+
+**Engine Imagick** (`details.engine = 'imagick'`): `ImagickCommand` translates the same
+argument list into Imagick calls and replaces the policy as far as possible:
+
+* Source and target still with a coder prefix (`jpeg:/path/file[0]`).
+* Only options from the whitelist `ImagickCommand::OPTIONS`/`PLUS_OPTIONS`, every value
+  checked (colors, geometries, constant names, `-define` only with coder prefixes such as
+  `jpeg:`); additionally `Execute::unsafeParameter()`. Checked on saving and before every
+  call.
+* Limits from `MagickPolicy::resources()` via `Imagick::setResourceLimit()` before every
+  call; `-limit` can only lower them. The time limit is not set – ImageMagick measures it
+  from the first image of the PHP process – `max_execution_time` takes its place.
+* SVG and PDF are never processed (`unsupported`); without the policy, delegates cannot be
+  blocked.
 
 ## Fixed backend domain
 

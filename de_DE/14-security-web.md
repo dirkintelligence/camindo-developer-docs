@@ -232,9 +232,25 @@ Skript-Inhalt würde als Skriptformat verarbeitet. Der Prozessor `Magick` sicher
   Ausgabedatei wären. Die Module Konverter, Komponenten und Zeitplaner sind Superusern
   vorbehalten (`'superuser' => true`).
 
-Die Policy greift für die Programme, nicht für die PHP-Erweiterung Imagick – ein
-Zusatzmodul, das Imagick nutzt, arbeitet unter der Policy des Systems. Wer ImageMagick
-selbst aufruft, ruft vorher `MagickPolicy::apply()`.
+Die Policy greift für die Programme, nicht für die PHP-Erweiterung Imagick: Die
+Erweiterung liest `policy.xml` beim Laden, ein später gesetztes `MAGICK_CONFIGURE_PATH`
+bleibt wirkungslos. Ein Zusatzmodul, das Imagick nutzt, arbeitet unter der Policy des
+Systems. Wer ImageMagick selbst aufruft, ruft vorher `MagickPolicy::apply()`.
+
+**Engine Imagick** (`details.engine = 'imagick'`): `ImagickCommand` übersetzt dieselbe
+Argumentliste in Imagick-Aufrufe und ersetzt die Policy so weit wie möglich:
+
+* Quelle und Ziel weiterhin mit Coder-Präfix (`jpeg:/pfad/datei[0]`).
+* Nur Optionen aus der Whitelist `ImagickCommand::OPTIONS`/`PLUS_OPTIONS`, jeder Wert
+  geprüft (Farben, Geometrien, Konstantennamen, `-define` nur mit Coder-Präfixen wie
+  `jpeg:`); zusätzlich `Execute::unsafeParameter()`. Geprüft beim Speichern und vor jedem
+  Aufruf.
+* Grenzen aus `MagickPolicy::resources()` per `Imagick::setResourceLimit()` vor jedem
+  Aufruf; `-limit` kann sie nur senken. Die Zeitgrenze wird nicht gesetzt – ImageMagick
+  misst sie ab dem ersten Bild des PHP-Prozesses –, an ihre Stelle tritt
+  `max_execution_time`.
+* SVG und PDF werden nie verarbeitet (`unsupported`), Delegates lassen sich ohne Policy
+  nicht sperren.
 
 ## Feste Backend-Domain
 

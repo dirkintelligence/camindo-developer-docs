@@ -252,6 +252,23 @@ Argumentliste in Imagick-Aufrufe und ersetzt die Policy so weit wie möglich:
 * SVG und PDF werden nie verarbeitet (`unsupported`), Delegates lassen sich ohne Policy
   nicht sperren.
 
+## PDF mit Poppler
+
+Für PDF-Vorschaubilder ist der Prozessor `Poppler` der sicherere Weg: `pdftoppm` stellt nur
+PDF dar und führt weder PostScript noch JavaScript aus, Ghostscript (Hauptrisiko des Wegs
+über ImageMagick) bleibt außen vor.
+
+* Nur Dateien mit `%PDF-` im ersten Kilobyte; sonst `unsupported`.
+* Feste Argumentliste ohne frei eingebbare Parameter: Seite (`-f`/`-l`, auf die letzte
+  Seite begrenzt), `-singlefile`, `-scale-to` (höchstens `MAX_SIDE` = 10000 px), `-cropbox`,
+  optional `-hide-annotations`, Ausgabeformat. Kein Passwort (`-upw`/`-opw`): verschlüsselte
+  Dateien schlagen fehl.
+* `-scale-to` statt `-scale-to-x/-y`: Letztere wirken je nach Poppler-Version vor der
+  Seitendrehung (22.12).
+* Zeitgrenze 60 s (`Execute`), Ausgabe unter zufälligem Präfix im Zielverzeichnis, bei
+  Fehlern aufgeräumt. Speicher lässt sich aus PHP nicht begrenzen – dafür ein
+  Wrapper-Script unter `paths.pdftoppm` (`pdfinfo` daneben).
+
 ## Feste Backend-Domain
 
 `admin.backend_domain` (z. B. `cms.example.com`) bindet das Backend an eine Domain –

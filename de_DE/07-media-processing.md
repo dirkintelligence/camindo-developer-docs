@@ -19,6 +19,7 @@ gespeichert wird (oder über Werkzeuge → Daten „Thumbnails neu erzeugen“).
 |---|---|---|
 | `ImageGd` | image | PHP-GD – einfache Bildbearbeitung ohne externe Programme, kein Hintergrundmodus |
 | `Magick` | image | ImageMagick (`paths.magick`) – auch TIFF, PSD, HEIC, AVIF; immer unter eigener Sicherheits-Policy ([14](14-security-web.md#imagemagick)). Wahlweise je Konverter über die PHP-Erweiterung Imagick (`details.engine`, `ImagickCommand`): gleiche Argumente, übersetzt in Methodenaufrufe, ohne Hintergrundbetrieb, ohne SVG/PDF. Bildbearbeitung, `autoOrient()` und Wasserzeichen haben keinen Konverter: Sie nehmen das Programm und nur ohne `paths.magick` die Erweiterung (`Magick::fallbackImagick()`, `available()` = Programm oder Erweiterung, `cliAvailable()` = nur Programm); Selbsttest `check_imagick.php` |
+| `Poppler` | document | pdftoppm (`paths.pdftoppm`, `pdfinfo` daneben) – eine PDF-Seite als PNG/JPEG/TIFF, ohne Ghostscript; feste Argumente, kein Expertenmodus, kein Hintergrundbetrieb ([14](14-security-web.md#pdf-mit-poppler)); Selbsttest `check_poppler.php` |
 | `FFmpegVideo` | video | ffmpeg – Videokonvertierung |
 | `FFmpegAudio` | audio | ffmpeg – Audiokonvertierung |
 | `FFmpegImage` | image | ffmpeg – Standbild aus einem Video |

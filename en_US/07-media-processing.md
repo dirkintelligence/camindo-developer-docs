@@ -19,6 +19,7 @@ Processors only run when a record is saved with a new file (or via Tools → Dat
 |---|---|---|
 | `ImageGd` | image | PHP GD – simple image editing without external programs, no background mode |
 | `Magick` | image | ImageMagick (`paths.magick`) – also TIFF, PSD, HEIC, AVIF; always under its own security policy ([14](14-security-web.md#imagemagick)). Optionally per converter via the PHP extension Imagick (`details.engine`, `ImagickCommand`): same arguments, translated into method calls, no background mode, no SVG/PDF. Image editing, `autoOrient()` and the watermark have no converter: they use the program and the extension only without `paths.magick` (`Magick::fallbackImagick()`, `available()` = program or extension, `cliAvailable()` = program only); self-test `check_imagick.php` |
+| `Poppler` | document | pdftoppm (`paths.pdftoppm`, `pdfinfo` next to it) – one PDF page as PNG/JPEG/TIFF, without Ghostscript; fixed arguments, no expert mode, no background mode ([14](14-security-web.md#pdf-with-poppler)); self-test `check_poppler.php` |
 | `FFmpegVideo` | video | ffmpeg – video conversion |
 | `FFmpegAudio` | audio | ffmpeg – audio conversion |
 | `FFmpegImage` | image | ffmpeg – still image from a video |

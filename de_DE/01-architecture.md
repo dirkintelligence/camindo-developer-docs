@@ -260,6 +260,7 @@ Der URL-Hash bildet den Zustand des Backends ab; mehrere mit `~` verkettete Pfad
 | Methode | Wirkung |
 |---|---|
 | `cApp.layers.add(path)` | neuen Layer oben auflegen |
+| `cApp.layers.addVia(path)` | Layer unsichtbar einfügen, auf den der nächste `add(…, true)` gelegt wird – beide Pfade in einem Verlaufseintrag (z. B. Bereichsliste unter einem Datensatz aus „Zuletzt geändert“) |
 | `cApp.layers.replace(path)` / `replacePost(path, params)` | obersten Layer ersetzen (GET bzw. POST) |
 | `cApp.layers.close()` | obersten Layer schließen |
 | `cApp.layers.refresh()` | obersten Layer neu laden |

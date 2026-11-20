@@ -262,6 +262,7 @@ stacked layers:
 | Method | Effect |
 |---|---|
 | `cApp.layers.add(path)` | put a new layer on top |
+| `cApp.layers.addVia(path)` | insert a hidden layer that the next `add(…, true)` is placed on – both paths in one history entry (e.g. the area list below a record from “Recently changed”) |
 | `cApp.layers.replace(path)` / `replacePost(path, params)` | replace the top layer (GET or POST) |
 | `cApp.layers.close()` | close the top layer |
 | `cApp.layers.refresh()` | reload the top layer |

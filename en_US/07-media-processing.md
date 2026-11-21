@@ -196,7 +196,12 @@ to six characters `A`–`Z` and `-` into images: every character is a digit 1–
 not. The method works in the frequency
 domain: the luma is resampled to a fixed 512 grid and marked via DCT in a ring of middle
 frequencies (spread spectrum with key-dependent signs, CRC-16, pilot bits). It survives
-scaling, JPEG and turning by 90°, but not cropping.
+scaling, JPEG and turning by 90° directly. Since version 1.3 a synchronization pattern is
+added: 8 × 8 tiles with the same key-dependent pattern above the band of the id. Detection
+finds the tile lattice via the autocorrelation, reconstructs the original frame from it and
+reads the id also after slight cropping, rotation by any angle or pasting into a collage.
+`detect` reports this with `synced: true` and, for free angles, `rotation_deg`; `orientation`
+stays one of the eight names of the 90° grid.
 
 | Where | What |
 |---|---|

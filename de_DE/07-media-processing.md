@@ -199,7 +199,13 @@ Basis 28 (0 = kein Zeichen), 28⁶ Codes passen in die 32 Bit des Programms, ein
 nicht mehr. Das Verfahren arbeitet im
 Frequenzraum: Die Luma wird auf ein festes 512er-Raster umgerechnet und per DCT in einem Ring
 mittlerer Frequenzen markiert (Spread Spectrum mit schlüsselabhängigen Vorzeichen, CRC-16,
-Pilotbits). Skalierung, JPEG und Drehen um 90° übersteht es, Zuschneiden nicht.
+Pilotbits). Skalierung, JPEG und Drehen um 90° übersteht es direkt. Seit Version 1.3 kommt
+ein Synchronisationsmuster dazu: 8 × 8 Kacheln mit demselben schlüsselabhängigen Muster
+oberhalb des Bandes der Kennung. Die Erkennung findet das Kachelgitter über die
+Autokorrelation, rekonstruiert daraus den Originalrahmen und liest die Kennung auch nach
+leichtem Zuschneiden, Drehen um beliebige Winkel oder Einfügen in eine Collage. `detect`
+meldet das mit `synced: true` und bei freien Winkeln `rotation_deg`; `orientation` bleibt einer
+der acht Namen des 90°-Rasters.
 
 | Wo | Was |
 |---|---|

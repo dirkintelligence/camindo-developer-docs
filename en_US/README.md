@@ -14,7 +14,8 @@ their terminology and describes what lies behind it.
 * PHP ≥ 8.3 with the extensions `mysqli`, `intl`, `gd`, `json`, `mbstring`
 * MySQL ≥ 8.0.17 (JSON columns, multi-valued indexes)
 * Composer 2
-* optional: ImageMagick (`magick`/`convert`), `ffmpeg`/`ffprobe`, `pdftoppm`/`pdfinfo` (Poppler), `mysqldump`
+* optional: ImageMagick (`magick`/`convert`), `ffmpeg`/`ffprobe`, `pdftoppm`/`pdfinfo` (Poppler), `mysqldump`,
+  [`image-watermark`](https://github.com/andreasmayercode/image-watermark) ≥ 1.0.0 (invisible watermark)
 * working knowledge of PHP 8 (types, constructor property promotion), SQL and jQuery
 
 camindo CMS is deliberately **framework-free**: bootstrap, dependency injection

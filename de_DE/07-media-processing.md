@@ -193,14 +193,21 @@ Upload-Feld ändern; `Record::renameFile()` überträgt ihn auf alle Thumbnail-F
 ## Unsichtbares Wasserzeichen
 
 `Camindo\Core\Watermark` bettet mit dem externen Programm
-[`camindo-watermark`](https://github.com/dirkintelligence/camindo-watermark) einen Code aus
-ein bis sechs Zeichen `A`–`Z` und `-` in Bilder ein: Jedes Zeichen ist eine Ziffer 1–27 zur
-Basis 28 (0 = kein Zeichen), 28⁶ Codes passen in die 32 Bit des Programms, ein siebtes Zeichen
-nicht mehr. Das Verfahren arbeitet im
+[`image-watermark`](https://github.com/andreasmayercode/image-watermark) (ab 1.0.0) eine
+32-Bit-Zahl in Bilder ein. camindo ruft es mit `-namespace camindo-watermark` auf
+(`Watermark::NAMESPACE`): Der Namensraum geht in die Schlüsselableitung ein, ist Teil des
+Datenformats und darf sich nie ändern. Den Code der Instanz – ein bis sechs Zeichen `A`–`Z`,
+`0`–`9` und `-` – rechnet camindo selbst in die Zahl um (`codeToId()`, `idToCode()`): Jedes
+Zeichen ist eine Ziffer 1–37 zur Basis 38 (0 = Ende des Codes), linksbündig, plus
+`CODE_OFFSET` = 28⁶. Zahlen darunter sind Codes des früheren Programms `camindo-watermark`
+(nur `A`–`Z` und `-`, Basis 28, gleicher Namensraum) und bleiben lesbar; die größte neue Zahl
+(38⁶ + 28⁶ − 1) passt in die 32 Bit, ein siebtes Zeichen nicht mehr. Für das Prüfen von außen
+gibt es die Prüf-Website des Programms (`SetEnv IMAGE_WM_NAMESPACE camindo-watermark`), die
+nur die Zahl zeigt. Das Verfahren arbeitet im
 Frequenzraum: Die Luma wird auf ein festes 512er-Raster umgerechnet und per DCT in einem Ring
 mittlerer Frequenzen markiert (Spread Spectrum mit schlüsselabhängigen Vorzeichen, CRC-16,
-Pilotbits). Skalierung, JPEG und Drehen um 90° übersteht es direkt. Seit Version 1.3 kommt
-ein Synchronisationsmuster dazu: 8 × 8 Kacheln mit demselben schlüsselabhängigen Muster
+Pilotbits). Skalierung, JPEG und Drehen um 90° übersteht es direkt. Dazu kommt ein
+Synchronisationsmuster: 8 × 8 Kacheln mit demselben schlüsselabhängigen Muster
 oberhalb des Bandes der Kennung. Die Erkennung findet das Kachelgitter über die
 Autokorrelation, rekonstruiert daraus den Originalrahmen und liest die Kennung auch nach
 leichtem Zuschneiden, Drehen um beliebige Winkel oder Einfügen in eine Collage. `detect`
@@ -224,9 +231,17 @@ und benennt um. JPEG und PNG verarbeitet das Programm selbst; WebP schreibt es a
 gilt `DEFAULT_QUALITY` (92) bzw. `DEFAULT_QUALITY_WEBP` (80).
 
 Fehlerverhalten: Ist `paths.watermark` leer, bleibt alles unmarkiert. Ist das Programm
-eingetragen, aber nicht nutzbar (`available()`: Programm nicht ausführbar, Schlüssel fehlt)
-oder scheitert der Aufruf, schlägt das Speichern mit `error_watermark` fehl; im Hintergrund
-endet der Prozess mit diesem Fehler. Die Ursache steht im Fehlerprotokoll.
+eingetragen, aber nicht nutzbar (`available()`: Programm nicht ausführbar oder ohne `-namespace` – etwa noch das alte
+`camindo-watermark`, das ebenfalls Version 1.0.0 meldet; geprüft per `help`, einmal je
+Request –, Schlüssel fehlt),
+scheitert der Aufruf (Bild kleiner als 64 × 64 px, beschädigt …) oder ist das Wasserzeichen
+zu schwach, um es sicher zurückzulesen (`verified: false`, zu strukturarmes Bild), wird
+trotzdem gespeichert: Die Datei bleibt unmarkiert bzw. schwach markiert, die Ursache steht im
+Fehlerprotokoll (`error`). `VirtualFieldsTrait::watermarkFile()` sammelt die betroffenen Felder;
+`Record::watermarkWarnings()` gibt sie einmal zurück, die Eingabemaske
+(`RecordBackendEdit`) und die Bildbearbeitung zeigen je Feld eine Warnung
+(`warning_watermark`, `warning_watermark_weak`). Im Hintergrund (`TriggerMedia`) wird nur
+protokolliert.
 
 Der Schlüssel (`paths.watermark_key_file`, Modus `0600`) entscheidet, ob sich ein
 Wasserzeichen lesen lässt; `camindo.php watermark key` legt ihn an und überschreibt nie.
@@ -461,7 +476,7 @@ Template mit `type = 'scheduler'` als Adresse (`/0,name`) immer mit 404, und
     'ffmpeg'    => '/usr/bin/ffmpeg',
     'php'       => '/usr/local/bin/php',  // startet die Trigger
     'mysqldump' => '/usr/bin/mysqldump',
-    'watermark' => '/opt/camindo-watermark/camindo-watermark',  // '' = aus
+    'watermark' => '/opt/image-watermark/image-watermark',  // '' = aus
     'watermark_key_file' => '/pfad/zum/projekt/.camindo-watermark.key',
 ],
 ```

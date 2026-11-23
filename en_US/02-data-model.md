@@ -207,7 +207,7 @@ overview_template_id, login_name_field_id, login_password_field_id, deleted …
 | `rel_field_id`, `rel_area_id`, `rel_field_area` | counterpart field and target area(s) of a relation |
 | `parent_field_id` | thumbnail field: the field it is generated from |
 | `custom_order` | links can be sorted manually |
-| `visibility_input`, `visibility_search`, `visibility_list` | where the field appears |
+| `visibility_input`, `visibility_search`, `visibility_list`, `visibility_lookup` | where the field appears: input mask, search form, record list, detailed lookup preview (`RecordPresenter::listFields($schema, 'lookup')`, always the default field; since 9.2.0) |
 | `default_field`, `meta`, `multilingual` | default field; meta field; content per language |
 | `details` (JSON) | among others `extension`/`extension_options`, `user_auth`, `profile_area_ids`, `lookup_detailed`; in the trash `trash_area_refs` |
 | `deleted`, `changed_at`, `changed_by` | trash: deleted, time and user of the delete operation |

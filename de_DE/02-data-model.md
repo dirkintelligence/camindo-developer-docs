@@ -208,7 +208,7 @@ overview_template_id, login_name_field_id, login_password_field_id, deleted …
 | `rel_field_id`, `rel_area_id`, `rel_field_area` | Gegenfeld und Zielbereich(e) einer Relation |
 | `parent_field_id` | Thumbnail-Feld: das Feld, aus dem es erzeugt wird |
 | `custom_order` | Verknüpfungen manuell sortierbar |
-| `visibility_input`, `visibility_search`, `visibility_list` | wo das Feld erscheint |
+| `visibility_input`, `visibility_search`, `visibility_list`, `visibility_lookup` | wo das Feld erscheint: Eingabemaske, Suchmaske, Datensatzliste, ausführliche Lookup-Vorschau (`RecordPresenter::listFields($schema, 'lookup')`, das Default-Feld immer; seit 9.2.0) |
 | `default_field`, `meta`, `multilingual` | Default-Feld; Metafeld; Inhalt je Sprache |
 | `details` (JSON) | u. a. `extension`/`extension_options`, `user_auth`, `profile_area_ids`, `lookup_detailed`; im Papierkorb `trash_area_refs` |
 | `deleted`, `changed_at`, `changed_by` | Papierkorb: gelöscht, Zeitpunkt und Benutzer des Löschvorgangs |

@@ -524,8 +524,9 @@ the fields. Copying an area uses the same path.
 
 The Record module exports records as **XML** (backup format: areas, fields, records in
 all languages, links, files, templates, converters), **CSV** (one row per record,
-sub-fields in dot notation) and **DOCX** (for translation), and imports the same
-formats. Larger amounts run as a background process (`Core/cron/record_export.php`,
+sub-fields in dot notation) and **DOCX** (for translation and proofreading), and imports the same
+formats. A proofreading file names field and language per text (`field=… | language_id=…`, head row
+`record_id=… | proofread`); the import writes back only changed texts. Larger amounts run as a background process (`Core/cron/record_export.php`,
 `record_import.php`); the result arrives as an internal message. The same applies to the
 media import from a zip file (`RecordMediaImport::start()`, `Core/cron/media_import.php`,
 same threshold `admin.import_background_threshold`, counted in files).

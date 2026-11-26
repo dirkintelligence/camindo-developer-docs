@@ -531,7 +531,9 @@ legt die Felder an. Das Kopieren eines Bereichs nutzt denselben Weg.
 Das Modul Record exportiert Datensätze als **XML** (Sicherungsformat: Bereiche, Felder,
 Datensätze in allen Sprachen, Verknüpfungen, Dateien, Templates, Konverter), **CSV**
 (eine Zeile je Datensatz, Unterfelder in Punkt-Schreibweise) und **DOCX** (für
-Übersetzungen) und importiert dieselben Formate. Größere Mengen laufen als
+Übersetzungen und zum Korrekturlesen) und importiert dieselben Formate. Eine
+Korrekturdatei nennt je Text Feld und Sprache (`field=… | language_id=…`, Kopfzeile
+`record_id=… | proofread`); der Import schreibt nur geänderte Texte zurück. Größere Mengen laufen als
 Hintergrundprozess (`Core/cron/record_export.php`, `record_import.php`); das Ergebnis
 kommt als interne Nachricht. Ebenso der Medien-Import aus einer Zip-Datei
 (`RecordMediaImport::start()`, `Core/cron/media_import.php`, gleiche Schwelle
